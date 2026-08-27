@@ -1,0 +1,89 @@
+export * from "./nav-tile-card.types";
+import type { NavigationTileCardConfig } from "./nav-tile-card.types";
+export * from "./nav-tile-card.styles";
+import { navTileCardStyles } from "./nav-tile-card.styles";
+import { html, TemplateResult, CSSResultGroup } from "lit";
+import { customElement } from "lit/decorators.js";
+import { LitBaseCard } from "../../components/base/lit-base-card";
+import { interaction, InteractionHandle } from "../../utils/interaction";
+import { registerCard } from "../../utils/registration";
+
+const DEFAULTS: NavigationTileCardConfig = {
+  type: "custom:component-nav-tile-v2",
+  icon: "mdi:door-open",
+  title: "Destination",
+  context: "Navigation",
+  navigation_path: null,
+};
+
+@customElement("component-nav-tile-v2")
+export class ComponentNavigationTileV2 extends LitBaseCard<NavigationTileCardConfig> {
+  private _interactionHandle: InteractionHandle | null = null;
+
+  public static override styles: CSSResultGroup = navTileCardStyles;
+
+  public override setConfig(config: NavigationTileCardConfig): void {
+    super.setConfig({ ...DEFAULTS, ...config });
+  }
+
+  public override getCardSize(): number {
+    return 1;
+  }
+
+  protected override updated(): void {
+    const path = this._config?.navigation_path;
+    const btn = this.renderRoot.querySelector(
+      "button.nav",
+    ) as HTMLElement | null;
+    if (path && btn) {
+      this._interactionHandle?.destroy();
+      this._interactionHandle = interaction(btn, {
+        primary: () => this.navigate(path),
+        feedback: true,
+      });
+    } else {
+      this._interactionHandle?.destroy();
+      this._interactionHandle = null;
+    }
+  }
+
+  public override disconnectedCallback(): void {
+    this._interactionHandle?.destroy();
+    this._interactionHandle = null;
+    super.disconnectedCallback();
+  }
+
+  protected override render(): TemplateResult {
+    if (!this._config) return html``;
+    const path = this._config.navigation_path;
+
+    const inner = html`
+      <div class="wrap">
+        <span class="icon">
+          <ha-icon icon="${this.esc(this._config.icon)}"></ha-icon>
+        </span>
+        <span>
+          <div class="title">${this.esc(this._config.title)}</div>
+          <div class="desc">${this.esc(this._config.context)}</div>
+        </span>
+      </div>
+    `;
+
+    return html`
+      <ha-card>
+        ${
+          path
+            ? html`<button class="i nav" type="button">${inner}</button>`
+            : html`<div class="nav nav-static">${inner}</div>`
+        }
+      </ha-card>
+    `;
+  }
+}
+
+registerCard({
+  type: "component-nav-tile-v2",
+  element: ComponentNavigationTileV2,
+  name: "Navigation Tile",
+  description: "Reusable navigation tile component.",
+});

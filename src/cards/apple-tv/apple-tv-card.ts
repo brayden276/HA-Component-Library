@@ -1,0 +1,362 @@
+export * from "./apple-tv-card.types";
+import type { AppleTvControllerConfig } from "./apple-tv-card.types";
+export * from "./apple-tv-card.styles";
+import { appleTvCardStyles } from "./apple-tv-card.styles";
+import { html, TemplateResult, CSSResultGroup } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import { LitBaseCard } from "../../components/base/lit-base-card";
+import type {
+  LovelaceCard,
+  LovelaceGridOptions,
+} from "../../types/home-assistant";
+import { interaction, InteractionHandle } from "../../utils/interaction";
+import { registerCard } from "../../utils/registration";
+
+const APPLE_TV_REMOTE_COMMANDS = Object.freeze([
+  ["up", "Up", "mdi:chevron-up"],
+  ["left", "Left", "mdi:chevron-left"],
+  ["select", "Select", "mdi:radiobox-marked"],
+  ["right", "Right", "mdi:chevron-right"],
+  ["down", "Down", "mdi:chevron-down"],
+] as const);
+
+const APPLE_TV_UTILITY_COMMANDS = Object.freeze([
+  ["menu", "Menu", "mdi:menu"],
+  ["home", "Home", "mdi:home-outline"],
+  ["top_menu", "Top Menu", "mdi:format-list-bulleted"],
+] as const);
+
+const appleTvNativeTileConfig = (config: AppleTvControllerConfig) => ({
+  type: "tile",
+  entity: config.entity,
+  ...(config.title ? { name: config.title } : {}),
+  features_position: "bottom",
+  features: [
+    {
+      type: "media-player-playback",
+      controls: [
+        "media_previous_track",
+        "media_play_pause",
+        "media_next_track",
+      ],
+    },
+    { type: "media-player-volume-buttons", show_mute_button: true },
+    { type: "media-player-source" },
+  ],
+});
+
+@customElement("component-apple-tv-controller-v1")
+export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerConfig> {
+  @state()
+  private _nativeCard: LovelaceCard | null = null;
+
+  private _buildToken = 0;
+  private _interactionHandles: InteractionHandle[] = [];
+
+  public static override getGridOptions(): LovelaceGridOptions {
+    return { columns: 12, rows: "auto" };
+  }
+
+  public static override styles: CSSResultGroup = appleTvCardStyles;
+
+  public override setConfig(config: AppleTvControllerConfig): void {
+    if (!config?.entity && !config?.demo) {
+      throw new Error("An Apple TV media_player entity is required");
+    }
+    this._buildToken += 1;
+    this._nativeCard = null;
+    super.setConfig({
+      type: "custom:component-apple-tv-controller-v1",
+      entity: config?.entity || "media_player.demo_apple_tv",
+      title: config?.title || undefined,
+      demo: Boolean(config?.demo),
+      remote_entity: config?.remote_entity || null,
+      keyboard_entity: config?.keyboard_entity || null,
+      keyboard_config_entry_id:
+        config?.keyboard_config_entry_id || config?.config_entry_id || null,
+    });
+    this._buildNativeCard();
+  }
+
+  public override getCardSize(): number {
+    return this._config?.remote_entity ? 4 : 2;
+  }
+
+  private async _buildNativeCard(): Promise<void> {
+    if (!this._config || this._nativeCard || !this.isConnected) return;
+    const loadCardHelpers = (globalThis as any).loadCardHelpers;
+    if (typeof loadCardHelpers !== "function") return;
+    const token = ++this._buildToken;
+    try {
+      const helpers = await loadCardHelpers();
+      if (token !== this._buildToken || !this.isConnected) return;
+      const card = helpers.createCardElement(
+        appleTvNativeTileConfig(this._config),
+      );
+      card.hass = this.hass;
+      this._nativeCard = card;
+    } catch (error) {
+      console.error("Could not create native Apple TV media tile", error);
+    }
+  }
+
+  public override connectedCallback(): void {
+    super.connectedCallback();
+    this._buildNativeCard();
+  }
+
+  public override disconnectedCallback(): void {
+    this._buildToken += 1;
+    for (const h of this._interactionHandles) h.destroy();
+    this._interactionHandles = [];
+    super.disconnectedCallback();
+  }
+
+  protected override willUpdate(): void {
+    if (this._nativeCard && this.hass) {
+      this._nativeCard.hass = this.hass;
+    }
+  }
+
+  private async _remoteCommand(command: string): Promise<void> {
+    if (this._config?.demo || !this.hass || !this._config?.remote_entity)
+      return;
+    try {
+      await this.hass.callService("remote", "send_command", {
+        entity_id: this._config.remote_entity,
+        command,
+      });
+    } catch (error) {
+      console.error(`Apple TV remote command failed: ${command}`, error);
+    }
+  }
+
+  private async _keyboardAction(service: string): Promise<void> {
+    if (
+      this._config?.demo ||
+      !this.hass ||
+      !this._config?.keyboard_config_entry_id
+    )
+      return;
+    const data: Record<string, any> = {
+      config_entry_id: this._config.keyboard_config_entry_id,
+    };
+    const input = this.renderRoot.querySelector(
+      ".keyboard input",
+    ) as HTMLInputElement | null;
+    if (service === "set_keyboard_text") {
+      const text = input?.value;
+      if (!text) return;
+      data.text = text;
+    } else if (service === "clear_keyboard_text") {
+      if (input) input.value = "";
+    }
+    try {
+      await this.hass.callService("apple_tv", service, data);
+    } catch (error) {
+      console.error(`Apple TV keyboard action failed: ${service}`, error);
+    }
+  }
+
+  protected override updated(): void {
+    for (const h of this._interactionHandles) h.destroy();
+    this._interactionHandles = [];
+
+    const buttons = this.renderRoot.querySelectorAll(
+      ".remote button[data-cmd]",
+    );
+    buttons.forEach((btn) => {
+      const cmd = (btn as HTMLElement).dataset.cmd;
+      if (cmd) {
+        this._interactionHandles.push(
+          interaction(btn as HTMLElement, {
+            primary: () => this._remoteCommand(cmd),
+            feedback: true,
+          }),
+        );
+      }
+    });
+
+    const setBtn = this.renderRoot.querySelector(
+      ".keyboard-set",
+    ) as HTMLElement | null;
+    const clearBtn = this.renderRoot.querySelector(
+      ".keyboard-clear",
+    ) as HTMLElement | null;
+    if (setBtn) {
+      this._interactionHandles.push(
+        interaction(setBtn, {
+          primary: () => this._keyboardAction("set_keyboard_text"),
+          feedback: true,
+        }),
+      );
+    }
+    if (clearBtn) {
+      this._interactionHandles.push(
+        interaction(clearBtn, {
+          primary: () => this._keyboardAction("clear_keyboard_text"),
+          feedback: true,
+        }),
+      );
+    }
+  }
+
+  protected override render(): TemplateResult {
+    if (!this._config) return html``;
+    const remoteEntity = this._config.remote_entity;
+    const remote = remoteEntity && this.hass?.states?.[remoteEntity];
+    const remoteAvailable =
+      this._config.demo ||
+      Boolean(
+        remote &&
+          remote.state !== "unavailable" &&
+          remote.state !== "unknown",
+      );
+
+    const hasKeyboard = Boolean(
+      this._config.keyboard_entity && this._config.keyboard_config_entry_id,
+    );
+    const keyboardFocused =
+      this._config.demo ||
+      (hasKeyboard &&
+        this.hass?.states?.[this._config.keyboard_entity!]?.state === "on");
+
+    const byCommand = new Map(
+      APPLE_TV_REMOTE_COMMANDS.map((item) => [item[0], item]),
+    );
+    const layout = [
+      null,
+      "up",
+      null,
+      "left",
+      "select",
+      "right",
+      null,
+      "down",
+      null,
+    ] as const;
+
+    return html`
+      <div class="stack">
+        <div class="native">${this._nativeCard}</div>
+
+        ${
+          remoteEntity
+            ? html`
+                <section class="remote">
+                  <div class="remote-head">
+                    <span class="remote-title">Remote</span>
+                    <span class="power">
+                      <button
+                        type="button"
+                        data-cmd="wakeup"
+                        aria-label="Wake"
+                        ?disabled=${!remoteAvailable}
+                      >
+                        <ha-icon icon="mdi:power-on"></ha-icon>
+                        <span>Wake</span>
+                      </button>
+                      <button
+                        type="button"
+                        data-cmd="suspend"
+                        aria-label="Sleep"
+                        ?disabled=${!remoteAvailable}
+                      >
+                        <ha-icon icon="mdi:power-sleep"></ha-icon>
+                        <span>Sleep</span>
+                      </button>
+                    </span>
+                  </div>
+
+                  <div class="dpad" aria-label="Apple TV directional remote">
+                    ${layout.map((cmd) => {
+                      if (!cmd) {
+                        return html`<button
+                          class="blank"
+                          type="button"
+                          tabindex="-1"
+                          aria-hidden="true"
+                        ></button>`;
+                      }
+                      const [, labelText, icon] = byCommand.get(cmd)!;
+                      return html`
+                        <button
+                          class="${cmd === "select" ? "select" : "direction"}"
+                          type="button"
+                          data-cmd="${cmd}"
+                          aria-label="${labelText}"
+                          ?disabled=${!remoteAvailable}
+                        >
+                          <ha-icon icon="${icon}"></ha-icon>
+                        </button>
+                      `;
+                    })}
+                  </div>
+
+                  <div class="utility">
+                    ${APPLE_TV_UTILITY_COMMANDS.map(
+                      ([cmd, labelText, icon]) => html`
+                        <button
+                          type="button"
+                          data-cmd="${cmd}"
+                          aria-label="${labelText}"
+                          ?disabled=${!remoteAvailable}
+                        >
+                          <ha-icon icon="${icon}"></ha-icon>
+                          <span>${labelText}</span>
+                        </button>
+                      `,
+                    )}
+                  </div>
+
+                  ${
+                    hasKeyboard
+                      ? html`
+                          <div class="keyboard">
+                            <input
+                              type="text"
+                              aria-label="Apple TV keyboard text"
+                              placeholder="Type on Apple TV"
+                              ?disabled=${!keyboardFocused}
+                              @keydown=${(e: KeyboardEvent) => {
+                                if (e.key === "Enter") {
+                                  this._keyboardAction("set_keyboard_text");
+                                }
+                              }}
+                            />
+                            <button
+                              class="keyboard-set"
+                              type="button"
+                              aria-label="Set keyboard text"
+                              ?disabled=${!keyboardFocused}
+                            >
+                              <ha-icon icon="mdi:keyboard"></ha-icon>
+                            </button>
+                            <button
+                              class="keyboard-clear"
+                              type="button"
+                              aria-label="Clear keyboard text"
+                              ?disabled=${!keyboardFocused}
+                            >
+                              <ha-icon icon="mdi:backspace-outline"></ha-icon>
+                            </button>
+                          </div>
+                        `
+                      : ""
+                  }
+                </section>
+              `
+            : ""
+        }
+      </div>
+    `;
+  }
+}
+
+registerCard({
+  type: "component-apple-tv-controller-v1",
+  element: ComponentAppleTvControllerV1,
+  name: "Apple TV Controller",
+  description:
+    "Native Home Assistant media controls with an optional explicit Apple TV remote.",
+});

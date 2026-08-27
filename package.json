@@ -1,0 +1,55 @@
+{
+  "name": "ha-component-library",
+  "version": "1.0.0",
+  "description": "TypeScript + Lit Web Component library for Home Assistant Lovelace dashboards built with Vite",
+  "type": "module",
+  "main": "dist/ha-component-library.js",
+  "module": "dist/ha-component-library.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "prettier --check \"src/**/*.ts\"",
+    "format:fix": "prettier --write \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:browser": "node tests/browser/bundle-smoke.mjs",
+    "check": "npm run typecheck && npm run test && npm run build && npm run test:browser"
+  },
+  "keywords": [
+    "home-assistant",
+    "homeassistant",
+    "lovelace",
+    "custom-card",
+    "lit",
+    "lit-element",
+    "web-components",
+    "typescript",
+    "vite"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "custom-card-helpers": "^1.9.0",
+    "lit": "^3.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@typescript-eslint/eslint-plugin": "^8.68.0",
+    "@typescript-eslint/parser": "^8.68.0",
+    "eslint": "^10.9.1",
+    "happy-dom": "^20.11.8",
+    "playwright": "^1.62.1",
+    "prettier": "^3.9.6",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "vite-plugin-dts": "^4.4.0",
+    "vitest": "^4.1.11"
+  }
+}
