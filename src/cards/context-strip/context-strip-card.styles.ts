@@ -14,19 +14,19 @@ export const contextStripCardStyles: CSSResultGroup = css`
   button {
     appearance: none;
     width: 100%;
-    min-height: 44px;
+    min-height: 34px;
     box-sizing: border-box;
     border: 0;
     background: transparent;
     font: inherit;
-    padding: 12px 14px;
+    padding: 8px 11px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    gap: 16px;
+    gap: 10px;
     cursor: pointer;
-    font-size: 11.5px;
-    line-height: 1.3;
+    font-size: 11px;
+    line-height: 1.25;
     white-space: nowrap;
     overflow: hidden;
     color: inherit;
@@ -37,11 +37,11 @@ export const contextStripCardStyles: CSSResultGroup = css`
   button:focus-visible {
     outline: 2px solid var(--primary-color);
     outline-offset: -2px;
-    border-radius: var(--ha-card-border-radius, 16px);
+    border-radius: var(--ha-card-border-radius, 12px);
   }
   .phase {
     color: var(--primary-text-color);
-    font-weight: 600;
+    font-weight: 500;
     text-align: left;
     justify-self: start;
     overflow: hidden;
@@ -59,7 +59,7 @@ export const contextStripCardStyles: CSSResultGroup = css`
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 18px;
+    gap: 12px;
     min-width: 0;
     color: var(--secondary-text-color);
   }

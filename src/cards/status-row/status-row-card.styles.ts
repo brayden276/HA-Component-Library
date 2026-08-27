@@ -5,36 +5,36 @@ export const statusRowCardStyles: CSSResultGroup = [
   presentationalCardStyles,
   css`
     .wrap {
-      padding: 12px 14px;
+      padding: 8px 11px;
       display: grid;
-      grid-template-columns: 34px minmax(0, 1fr) auto;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
       align-items: center;
-      gap: 10px;
-      min-height: 70px;
+      gap: 8px;
+      min-height: 48px;
     }
     .icon {
-      width: 34px;
-      height: 34px;
+      width: 28px;
+      height: 28px;
       display: grid;
       place-items: center;
-      border-radius: 11px;
+      border-radius: 6px;
       background: var(--secondary-background-color);
       color: var(--primary-color);
     }
     ha-icon {
-      --mdc-icon-size: 19px;
+      --mdc-icon-size: 16px;
     }
     .title {
-      font-size: 13px;
-      font-weight: 650;
+      font-size: 12px;
+      font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .desc {
-      margin-top: 3px;
-      font-size: 10.5px;
-      line-height: 1.3;
+      margin-top: 2px;
+      font-size: 10px;
+      line-height: 1.25;
       color: var(--secondary-text-color);
       white-space: nowrap;
       overflow: hidden;
@@ -46,13 +46,13 @@ export const statusRowCardStyles: CSSResultGroup = [
     }
     .status b {
       display: block;
-      font-size: 12px;
-      font-weight: 650;
+      font-size: 11px;
+      font-weight: 500;
     }
     .status span {
       display: block;
-      margin-top: 3px;
-      font-size: 10.5px;
+      margin-top: 2px;
+      font-size: 10px;
       color: var(--secondary-text-color);
     }
     @media (max-width: 700px) {

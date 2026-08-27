@@ -1,35 +1,27 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import {
+  cardBaseStyles,
+  rowStyles,
+  iconBoxStyles,
+  buttonStyles,
+} from "../../styles";
 
 export const mediaRowCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  rowStyles,
+  iconBoxStyles,
+  buttonStyles,
   css`
-    .wrap {
-      min-height: 56px;
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 10px;
-    }
-    .icon {
-      width: 36px;
-      height: 36px;
-      display: grid;
-      place-items: center;
-      border-radius: var(--dashboard-radius-icon, 0px);
-      background: transparent;
-      color: var(--primary-color);
-    }
     .buttons {
       display: flex;
-      gap: 4px;
+      gap: var(--c-space-1);
     }
     .btn {
       position: relative;
-      width: 44px;
-      height: 44px;
+      width: 36px;
+      height: 36px;
       border: 0 !important;
-      border-radius: var(--dashboard-radius-control, 5px) !important;
+      border-radius: var(--c-radius-control) !important;
       background: transparent !important;
       display: grid;
       place-items: center;
@@ -39,17 +31,17 @@ export const mediaRowCardStyles: CSSResultGroup = [
     .btn:before {
       content: "";
       position: absolute;
-      width: 30px;
-      height: 30px;
-      border: 1px solid var(--dashboard-card-border-color, var(--divider-color));
-      border-radius: var(--dashboard-radius-control, 5px);
+      width: 26px;
+      height: 26px;
+      border: 1px solid var(--c-card-border-color);
+      border-radius: var(--c-radius-control);
     }
     .btn.main {
       color: var(--primary-color);
     }
     .btn ha-icon {
       position: relative;
-      --mdc-icon-size: 17px;
+      --mdc-icon-size: var(--c-icon-sm-size);
     }
   `,
 ];

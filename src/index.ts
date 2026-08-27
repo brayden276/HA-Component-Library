@@ -7,6 +7,7 @@
 export * from "./types/home-assistant";
 export * from "./types/registry";
 export * from "./utils/index";
+export * from "./styles/index";
 
 // Base Components
 export * from "./components/base/lit-base-card";

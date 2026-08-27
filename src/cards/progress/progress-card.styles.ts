@@ -5,39 +5,39 @@ export const progressCardStyles: CSSResultGroup = [
   presentationalCardStyles,
   css`
     .wrap {
-      padding: 12px 14px;
-      min-height: 78px;
+      padding: 8px 11px;
+      min-height: 56px;
     }
     .head {
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
-      gap: 14px;
+      gap: 10px;
     }
     .value {
-      font-size: 27px;
+      font-size: 20px;
       line-height: 1;
-      font-weight: 650;
-      letter-spacing: -0.035em;
+      font-weight: 500;
+      letter-spacing: -0.025em;
     }
     .label {
-      margin-top: 4px;
-      font-size: 11px;
+      margin-top: 2px;
+      font-size: 10.5px;
       color: var(--secondary-text-color);
     }
     .target {
       text-align: right;
-      font-size: 11.5px;
+      font-size: 10.5px;
       color: var(--secondary-text-color);
       white-space: nowrap;
     }
     .target b {
-      font-weight: 600;
+      font-weight: 500;
       color: var(--primary-text-color);
     }
     .track {
-      height: 5px;
-      margin-top: 11px;
+      height: 4px;
+      margin-top: 8px;
       border-radius: 999px;
       background: var(--secondary-background-color);
       overflow: hidden;

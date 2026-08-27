@@ -5,35 +5,35 @@ export const singleKpiCardStyles: CSSResultGroup = [
   presentationalCardStyles,
   css`
     .wrap {
-      padding: 12px 14px;
+      padding: 8px 11px;
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
-      gap: 16px;
-      min-height: 70px;
+      gap: 12px;
+      min-height: 52px;
     }
     .value {
-      font-size: 27px;
+      font-size: 20px;
       line-height: 1;
-      font-weight: 650;
-      letter-spacing: -0.035em;
+      font-weight: 500;
+      letter-spacing: -0.025em;
       white-space: nowrap;
     }
     .label {
-      margin-top: 4px;
-      font-size: 11px;
+      margin-top: 2px;
+      font-size: 10.5px;
       color: var(--secondary-text-color);
       white-space: nowrap;
     }
     .support {
       text-align: right;
-      font-size: 11.5px;
-      line-height: 1.3;
+      font-size: 10.5px;
+      line-height: 1.25;
       color: var(--secondary-text-color);
       white-space: nowrap;
     }
     .support b {
-      font-weight: 600;
+      font-weight: 500;
       color: var(--primary-text-color);
     }
     @media (max-width: 700px) {

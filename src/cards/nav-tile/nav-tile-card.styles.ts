@@ -9,20 +9,23 @@ export const navTileCardStyles: CSSResultGroup = [
       text-align: left;
     }
     .wrap {
-      min-height: 58px;
+      min-height: 44px;
       display: grid;
-      grid-template-columns: 36px minmax(0, 1fr);
+      grid-template-columns: 28px minmax(0, 1fr);
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
     .icon {
-      width: 36px;
-      height: 36px;
+      width: 28px;
+      height: 28px;
       display: grid;
       place-items: center;
-      border-radius: var(--dashboard-radius-icon, 6px);
+      border-radius: var(--dashboard-radius-icon, 5px);
       background: transparent;
       color: var(--primary-color);
+    }
+    .icon ha-icon {
+      --mdc-icon-size: 17px;
     }
     .nav-static {
       border: 0;

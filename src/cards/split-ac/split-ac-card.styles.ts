@@ -1,209 +1,134 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import {
+  cardBaseStyles,
+  rowStyles,
+  iconBoxStyles,
+  buttonStyles,
+  controlStyles,
+  sheetStyles,
+} from "../../styles";
 
 export const splitAcCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  rowStyles,
+  iconBoxStyles,
+  buttonStyles,
+  controlStyles,
+  sheetStyles,
   css`
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    [hidden] {
-      display: none !important;
-    }
-    button,
-    input {
-      font: inherit;
-      color: inherit;
-    }
-    button {
-      appearance: none;
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-    }
     ha-card {
       container-type: inline-size;
       overflow: hidden;
     }
     .w {
-      padding: 12px 14px;
+      padding: var(--c-card-padding);
     }
     .hd {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 44px;
+      grid-template-columns: minmax(0, 1fr) var(--c-button-height);
       align-items: center;
-      gap: 12px;
+      gap: var(--c-space-3);
     }
     .hd.settings {
-      grid-template-columns: minmax(0, 1fr) 44px 44px;
-      gap: 8px;
-    }
-    .idn {
-      min-width: 0;
-      min-height: 44px;
-      padding: 0;
-      display: grid;
-      grid-template-columns: 40px minmax(0, 1fr);
-      align-items: center;
-      gap: 12px;
-      text-align: left;
-      border-radius: var(--dashboard-radius-control, 8px);
-    }
-    .iw {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--dashboard-radius-icon, 6px);
-      display: grid;
-      place-items: center;
-      background: transparent;
-      color: var(--primary-color);
-    }
-    ha-icon {
-      --mdc-icon-size: 20px;
-    }
-    .cp {
-      min-width: 0;
-    }
-    .nm,
-    .st {
-      display: block;
-    }
-    .nm {
-      font-size: 13px;
-      line-height: 1.25;
-      font-weight: 650;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .st {
-      margin-top: 3px;
-      font-size: 13px;
-      line-height: 1.25;
-      color: var(--secondary-text-color);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .pw {
-      width: 44px;
-      height: 44px;
-      padding: 0;
-      border: 1px solid var(--dashboard-card-border-color, var(--divider-color));
-      border-radius: var(--dashboard-radius-control, 5px);
-      background: transparent;
-      color: var(--secondary-text-color);
-      display: grid;
-      place-items: center;
-    }
-    .pw.on {
-      color: var(--primary-color);
-    }
-    button[disabled],
-    button[aria-disabled="true"] {
-      opacity: 0.45;
-      cursor: default;
+      grid-template-columns: minmax(0, 1fr) var(--c-button-height) var(--c-button-height);
+      gap: var(--c-space-2);
     }
     .ct {
-      margin-top: 12px;
-      padding-top: 12px;
+      margin-top: var(--c-space-3);
+      padding-top: var(--c-space-3);
       border-top: 1px solid var(--divider-color);
     }
     .cr {
       display: grid;
-      grid-template-columns: minmax(120px, 1fr) auto;
+      grid-template-columns: minmax(100px, 1fr) auto;
       align-items: center;
-      gap: 16px;
+      gap: var(--c-space-5);
     }
     .cr.to {
       grid-template-columns: auto;
       justify-content: end;
     }
     .rv {
-      font-size: 27px;
+      font-size: var(--c-font-hero);
       line-height: 1;
-      font-weight: 650;
-      letter-spacing: -0.03em;
+      font-weight: var(--c-font-weight-medium);
+      letter-spacing: -0.02em;
       font-variant-numeric: tabular-nums;
     }
     .ml {
       display: block;
-      margin-top: 6px;
+      margin-top: var(--c-space-1);
       color: var(--secondary-text-color);
-      font-size: 13px;
-      line-height: 1.2;
+      font-size: var(--c-font-base);
+      line-height: var(--c-line-height-normal);
     }
     .tc {
-      min-height: 48px;
+      min-height: 38px;
       display: grid;
-      grid-template-columns: 44px minmax(82px, auto) 44px;
+      grid-template-columns: var(--c-button-height) minmax(70px, auto) var(--c-button-height);
       align-items: center;
-      border: 1px solid var(--dashboard-card-border-color, var(--divider-color));
-      border-radius: var(--dashboard-radius-control, 5px);
+      border: 1px solid var(--c-card-border-color);
+      border-radius: var(--c-radius-control);
       background: transparent;
       overflow: hidden;
     }
     .tb {
-      width: 44px;
-      height: 48px;
+      width: var(--c-button-height);
+      height: 38px;
       padding: 0;
       display: grid;
       place-items: center;
     }
     .tp {
       min-width: 0;
-      padding: 0 8px;
+      padding: 0 var(--c-space-2);
       text-align: center;
     }
     .tv {
-      font-size: 18px;
-      line-height: 1.1;
-      font-weight: 650;
+      font-size: var(--c-font-xl);
+      line-height: var(--c-line-height-tight);
+      font-weight: var(--c-font-weight-medium);
       font-variant-numeric: tabular-nums;
     }
     .ts {
-      margin-top: 3px;
+      margin-top: 2px;
       color: var(--secondary-text-color);
-      font-size: 13px;
-      line-height: 1.1;
+      font-size: var(--c-font-sm);
+      line-height: var(--c-line-height-tight);
       white-space: nowrap;
     }
     .os,
     .uv {
-      font-size: 13px;
-      line-height: 1.35;
+      font-size: var(--c-font-base);
+      line-height: 1.3;
       color: var(--secondary-text-color);
     }
     .as {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
+      gap: var(--c-card-gap);
+      margin-top: var(--c-space-3);
     }
     .a {
       min-width: 0;
-      min-height: 44px;
-      flex: 1 1 118px;
-      padding: 0 10px;
-      border: 1px solid var(--dashboard-card-border-color, var(--divider-color));
-      border-radius: var(--dashboard-radius-control, 5px);
+      min-height: var(--c-button-height);
+      flex: 1 1 100px;
+      padding: 0 var(--c-space-3);
+      border: 1px solid var(--c-card-border-color);
+      border-radius: var(--c-radius-control);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
+      gap: var(--c-space-2);
       color: var(--secondary-text-color);
     }
     .a ha-icon {
-      --mdc-icon-size: 18px;
+      --mdc-icon-size: var(--c-icon-size);
     }
     .al {
       min-width: 0;
-      font-size: 13px;
-      font-weight: 600;
+      font-size: var(--c-font-base);
+      font-weight: var(--c-font-weight-medium);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -211,7 +136,7 @@ export const splitAcCardStyles: CSSResultGroup = [
     .a.av,
     .a[aria-expanded="true"] {
       color: var(--primary-color);
-      background: var(--dashboard-active-surface, var(--card-background-color));
+      background: var(--c-active-surface);
     }
     .pn {
       position: fixed;
@@ -220,80 +145,71 @@ export const splitAcCardStyles: CSSResultGroup = [
       display: grid;
       place-items: center;
       overscroll-behavior: contain;
-      padding: 16px;
-      background: var(
-        --dashboard-modal-scrim,
-        var(
-          --ha-dialog-scrim-color,
-          color-mix(in srgb, var(--primary-text-color) 32%, transparent)
-        )
-      );
+      padding: var(--c-space-6);
+      background: var(--c-modal-scrim);
     }
     .pd {
       width: min(380px, calc(100vw - 32px));
       max-height: calc(100dvh - 32px);
       overflow: auto;
       overscroll-behavior: contain;
-      padding: 12px 14px 14px;
-      border: 1px solid var(--divider-color);
-      border-radius: var(--dashboard-radius-dialog, 8px);
+      padding: var(--c-card-padding);
+      border: var(--c-card-border);
+      border-radius: var(--c-radius-dialog);
       background: var(--card-background-color);
       color: var(--primary-text-color);
-      box-shadow: var(
-        --dashboard-dialog-shadow,
-        0 16px 48px rgba(0, 0, 0, 0.22)
-      );
+      box-shadow: var(--c-dialog-shadow);
     }
     .ph {
-      min-height: 44px;
+      min-height: 38px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: var(--c-space-5);
     }
     .pt {
       margin: 0;
-      font-size: 18px;
-      line-height: 1.2;
-      font-weight: 650;
+      font-size: var(--c-font-hero);
+      line-height: var(--c-line-height-normal);
+      font-weight: var(--c-font-weight-medium);
     }
     .x {
-      width: 44px;
-      height: 44px;
-      border-radius: var(--dashboard-radius-control, 8px);
+      width: var(--c-button-icon-size);
+      height: var(--c-button-icon-size);
+      border-radius: var(--c-radius-control);
       display: grid;
       place-items: center;
     }
     .og + .og {
-      margin-top: 12px;
-      padding-top: 12px;
+      margin-top: var(--c-space-4);
+      padding-top: var(--c-space-4);
       border-top: 1px solid var(--divider-color);
     }
     .gt {
-      margin: 0 4px 8px;
-      font-size: 13px;
-      font-weight: 650;
+      margin: 0 4px var(--c-space-3);
+      font-size: var(--c-font-base);
+      font-weight: var(--c-font-weight-medium);
       color: var(--secondary-text-color);
     }
     .qs {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
+      gap: var(--c-grid-gap);
     }
     .o {
-      min-height: 50px;
+      min-height: 42px;
       width: 100%;
-      padding: 0 10px;
-      border: 1px solid var(--dashboard-card-border-color, var(--divider-color));
-      border-radius: var(--dashboard-radius-control, 5px);
+      padding: 0 var(--c-space-4);
+      border: 1px solid var(--c-card-border-color);
+      border-radius: var(--c-radius-control);
       display: grid;
       grid-template-columns: 20px minmax(0, 1fr) 20px;
       align-items: center;
-      gap: 8px;
+      gap: var(--c-space-3);
       text-align: left;
       background: transparent;
-      font-size: 13px;
-      font-weight: 600;
+      font-size: var(--c-font-base);
+      font-weight: var(--c-font-weight-medium);
     }
     .oi {
       color: var(--secondary-text-color);
@@ -308,54 +224,54 @@ export const splitAcCardStyles: CSSResultGroup = [
     .tpr {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
+      gap: var(--c-grid-gap);
     }
     .tpr button,
     .tcu button,
     .tac button {
-      min-height: 44px;
-      border: 1px solid var(--dashboard-card-border-color, var(--divider-color));
-      border-radius: var(--dashboard-radius-control, 5px);
+      min-height: var(--c-button-height);
+      border: 1px solid var(--c-card-border-color);
+      border-radius: var(--c-radius-control);
       background: transparent;
-      font-size: 13px;
-      font-weight: 650;
+      font-size: var(--c-font-base);
+      font-weight: var(--c-font-weight-medium);
     }
     .tpr button {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: var(--c-space-2);
     }
     .tcu {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: end;
-      gap: 8px;
-      margin-top: 12px;
+      gap: var(--c-space-3);
+      margin-top: var(--c-space-4);
     }
     .tcu label {
-      font-size: 13px;
+      font-size: var(--c-font-base);
       color: var(--secondary-text-color);
     }
     .tcu input {
       display: block;
       width: 100%;
-      height: 44px;
-      margin-top: 6px;
-      padding: 0 11px;
+      height: var(--c-button-height);
+      margin-top: var(--c-space-2);
+      padding: 0 var(--c-space-4);
       border: 1px solid var(--divider-color);
-      border-radius: var(--dashboard-radius-control, 5px);
+      border-radius: var(--c-radius-control);
       background: transparent;
     }
     .tcu button {
-      padding: 0 14px;
+      padding: 0 var(--c-space-5);
       color: var(--primary-color);
     }
     .tac {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 12px;
+      gap: var(--c-grid-gap);
+      margin-top: var(--c-space-4);
     }
     .tac button:first-child {
       color: var(--primary-color);
@@ -364,24 +280,17 @@ export const splitAcCardStyles: CSSResultGroup = [
       color: var(--error-color);
     }
     .fb {
-      font-size: 13px;
+      font-size: var(--c-font-base);
       line-height: 1.35;
       color: var(--secondary-text-color);
     }
     .fb:not(:empty) {
-      margin-top: 10px;
+      margin-top: var(--c-space-4);
     }
     .fb.er {
       color: var(--error-color);
     }
-    :is(button, input):focus-visible {
-      outline: 2px solid var(--primary-color);
-      outline-offset: 2px;
-    }
     @container (max-width: 400px) {
-      .w {
-        padding: 12px;
-      }
       .as .a {
         flex-basis: calc(50% - 4px);
       }

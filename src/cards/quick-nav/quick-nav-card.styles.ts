@@ -8,31 +8,31 @@ export const quickNavCardStyles: CSSResultGroup = [
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      min-height: 56px;
+      gap: 8px;
+      min-height: 42px;
     }
     .group {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .chip {
-      min-height: 44px;
+      min-height: 32px;
       border: 1px solid var(--divider-color) !important;
-      border-radius: var(--dashboard-radius-control, 8px);
-      padding: 0 13px !important;
+      border-radius: var(--dashboard-radius-control, 6px);
+      padding: 0 9px !important;
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 5px;
       color: var(--primary-text-color);
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 11.5px;
+      font-weight: 500;
       white-space: nowrap;
     }
     .chip ha-icon,
     .chip ha-state-icon {
       color: var(--primary-color);
-      --mdc-icon-size: 19px;
+      --mdc-icon-size: 15px;
     }
     .chip:disabled {
       cursor: default;

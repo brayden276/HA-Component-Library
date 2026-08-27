@@ -28,8 +28,8 @@ export const actionTileCardStyles: CSSResultGroup = [
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 14px;
-      min-height: 80px;
+      padding: 10px 12px;
+      min-height: 64px;
       box-sizing: border-box;
     }
 
@@ -37,16 +37,16 @@ export const actionTileCardStyles: CSSResultGroup = [
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
 
     .tile-icon-box {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
       background-color: var(
         --secondary-background-color,
         rgba(128, 128, 128, 0.1)
@@ -55,17 +55,21 @@ export const actionTileCardStyles: CSSResultGroup = [
       transition: all 0.25s ease;
     }
 
+    .tile-icon-box ha-icon {
+      --mdc-icon-size: 16px;
+    }
+
     .tile-icon-box.active {
       background-color: var(--tile-active-color);
       color: #ffffff;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
     }
 
     .badge-pill {
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      font-weight: 500;
       background-color: var(
         --secondary-background-color,
         rgba(128, 128, 128, 0.12)

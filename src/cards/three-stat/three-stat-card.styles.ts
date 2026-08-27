@@ -5,11 +5,11 @@ export const threeStatCardStyles: CSSResultGroup = [
   presentationalCardStyles,
   css`
     .wrap {
-      padding: 12px 14px;
+      padding: 8px 11px;
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      min-height: 70px;
+      gap: 8px;
+      min-height: 52px;
       align-items: center;
     }
     .stat {
@@ -34,21 +34,21 @@ export const threeStatCardStyles: CSSResultGroup = [
     }
     .stat:focus-visible {
       outline: 2px solid var(--primary-color);
-      outline-offset: 3px;
-      border-radius: 8px;
+      outline-offset: 2px;
+      border-radius: 6px;
     }
     .value {
-      font-size: 22px;
+      font-size: 16px;
       line-height: 1;
-      font-weight: 650;
-      letter-spacing: -0.025em;
+      font-weight: 500;
+      letter-spacing: -0.02em;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .label {
-      margin-top: 5px;
-      font-size: 10.5px;
+      margin-top: 3px;
+      font-size: 10px;
       line-height: 1.2;
       color: var(--secondary-text-color);
       white-space: nowrap;

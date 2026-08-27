@@ -1,82 +1,47 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import { cardBaseStyles } from "../../styles";
 
 export const homeOverviewCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
   css`
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    * {
-      box-sizing: border-box;
-    }
     ha-card {
-      display: block;
       border: 0;
       box-shadow: none;
       background: transparent;
       overflow: visible;
-      color: var(--primary-text-color);
     }
     .top {
-      min-height: 44px;
+      min-height: var(--c-head-min-height);
       padding: 0 2px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: var(--c-space-3);
     }
     .time {
       min-width: 0;
       white-space: nowrap;
       color: var(--secondary-text-color);
-      font-size: 14px;
-      line-height: 1.2;
-      font-weight: 400;
+      font-size: var(--c-font-base);
+      line-height: var(--c-line-height-normal);
+      font-weight: var(--c-font-weight-normal);
     }
     .weather {
-      appearance: none;
-      border: 0;
-      min-height: 44px;
-      padding: 0;
-      background: transparent;
+      min-height: var(--c-head-min-height);
       color: var(--secondary-text-color);
-      font: inherit;
-      font-size: 13px;
-      line-height: 1.2;
-      font-weight: 400;
+      font-size: var(--c-font-base);
+      line-height: var(--c-line-height-normal);
+      font-weight: var(--c-font-weight-normal);
       white-space: nowrap;
-      cursor: pointer;
+      text-align: right;
     }
     .weather:hover {
       text-decoration: underline;
     }
-    .weather:focus-visible {
-      outline: 2px solid var(--primary-color);
-      outline-offset: 2px;
-      border-radius: 6px;
-    }
     .sections {
-      margin-top: 8px;
+      margin-top: var(--c-space-2);
       display: grid;
-      gap: 16px;
-    }
-    @media (max-width: 520px) {
-      .time {
-        font-size: 13px;
-      }
-      .weather {
-        font-size: 12px;
-      }
-    }
-    @media (max-width: 350px) {
-      .time {
-        font-size: 12px;
-      }
-      .weather {
-        font-size: 11px;
-      }
+      gap: var(--c-space-4);
     }
   `,
 ];

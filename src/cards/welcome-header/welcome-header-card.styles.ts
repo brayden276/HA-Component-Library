@@ -21,29 +21,29 @@ export const welcomeHeaderCardStyles: CSSResultGroup = [
       color: var(--primary-text-color);
     }
     .row {
-      min-height: 44px;
+      min-height: 32px;
       padding: 0 2px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 8px;
     }
     .time {
       min-width: 0;
       white-space: nowrap;
       color: var(--secondary-text-color);
-      font-size: 14px;
+      font-size: 12.5px;
       line-height: 1.2;
       font-weight: 400;
     }
     .weather {
       appearance: none;
       border: 0;
-      min-height: 44px;
+      min-height: 32px;
       padding: 0;
       background: transparent;
       color: var(--secondary-text-color);
-      font-size: 13px;
+      font-size: 11.5px;
       line-height: 1.2;
       font-weight: 400;
       white-space: nowrap;
@@ -56,7 +56,7 @@ export const welcomeHeaderCardStyles: CSSResultGroup = [
     .weather:focus-visible {
       outline: 2px solid var(--primary-color);
       outline-offset: 2px;
-      border-radius: 6px;
+      border-radius: 5px;
     }
     @media (max-width: 520px) {
       .row {
