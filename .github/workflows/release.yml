@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Release Assets for HACS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Full Check Suite
+        run: npm run check
+
+      - name: Verify Build Output
+        run: |
+          test -f dist/ha-component-library.js || (echo "Build output dist/ha-component-library.js is missing!" && exit 1)
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'release'
+        with:
+          files: |
+            dist/ha-component-library.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
