@@ -93,28 +93,36 @@ async function runSmokeTest() {
   const baseUrl = `http://127.0.0.1:${port}`;
   console.log(`Local HTTP test server listening on ${baseUrl}`);
 
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext();
-  const page = await context.newPage();
-
-  const consoleErrors = [];
-  const pageErrors = [];
-
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') {
-      consoleErrors.push(msg.text());
-      console.error(`[Browser Console Error] ${msg.text()}`);
-    } else {
-      // console.log(`[Browser Console ${msg.type()}] ${msg.text()}`);
-    }
-  });
-
-  page.on('pageerror', (err) => {
-    pageErrors.push(err.message);
-    console.error(`[Browser Page Error] ${err.message}`);
-  });
-
+  let browser;
   try {
+    try {
+      browser = await chromium.launch({ headless: true });
+    } catch (launchErr) {
+      if (launchErr.message?.includes("Executable doesn't exist") || launchErr.message?.includes("Please run the following command")) {
+        console.error('\n⚠️ Playwright Chromium browser is not installed.');
+        console.error('To install, run: npx playwright install --with-deps chromium\n');
+      }
+      throw launchErr;
+    }
+
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    const consoleErrors = [];
+    const pageErrors = [];
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+        console.error(`[Browser Console Error] ${msg.text()}`);
+      }
+    });
+
+    page.on('pageerror', (err) => {
+      pageErrors.push(err.message);
+      console.error(`[Browser Page Error] ${err.message}`);
+    });
+
     await page.goto(baseUrl, { waitUntil: 'networkidle' });
 
     // 1. Verify module parsed and loaded
@@ -220,7 +228,7 @@ async function runSmokeTest() {
 
     console.log('=== REAL BROWSER SMOKE TEST PASSED (0 errors) ===');
   } finally {
-    await browser.close();
+    if (browser) await browser.close();
     server.close();
   }
 }
