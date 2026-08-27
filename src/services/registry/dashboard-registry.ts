@@ -6,6 +6,7 @@ import type {
   DashboardRegistryEntry,
   DashboardRegistries,
 } from "../../types/registry";
+import { domainOf } from "../../utils/entity";
 
 export type EntryFilter = (entry: EntityRegistryEntry) => boolean;
 
@@ -274,3 +275,454 @@ export const areaOf = (
     ? registry?.deviceArea?.get(entry.device_id) || null
     : null) ||
   null;
+
+export type ControlResolver = (
+  entry: EntityRegistryEntry,
+  state?: HassEntity | null,
+  registry?: DashboardRegistries | null,
+  hass?: HomeAssistant | null,
+) => Record<string, any> | null;
+
+export interface UserPreferences {
+  order: string[];
+  hidden: string[];
+}
+
+export const splitIdentity = (
+  entry?: EntityRegistryEntry | null,
+  hass?: HomeAssistant | null,
+): string =>
+  `${entry?.entity_id || ""} ${entry?.name || ""} ${entry?.original_name || ""} ${hass?.states?.[entry?.entity_id || ""]?.attributes?.friendly_name || ""}`.toLowerCase();
+
+export const nativeClimateControlConfig = (
+  entry: EntityRegistryEntry,
+  state?: HassEntity | null,
+  registry?: DashboardRegistries | null,
+  hass?: HomeAssistant | null,
+): Record<string, any> | null => {
+  if (domainOf(entry?.entity_id) !== "climate") return null;
+  const areaId = areaOf(entry, registry);
+  const sameDevice = entry.device_id
+    ? registry?.byDevice?.get(entry.device_id) || []
+    : [];
+  const sameArea = areaId
+    ? (registry?.entities || []).filter(
+        (candidate) => areaOf(candidate, registry) === areaId,
+      )
+    : [];
+  const helpers = (registry?.entities || []).filter((candidate) =>
+    ["timer", "script", "scene"].includes(domainOf(candidate?.entity_id)),
+  );
+  const candidates = [
+    ...new Map(
+      [...sameDevice, ...sameArea, ...helpers].map((candidate) => [
+        candidate.entity_id,
+        candidate,
+      ]),
+    ).values(),
+  ].filter((candidate) => hass?.states?.[candidate.entity_id]);
+
+  const climateName = splitIdentity(entry, hass)
+    .replace(/climate\.|split|system|climate|air conditioner|aircon|hvac/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter((part) => part.length > 2);
+
+  const related = (candidate: EntityRegistryEntry) => {
+    const identity = splitIdentity(candidate, hass);
+    return (
+      Boolean(entry.device_id && candidate.device_id === entry.device_id) ||
+      climateName.some((part) => identity.includes(part))
+    );
+  };
+
+  const select = (axis: string) => {
+    const matches = candidates.filter(
+      (candidate) =>
+        domainOf(candidate.entity_id) === "select" &&
+        splitIdentity(candidate, hass).includes(axis) &&
+        /(vane|swing)/.test(splitIdentity(candidate, hass)) &&
+        related(candidate),
+    );
+    return matches.length === 1 ? matches[0].entity_id : null;
+  };
+
+  const timer =
+    candidates.find(
+      (candidate) =>
+        domainOf(candidate.entity_id) === "timer" &&
+        related(candidate) &&
+        /(split|climate|air.?con|hvac|timer)/.test(
+          splitIdentity(candidate, hass),
+        ),
+    )?.entity_id || null;
+
+  const profiles = candidates
+    .filter(
+      (candidate) =>
+        ["script", "scene"].includes(domainOf(candidate.entity_id)) &&
+        related(candidate) &&
+        /(split|climate|air.?con|hvac)/.test(splitIdentity(candidate, hass)),
+    )
+    .map((candidate) => ({
+      entity: candidate.entity_id,
+      name: stateNameOf(hass, candidate, hass?.states?.[candidate.entity_id]),
+    }));
+
+  return {
+    type: "custom:component-split-controller-v4",
+    entity: entry.entity_id,
+    title: stateNameOf(hass, entry, state),
+    vertical_vane_entity: select("vertical"),
+    horizontal_vane_entity: select("horizontal"),
+    timer_entity: timer,
+    profile_entities: profiles,
+  };
+};
+
+const garageOperatorIdentity = (entry?: EntityRegistryEntry | null) =>
+  `${entry?.entity_id || ""} ${entry?.name || ""} ${entry?.original_name || ""}`
+    .toLowerCase()
+    .replace(/[_./-]+/g, " ");
+
+export const garageControl = (
+  entry: EntityRegistryEntry,
+  registry?: DashboardRegistries | null,
+  hass?: HomeAssistant | null,
+): string | null => {
+  if (!entry?.device_id) return null;
+  const buttons = (registry?.byDevice?.get(entry.device_id) || []).filter(
+    (candidate) =>
+      domainOf(candidate?.entity_id) === "button" &&
+      uiEntry(candidate) &&
+      hass?.states?.[candidate.entity_id] &&
+      String(hass.states[candidate.entity_id].state).toLowerCase() !==
+        "unavailable",
+  );
+  const explicit = buttons.filter((candidate) =>
+    /\bgarage\s+door\b.*\b(trigger|operate|operator)\b|\b(trigger|operate|operator)\b.*\bgarage\s+door\b/.test(
+      garageOperatorIdentity(candidate),
+    ),
+  );
+  return explicit.length === 1 ? explicit[0].entity_id : null;
+};
+
+export const appleTvBundle = (
+  entry: EntityRegistryEntry,
+  state?: HassEntity | null,
+  _registry?: DashboardRegistries | null,
+  hass?: HomeAssistant | null,
+): Record<string, any> | null =>
+  domainOf(entry?.entity_id) === "media_player" &&
+  entry?.platform === "apple_tv"
+    ? {
+        type: "custom:component-apple-tv-controller-v1",
+        entity: entry.entity_id,
+        title: stateNameOf(hass, entry, state),
+        icon: "mdi:apple",
+      }
+    : null;
+
+export const controlDomains = new Set([
+  "light",
+  "fan",
+  "switch",
+  "input_boolean",
+  "media_player",
+  "climate",
+  "cover",
+  "lock",
+  "vacuum",
+  "button",
+  "select",
+  "number",
+]);
+
+export const isPotential = (
+  entry: EntityRegistryEntry,
+  state?: HassEntity | null,
+): boolean =>
+  uiEntry(entry) &&
+  (controlDomains.has(domainOf(entry.entity_id)) ||
+    (domainOf(entry.entity_id) === "binary_sensor" &&
+      state?.attributes?.device_class === "garage_door"));
+
+export const isActive = (
+  entry: EntityRegistryEntry,
+  state?: HassEntity | null,
+): boolean => {
+  if (!uiEntry(entry) || !state) return false;
+  const d = domainOf(entry.entity_id);
+  const st = state.state;
+  const a = state.attributes || {};
+  if (["light", "fan", "switch", "input_boolean"].includes(d))
+    return st === "on";
+  if (d === "media_player") {
+    if (["playing", "paused", "buffering", "on"].includes(st)) return true;
+    if (st === "idle") {
+      const v = String(a.media_title || a.app_name || "");
+      return Boolean(
+        v && !/^(idle|home(?: screen)?|default media receiver)$/i.test(v),
+      );
+    }
+    return false;
+  }
+  if (d === "climate")
+    return /^(heat|cool|heat_cool|auto|dry|fan_only)$/.test(st);
+  if (d === "cover") return /^(open|opening|closing)$/.test(st);
+  if (d === "lock") return st === "unlocked";
+  if (d === "vacuum") return /^(cleaning|returning)$/.test(st);
+  if (d === "binary_sensor")
+    return (
+      st === "on" &&
+      /^(door|window|garage_door|smoke|moisture|gas)$/.test(
+        a.device_class || "",
+      )
+    );
+  return false;
+};
+
+export const controlResolvers: ControlResolver[] = [];
+
+export const registerControlResolver = (
+  resolver: ControlResolver,
+): (() => void) => {
+  if (typeof resolver !== "function")
+    throw new TypeError("Dashboard control resolvers must be functions");
+  controlResolvers.push(resolver);
+  return () => {
+    const index = controlResolvers.indexOf(resolver);
+    if (index >= 0) controlResolvers.splice(index, 1);
+  };
+};
+
+export const defaultControlConfig = (
+  entry: EntityRegistryEntry,
+  state?: HassEntity | null,
+  registry?: DashboardRegistries | null,
+  hass?: HomeAssistant | null,
+): Record<string, any> | null => {
+  const id = entry.entity_id;
+  const dom = domainOf(id);
+  if (
+    dom === "binary_sensor" &&
+    state?.attributes?.device_class === "garage_door"
+  ) {
+    const b = garageControl(entry, registry, hass);
+    return b
+      ? {
+          type: "custom:component-garage-door-controller-v1",
+          title: stateNameOf(hass, entry, state).replace(
+            / Garage Door Status$/i,
+            "",
+          ),
+          entity: id,
+          control_entity: b,
+        }
+      : {
+          type: "custom:bubble-card",
+          card_type: "button",
+          button_type: "state",
+          entity: id,
+          show_state: true,
+        };
+  }
+  if (["light", "fan", "number"].includes(dom)) {
+    return {
+      type: "custom:bubble-card",
+      card_type: "button",
+      button_type: "slider",
+      entity: id,
+      show_state: true,
+      tap_action: { action: "more-info" },
+    };
+  }
+  if (["switch", "input_boolean"].includes(dom)) {
+    return {
+      type: "custom:bubble-card",
+      card_type: "button",
+      button_type: "switch",
+      entity: id,
+      show_state: true,
+      button_action: { tap_action: { action: "toggle" } },
+      tap_action: { action: "more-info" },
+    };
+  }
+  if (dom === "media_player") {
+    return (
+      appleTvBundle(entry, state, registry, hass) || {
+        type: "custom:bubble-card",
+        card_type: "media-player",
+        entity: id,
+        show_state: true,
+        tap_action: { action: "more-info" },
+      }
+    );
+  }
+  if (dom === "climate") {
+    return nativeClimateControlConfig(entry, state, registry, hass);
+  }
+  if (dom === "cover") {
+    return {
+      type: "custom:bubble-card",
+      card_type: "cover",
+      entity: id,
+      show_state: true,
+    };
+  }
+  if (dom === "lock") {
+    return { type: "custom:mushroom-lock-card", entity: id };
+  }
+  if (dom === "vacuum") {
+    return { type: "custom:mushroom-vacuum-card", entity: id };
+  }
+  if (dom === "select") {
+    return { type: "custom:mushroom-select-card", entity: id };
+  }
+  if (dom === "button") {
+    return {
+      type: "custom:mushroom-entity-card",
+      entity: id,
+      tap_action: {
+        action: "perform-action",
+        perform_action: "button.press",
+        target: { entity_id: id },
+        confirmation: { text: "Run this control?" },
+      },
+      hold_action: { action: "more-info" },
+    };
+  }
+  if (dom === "binary_sensor") {
+    return {
+      type: "custom:bubble-card",
+      card_type: "button",
+      button_type: "state",
+      entity: id,
+      show_state: true,
+      show_last_changed: false,
+    };
+  }
+  return null;
+};
+
+export const controlConfig = (
+  entry: EntityRegistryEntry,
+  state?: HassEntity | null,
+  registry?: DashboardRegistries | null,
+  hass?: HomeAssistant | null,
+): Record<string, any> | null => {
+  for (const resolveControl of controlResolvers) {
+    const configuration = resolveControl(entry, state, registry, hass);
+    if (configuration) return configuration;
+  }
+  return defaultControlConfig(entry, state, registry, hass);
+};
+
+export const loadPrefs = async (
+  h?: HomeAssistant | null,
+  key?: string | null,
+): Promise<UserPreferences> => {
+  if (!h || !key) return { order: [], hidden: [] };
+  try {
+    const res = await h.callWS<{ value: UserPreferences }>({
+      type: "frontend/get_user_data",
+      key,
+    });
+    return res?.value || { order: [], hidden: [] };
+  } catch {
+    return { order: [], hidden: [] };
+  }
+};
+
+export const savePrefs = (
+  h: HomeAssistant,
+  key: string,
+  value: UserPreferences,
+) => {
+  return h.callWS({ type: "frontend/set_user_data", key, value });
+};
+
+export const applyPrefs = <T extends { id: string }>(
+  items: T[],
+  prefs?: UserPreferences | null,
+): { all: T[]; visible: T[]; hidden: Set<string> } => {
+  const by = new Map(items.map((x) => [x.id, x]));
+  const seen = new Set<string>();
+  const all: T[] = [];
+  for (const id of prefs?.order || []) {
+    const x = by.get(id);
+    if (x) {
+      all.push(x);
+      seen.add(id);
+    }
+  }
+  for (const x of items) {
+    if (!seen.has(x.id)) all.push(x);
+  }
+  const hidden = new Set(prefs?.hidden || []);
+  return { all, visible: all.filter((x) => !hidden.has(x.id)), hidden };
+};
+
+export const createCardElement = async (
+  config: Record<string, any>,
+  hass?: HomeAssistant | null,
+): Promise<HTMLElement> => {
+  const loadCardHelpers =
+    (globalThis as any).loadCardHelpers ||
+    (typeof window !== "undefined"
+      ? (window as any).loadCardHelpers
+      : undefined);
+  if (typeof loadCardHelpers === "function") {
+    try {
+      const helpers = await loadCardHelpers();
+      const card = helpers.createCardElement(config);
+      if (hass) card.hass = hass;
+      return card;
+    } catch {}
+  }
+  const rawType = String(config.type || "");
+  const tag = rawType.startsWith("custom:") ? rawType.slice(7) : rawType;
+  let element: any;
+  if (customElements.get(tag)) {
+    element = document.createElement(tag);
+  } else {
+    const entityId = config.entity || "";
+    const dom = domainOf(entityId);
+    if (dom === "media_player") {
+      element = document.createElement("component-media-row-v2");
+    } else {
+      element = document.createElement("component-control-row-v2");
+    }
+  }
+  if (typeof element.setConfig === "function") {
+    try {
+      element.setConfig(config);
+    } catch {}
+  }
+  if (hass) element.hass = hass;
+  return element;
+};
+
+(globalThis as any).__homeDashboardV2 ??= {};
+const HD2 = (globalThis as any).__homeDashboardV2;
+HD2.REG = centralRegistry;
+HD2.entryFilters = entryFilters;
+HD2.registerEntryFilter = registerEntryFilter;
+HD2.uiEntry = uiEntry;
+HD2.stateName = stateNameOf;
+HD2.areaOf = areaOf;
+HD2.domain = domainOf;
+HD2.controlResolvers = controlResolvers;
+HD2.registerControlResolver = registerControlResolver;
+HD2.nativeClimateControlConfig = nativeClimateControlConfig;
+HD2.garageControl = garageControl;
+HD2.appleTvBundle = appleTvBundle;
+HD2.controlConfig = controlConfig;
+HD2.defaultControlConfig = defaultControlConfig;
+HD2.controlDomains = controlDomains;
+HD2.isPotential = isPotential;
+HD2.isActive = isActive;
+HD2.prefs = loadPrefs;
+HD2.savePrefs = savePrefs;
+HD2.applyPrefs = applyPrefs;
+HD2.card = createCardElement;

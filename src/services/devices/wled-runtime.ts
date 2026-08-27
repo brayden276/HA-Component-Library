@@ -1,6 +1,7 @@
 import type { EntityRegistryEntry } from "../../types/registry";
 import {
   registerEntryFilter,
+  registerControlResolver,
   centralRegistry,
 } from "../registry/dashboard-registry";
 import { domainOf } from "../../utils/entity";
@@ -26,6 +27,16 @@ export const initWledIntegration = (): void => {
     if (domainOf(entry.entity_id) !== "light") return false;
     const name = WLED_NAME(entry);
     return name === "main" || !/_\d+$/.test(String(entry.unique_id || ""));
+  });
+
+  registerControlResolver((entry) => {
+    if (entry?.platform !== "wled" || domainOf(entry.entity_id) !== "light")
+      return null;
+    return {
+      type: "custom:component-wled-controller-v1",
+      entity: entry.entity_id,
+      device_id: entry.device_id,
+    };
   });
 
   centralRegistry.refresh();
