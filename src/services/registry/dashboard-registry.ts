@@ -545,6 +545,17 @@ export const defaultControlConfig = (
 ): Record<string, any> | null => {
   const id = entry.entity_id;
   const dom = domainOf(id);
+
+  if (dom === "climate") {
+    return (
+      nativeClimateControlConfig(entry, state, registry, hass) || {
+        type: "custom:component-split-controller-v4",
+        entity: id,
+        title: stateNameOf(hass, entry, state),
+      }
+    );
+  }
+
   if (
     dom === "binary_sensor" &&
     state?.attributes?.device_class === "garage_door"
@@ -561,88 +572,54 @@ export const defaultControlConfig = (
           control_entity: b,
         }
       : {
-          type: "custom:bubble-card",
-          card_type: "button",
-          button_type: "state",
+          type: "custom:component-control-row-v2",
           entity: id,
-          show_state: true,
+          title: stateNameOf(hass, entry, state),
         };
   }
-  if (["light", "fan", "number"].includes(dom)) {
-    return {
-      type: "custom:bubble-card",
-      card_type: "button",
-      button_type: "slider",
-      entity: id,
-      show_state: true,
-      tap_action: { action: "more-info" },
-    };
-  }
-  if (["switch", "input_boolean"].includes(dom)) {
-    return {
-      type: "custom:bubble-card",
-      card_type: "button",
-      button_type: "switch",
-      entity: id,
-      show_state: true,
-      button_action: { tap_action: { action: "toggle" } },
-      tap_action: { action: "more-info" },
-    };
-  }
+
   if (dom === "media_player") {
     return (
       appleTvBundle(entry, state, registry, hass) || {
-        type: "custom:bubble-card",
-        card_type: "media-player",
+        type: "custom:component-media-row-v2",
         entity: id,
-        show_state: true,
-        tap_action: { action: "more-info" },
+        title: stateNameOf(hass, entry, state),
       }
     );
   }
-  if (dom === "climate") {
-    return nativeClimateControlConfig(entry, state, registry, hass);
-  }
-  if (dom === "cover") {
+
+  if (dom === "camera") {
     return {
-      type: "custom:bubble-card",
-      card_type: "cover",
+      type: "custom:component-camera-controller-v1",
       entity: id,
-      show_state: true,
+      title: stateNameOf(hass, entry, state),
+      device_id: entry.device_id,
     };
   }
-  if (dom === "lock") {
-    return { type: "custom:mushroom-lock-card", entity: id };
-  }
-  if (dom === "vacuum") {
-    return { type: "custom:mushroom-vacuum-card", entity: id };
-  }
-  if (dom === "select") {
-    return { type: "custom:mushroom-select-card", entity: id };
-  }
-  if (dom === "button") {
+
+  if (
+    [
+      "light",
+      "fan",
+      "switch",
+      "input_boolean",
+      "cover",
+      "lock",
+      "vacuum",
+      "button",
+      "select",
+      "number",
+      "binary_sensor",
+    ].includes(dom)
+  ) {
     return {
-      type: "custom:mushroom-entity-card",
+      type: "custom:component-control-row-v2",
       entity: id,
-      tap_action: {
-        action: "perform-action",
-        perform_action: "button.press",
-        target: { entity_id: id },
-        confirmation: { text: "Run this control?" },
-      },
-      hold_action: { action: "more-info" },
+      title: stateNameOf(hass, entry, state),
+      name: stateNameOf(hass, entry, state),
     };
   }
-  if (dom === "binary_sensor") {
-    return {
-      type: "custom:bubble-card",
-      card_type: "button",
-      button_type: "state",
-      entity: id,
-      show_state: true,
-      show_last_changed: false,
-    };
-  }
+
   return null;
 };
 
@@ -708,26 +685,27 @@ export const createCardElement = async (
   config: Record<string, any>,
   hass?: HomeAssistant | null,
 ): Promise<HTMLElement> => {
-  const loadCardHelpers =
-    (globalThis as any).loadCardHelpers ||
-    (typeof window !== "undefined"
-      ? (window as any).loadCardHelpers
-      : undefined);
-  if (typeof loadCardHelpers === "function") {
-    try {
-      const helpers = await loadCardHelpers();
-      const card = helpers.createCardElement(config);
-      if (hass) card.hass = hass;
-      return card;
-    } catch {}
-  }
-  const rawType = String(config.type || "");
+  const rawType = String(config?.type || "");
   const tag = rawType.startsWith("custom:") ? rawType.slice(7) : rawType;
   let element: any;
+
   if (customElements.get(tag)) {
     element = document.createElement(tag);
   } else {
-    const entityId = config.entity || "";
+    const loadCardHelpers =
+      (globalThis as any).loadCardHelpers ||
+      (typeof window !== "undefined"
+        ? (window as any).loadCardHelpers
+        : undefined);
+    if (typeof loadCardHelpers === "function") {
+      try {
+        const helpers = await loadCardHelpers();
+        const card = helpers.createCardElement(config);
+        if (hass) card.hass = hass;
+        return card;
+      } catch {}
+    }
+    const entityId = config?.entity || "";
     const dom = domainOf(entityId);
     if (dom === "media_player") {
       element = document.createElement("component-media-row-v2");
@@ -735,6 +713,7 @@ export const createCardElement = async (
       element = document.createElement("component-control-row-v2");
     }
   }
+
   if (typeof element.setConfig === "function") {
     try {
       element.setConfig(config);

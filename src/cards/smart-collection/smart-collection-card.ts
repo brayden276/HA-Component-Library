@@ -73,6 +73,14 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
 
   public static override styles: CSSResultGroup = smartCollectionCardStyles;
 
+  public override get config(): SmartCollectionConfig | undefined {
+    return this._config;
+  }
+
+  public override set config(value: SmartCollectionConfig | undefined) {
+    if (value) this.setConfig(value);
+  }
+
   public override setConfig(config: SmartCollectionConfig): void {
     super.setConfig({ ...DEFAULTS, ...config });
     this._structureSig = "";
@@ -84,6 +92,7 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
         this._registry = data;
         void this._syncCards();
       });
+      void this._syncCards();
     }
   }
 
@@ -128,9 +137,8 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
           this._registry = data;
           void this._syncCards();
         });
-      } else if (this._config?.mode === "active") {
-        void this._syncCards();
       }
+      void this._syncCards();
       if (this._config?.mode === "active") {
         this._startActiveStateStream();
       }
@@ -261,8 +269,20 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
   }
 
   private _candidates(): EntityRegistryEntry[] {
-    if (!this._registry || !this.hass) return [];
-    const media = this._registry.entities.filter(
+    if (!this.hass) return [];
+    const sourceEntities: EntityRegistryEntry[] =
+      this._registry && this._registry.entities.length > 0
+        ? this._registry.entities
+        : Object.keys(this.hass.states).map((entity_id) => ({
+            entity_id,
+            device_id: null,
+            area_id: null,
+            name:
+              this.hass?.states[entity_id]?.attributes?.friendly_name ||
+              entity_id,
+          }));
+
+    const media = sourceEntities.filter(
       (entry) =>
         uiEntry(entry, this.hass?.states[entry.entity_id]) &&
         domainOf(entry.entity_id) === "media_player" &&
@@ -280,7 +300,7 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
       .filter(Boolean);
     const excluded = new Set(this._config?.exclude_device_names || []);
     const deviceNames = new Map(
-      this._registry.devices.map((d) => [
+      (this._registry?.devices || []).map((d) => [
         d.id,
         d.name_by_user || d.name || "",
       ]),
@@ -288,7 +308,7 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
 
     const climateDevices = new Set<string>();
     const splitOwned = new Set<string>();
-    for (const climate of this._registry.entities.filter(
+    for (const climate of sourceEntities.filter(
       (entry) =>
         domainOf(entry.entity_id) === "climate" &&
         uiEntry(entry, this.hass?.states[entry.entity_id]),
@@ -313,7 +333,7 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
     }
 
     const garageDevices = new Set(
-      this._registry.entities
+      sourceEntities
         .filter(
           (entry) =>
             domainOf(entry.entity_id) === "binary_sensor" &&
@@ -324,7 +344,7 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
         .filter((id): id is string => Boolean(id)),
     );
 
-    const candidates = this._registry.entities.filter((entry) => {
+    const candidates = sourceEntities.filter((entry) => {
       const state = this.hass?.states[entry.entity_id];
       const cameraOwner = this._isCameraOwner(entry);
       const eligible =
@@ -443,7 +463,7 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
   }
 
   private async _syncCards(): Promise<void> {
-    if (!this.hass || !this._registry) return;
+    if (!this.hass) return;
     const gen = ++this._gen;
 
     const candidates = this._candidates().sort((left, right) =>
