@@ -7,6 +7,7 @@ import type {
   DashboardRegistries,
 } from "../../types/registry";
 import { domainOf } from "../../utils/entity";
+import { discoverControls } from "../discovery/discovery-engine";
 
 export type EntryFilter = (entry: EntityRegistryEntry) => boolean;
 
@@ -747,3 +748,4 @@ HD2.prefs = loadPrefs;
 HD2.savePrefs = savePrefs;
 HD2.applyPrefs = applyPrefs;
 HD2.card = createCardElement;
+HD2.discoverControls = discoverControls;

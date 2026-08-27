@@ -381,4 +381,105 @@ describe("Auto Discovery and Control Resolution Contracts", () => {
 
     el.remove();
   });
+
+  it("discoverControls pure function resolves cards, claims subordinate entities and applies mode filters", () => {
+    const mockHass: any = {
+      states: {
+        "climate.bedroom_split": {
+          state: "cool",
+          attributes: { friendly_name: "Bedroom AC" },
+        },
+        "number.bedroom_split_compressor": {
+          state: "50",
+          attributes: { friendly_name: "Compressor" },
+        },
+        "select.bedroom_split_vertical_vane": {
+          state: "swing",
+          attributes: { friendly_name: "Bedroom Split Vertical Vane" },
+        },
+        "light.bedroom_ceiling": {
+          state: "on",
+          attributes: { friendly_name: "Bedroom Ceiling" },
+        },
+        "sensor.bedroom_temp_battery": {
+          state: "88",
+          attributes: { friendly_name: "Bedroom Temp Battery", device_class: "battery" },
+        },
+      },
+    };
+
+    const mockRegistry: any = {
+      entities: [
+        {
+          entity_id: "climate.bedroom_split",
+          device_id: "bedroom-ac-device",
+          area_id: "bedroom",
+          name: "Bedroom AC",
+        },
+        {
+          entity_id: "number.bedroom_split_compressor",
+          device_id: "bedroom-ac-device",
+          area_id: "bedroom",
+          name: "Compressor",
+        },
+        {
+          entity_id: "select.bedroom_split_vertical_vane",
+          device_id: "bedroom-ac-device",
+          area_id: "bedroom",
+          name: "Bedroom Split Vertical Vane",
+        },
+        {
+          entity_id: "light.bedroom_ceiling",
+          device_id: "bedroom-light-device",
+          area_id: "bedroom",
+          name: "Bedroom Ceiling",
+        },
+        {
+          entity_id: "sensor.bedroom_temp_battery",
+          device_id: "bedroom-sensor-device",
+          area_id: "bedroom",
+          name: "Bedroom Temp Battery",
+          device_class: "battery",
+        },
+      ],
+      devices: [
+        { id: "bedroom-ac-device", area_id: "bedroom", name: "Bedroom AC" },
+        { id: "bedroom-light-device", area_id: "bedroom", name: "Bedroom Light" },
+        { id: "bedroom-sensor-device", area_id: "bedroom", name: "Aqara Sensor" },
+      ],
+      deviceArea: new Map([
+        ["bedroom-ac-device", "bedroom"],
+        ["bedroom-light-device", "bedroom"],
+        ["bedroom-sensor-device", "bedroom"],
+      ]),
+      byDevice: new Map([
+        [
+          "bedroom-ac-device",
+          [
+            { entity_id: "climate.bedroom_split" },
+            { entity_id: "number.bedroom_split_compressor" },
+            { entity_id: "select.bedroom_split_vertical_vane" },
+          ],
+        ],
+      ]),
+    };
+
+    const cards = (globalThis as any).__homeDashboardV2.discoverControls
+      ? (globalThis as any).__homeDashboardV2.discoverControls(mockHass, mockRegistry, {
+          mode: "area",
+          area_id: "bedroom",
+        })
+      : [];
+
+    // Should return 2 cards:
+    // 1. component-split-controller-v4 (claims compressor + vertical vane)
+    // 2. component-control-row-v2 (for bedroom ceiling light)
+    // Battery sensor is ignored.
+    expect(cards.length).toBe(2);
+    expect(cards[0].cardConfig.type).toBe("custom:component-split-controller-v4");
+    expect(cards[0].cardConfig.entity).toBe("climate.bedroom_split");
+    expect(cards[0].cardConfig.vertical_vane_entity).toBe("select.bedroom_split_vertical_vane");
+    expect(cards[1].cardConfig.type).toBe("custom:component-control-row-v2");
+    expect(cards[1].cardConfig.entity).toBe("light.bedroom_ceiling");
+  });
 });
