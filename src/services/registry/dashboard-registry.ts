@@ -245,12 +245,53 @@ export const registerEntryFilter = (filter: EntryFilter): (() => void) => {
   };
 };
 
-export const uiEntry = (entry?: EntityRegistryEntry | null): boolean =>
+export const isPeripheralEntity = (
+  entry?: EntityRegistryEntry | null,
+  state?: HassEntity | null,
+): boolean => {
+  if (!entry?.entity_id) return false;
+  if (
+    entry.entity_category === "diagnostic" ||
+    entry.entity_category === "config"
+  ) {
+    return true;
+  }
+  const deviceClass = String(
+    state?.attributes?.device_class || entry.device_class || "",
+  ).toLowerCase();
+  if (
+    [
+      "battery",
+      "signal_strength",
+      "connectivity",
+      "tamper",
+      "update",
+      "problem",
+      "voltage",
+      "current",
+      "power_factor",
+      "duration",
+      "timestamp",
+    ].includes(deviceClass)
+  ) {
+    return true;
+  }
+  const idAndName = `${entry.entity_id} ${entry.name || ""} ${entry.original_name || ""} ${state?.attributes?.friendly_name || ""}`.toLowerCase();
+  return /\b(battery|battery_level|battery_low|battery_state|link_?quality|rssi|signal_strength|lqi|voltage|temp(erature)?_offset|humidity_offset|calibration_offset|firmware|ip_address|mac_address|device_temp(erature)?|cpu_temp(erature)?|ping|keep_alive|reporting_interval|uptime|free_heap|wifi_signal|compressor_speed|compressor_frequency)\b/i.test(
+    idAndName,
+  );
+};
+
+export const uiEntry = (
+  entry?: EntityRegistryEntry | null,
+  state?: HassEntity | null,
+): boolean =>
   Boolean(
     entry?.entity_id &&
       !entry.disabled_by &&
       !entry.hidden_by &&
       !["diagnostic", "config"].includes(entry.entity_category || "") &&
+      !isPeripheralEntity(entry, state) &&
       entryFilters.every((filter) => filter(entry)),
   );
 
@@ -442,7 +483,7 @@ export const isPotential = (
   entry: EntityRegistryEntry,
   state?: HassEntity | null,
 ): boolean =>
-  uiEntry(entry) &&
+  uiEntry(entry, state) &&
   (controlDomains.has(domainOf(entry.entity_id)) ||
     (domainOf(entry.entity_id) === "binary_sensor" &&
       state?.attributes?.device_class === "garage_door"));
@@ -451,7 +492,7 @@ export const isActive = (
   entry: EntityRegistryEntry,
   state?: HassEntity | null,
 ): boolean => {
-  if (!uiEntry(entry) || !state) return false;
+  if (!uiEntry(entry, state) || !state) return false;
   const d = domainOf(entry.entity_id);
   const st = state.state;
   const a = state.attributes || {};
@@ -722,6 +763,7 @@ HD2.defaultControlConfig = defaultControlConfig;
 HD2.controlDomains = controlDomains;
 HD2.isPotential = isPotential;
 HD2.isActive = isActive;
+HD2.isPeripheral = isPeripheralEntity;
 HD2.prefs = loadPrefs;
 HD2.savePrefs = savePrefs;
 HD2.applyPrefs = applyPrefs;

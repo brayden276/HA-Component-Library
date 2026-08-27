@@ -264,7 +264,7 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
     if (!this._registry || !this.hass) return [];
     const media = this._registry.entities.filter(
       (entry) =>
-        uiEntry(entry) &&
+        uiEntry(entry, this.hass?.states[entry.entity_id]) &&
         domainOf(entry.entity_id) === "media_player" &&
         this.hass?.states[entry.entity_id],
     );
@@ -286,17 +286,56 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
       ]),
     );
 
+    const climateDevices = new Set<string>();
+    const splitOwned = new Set<string>();
+    for (const climate of this._registry.entities.filter(
+      (entry) =>
+        domainOf(entry.entity_id) === "climate" &&
+        uiEntry(entry, this.hass?.states[entry.entity_id]),
+    )) {
+      if (climate.device_id) climateDevices.add(climate.device_id);
+      const config = nativeClimateControlConfig(
+        climate,
+        this.hass.states[climate.entity_id],
+        this._registry,
+        this.hass,
+      );
+      for (const entityId of [
+        config?.vertical_vane_entity,
+        config?.horizontal_vane_entity,
+        config?.timer_entity,
+      ].filter(Boolean)) {
+        splitOwned.add(entityId);
+      }
+      for (const profile of config?.profile_entities || []) {
+        if (profile?.entity) splitOwned.add(profile.entity);
+      }
+    }
+
+    const garageDevices = new Set(
+      this._registry.entities
+        .filter(
+          (entry) =>
+            domainOf(entry.entity_id) === "binary_sensor" &&
+            this.hass?.states[entry.entity_id]?.attributes?.device_class ===
+              "garage_door",
+        )
+        .map((entry) => entry.device_id)
+        .filter((id): id is string => Boolean(id)),
+    );
+
     const candidates = this._registry.entities.filter((entry) => {
       const state = this.hass?.states[entry.entity_id];
       const cameraOwner = this._isCameraOwner(entry);
       const eligible =
         this._config?.mode === "sound"
           ? Boolean(entry?.entity_id && !entry.disabled_by)
-          : uiEntry(entry) && (entry.platform !== "onvif" || cameraOwner);
+          : uiEntry(entry, state) && (entry.platform !== "onvif" || cameraOwner);
       if (
         !eligible ||
         !state ||
-        (entry.device_id && excluded.has(deviceNames.get(entry.device_id) || ""))
+        (entry.device_id &&
+          excluded.has(deviceNames.get(entry.device_id) || ""))
       ) {
         return false;
       }
@@ -306,6 +345,25 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
       const controlName = stateNameOf(this.hass, entry, state)
         .trim()
         .toLowerCase();
+
+      // Subordinate controls on a climate/split device are owned by the split controller
+      if (
+        entry.device_id &&
+        climateDevices.has(entry.device_id) &&
+        domain !== "climate"
+      ) {
+        return false;
+      }
+
+      // Explicitly claimed vane/timer/profile entities are suppressed from standalone cards
+      if (splitOwned.has(entry.entity_id)) {
+        return false;
+      }
+
+      // Sibling momentary buttons for garage operators are bundled into the garage card
+      if (this._isGarageTrigger(entry, garageDevices)) {
+        return false;
+      }
 
       if (this._config?.mode === "area") {
         return (
@@ -339,45 +397,7 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
       return false;
     });
 
-    const garageDevices = new Set(
-      candidates
-        .filter(
-          (entry) =>
-            domainOf(entry.entity_id) === "binary_sensor" &&
-            this.hass?.states[entry.entity_id]?.attributes?.device_class ===
-              "garage_door",
-        )
-        .map((entry) => entry.device_id)
-        .filter((id): id is string => Boolean(id)),
-    );
-
-    const splitOwned = new Set<string>();
-    for (const climate of candidates.filter(
-      (entry) => domainOf(entry.entity_id) === "climate",
-    )) {
-      const config = nativeClimateControlConfig(
-        climate,
-        this.hass.states[climate.entity_id],
-        this._registry,
-        this.hass,
-      );
-      for (const entityId of [
-        config?.vertical_vane_entity,
-        config?.horizontal_vane_entity,
-        config?.timer_entity,
-      ].filter(Boolean)) {
-        splitOwned.add(entityId);
-      }
-      for (const profile of config?.profile_entities || []) {
-        if (profile?.entity) splitOwned.add(profile.entity);
-      }
-    }
-
-    return candidates.filter(
-      (entry) =>
-        !this._isGarageTrigger(entry, garageDevices) &&
-        !splitOwned.has(entry.entity_id),
-    );
+    return candidates;
   }
 
   private _shown(entries: EntityRegistryEntry[]): EntityRegistryEntry[] {

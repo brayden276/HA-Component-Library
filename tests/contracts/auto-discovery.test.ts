@@ -256,4 +256,129 @@ describe("Auto Discovery and Control Resolution Contracts", () => {
 
     el.remove();
   });
+
+  it("filters out peripheral entities (battery, linkquality, diagnostic metrics) and climate compressor speed", async () => {
+    const climateEntry = {
+      entity_id: "climate.living_split",
+      device_id: "split-dev",
+      area_id: "living_room",
+      name: "Living Room Split",
+    };
+    const compressorSpeedEntry = {
+      entity_id: "number.living_split_compressor_speed",
+      device_id: "split-dev",
+      area_id: "living_room",
+      name: "Compressor Speed",
+    };
+    const beepSwitchEntry = {
+      entity_id: "switch.living_split_beep",
+      device_id: "split-dev",
+      area_id: "living_room",
+      name: "Beeper Switch",
+    };
+    const tempSensorBattery = {
+      entity_id: "sensor.temp_sensor_battery",
+      device_id: "temp-sensor-dev",
+      area_id: "living_room",
+      name: "Living Room Temp Battery",
+      device_class: "battery",
+    };
+    const tempSensorLinkQuality = {
+      entity_id: "sensor.temp_sensor_linkquality",
+      device_id: "temp-sensor-dev",
+      area_id: "living_room",
+      name: "Living Room Temp Linkquality",
+    };
+    const tempSensorLowBatteryBinary = {
+      entity_id: "binary_sensor.temp_sensor_low_battery",
+      device_id: "temp-sensor-dev",
+      area_id: "living_room",
+      name: "Living Room Temp Battery Low",
+      device_class: "battery",
+    };
+    const lampLight = {
+      entity_id: "light.living_lamp",
+      device_id: "lamp-dev",
+      area_id: "living_room",
+      name: "Living Lamp",
+    };
+
+    const mockHass = createMockHass({
+      states: {
+        "climate.living_split": {
+          state: "heat",
+          attributes: { friendly_name: "Living Room Split", temperature: 22 },
+        } as any,
+        "number.living_split_compressor_speed": {
+          state: "45",
+          attributes: { friendly_name: "Compressor Speed" },
+        } as any,
+        "switch.living_split_beep": {
+          state: "on",
+          attributes: { friendly_name: "Beeper Switch" },
+        } as any,
+        "sensor.temp_sensor_battery": {
+          state: "95",
+          attributes: { friendly_name: "Living Room Temp Battery", device_class: "battery" },
+        } as any,
+        "sensor.temp_sensor_linkquality": {
+          state: "120",
+          attributes: { friendly_name: "Living Room Temp Linkquality" },
+        } as any,
+        "binary_sensor.temp_sensor_low_battery": {
+          state: "off",
+          attributes: { friendly_name: "Living Room Temp Battery Low", device_class: "battery" },
+        } as any,
+        "light.living_lamp": {
+          state: "on",
+          attributes: { friendly_name: "Living Lamp" },
+        } as any,
+      },
+      wsHandler: (msg) => {
+        if (msg.type === "config/area_registry/list") {
+          return [{ area_id: "living_room", name: "Living Room" }];
+        }
+        if (msg.type === "config/device_registry/list") {
+          return [
+            { id: "split-dev", area_id: "living_room", name: "Split AC" },
+            { id: "temp-sensor-dev", area_id: "living_room", name: "Aqara Sensor" },
+            { id: "lamp-dev", area_id: "living_room", name: "Living Lamp" },
+          ];
+        }
+        if (msg.type === "config/entity_registry/list") {
+          return [
+            climateEntry,
+            compressorSpeedEntry,
+            beepSwitchEntry,
+            tempSensorBattery,
+            tempSensorLinkQuality,
+            tempSensorLowBatteryBinary,
+            lampLight,
+          ];
+        }
+        return [];
+      },
+    });
+
+    const el = document.createElement("component-smart-collection-v3") as any;
+    el.setConfig({ mode: "area", area_id: "living_room", title: "Living Room Controls" });
+    el.hass = mockHass;
+    document.body.appendChild(el);
+
+    await centralRegistry.load(mockHass, true);
+    await new Promise((r) => setTimeout(r, 50));
+    await el.updateComplete;
+
+    // Split controller is rendered
+    const splitCard = el.shadowRoot.querySelector("component-split-controller-v4");
+    expect(splitCard).not.toBeNull();
+
+    // Only 1 standalone control row is rendered (light.living_lamp)
+    // No controls rendered for compressor speed, beep switch, temp sensor battery, linkquality, or low battery binary sensor
+    const controlRows = el.shadowRoot.querySelectorAll("component-control-row-v2");
+    expect(controlRows.length).toBe(1);
+    expect(controlRows[0]._config.entity).toBe("light.living_lamp");
+
+    el.remove();
+  });
 });
