@@ -1,85 +1,323 @@
 import { css, CSSResultGroup } from "lit";
-import {
-  cardBaseStyles,
-  headerStyles,
-  rowStyles,
-  iconBoxStyles,
-  buttonStyles,
-  sheetStyles,
-} from "../../styles";
 
-export const roomDirectoryCardStyles: CSSResultGroup = [
-  cardBaseStyles,
-  headerStyles,
-  rowStyles,
-  iconBoxStyles,
-  buttonStyles,
-  sheetStyles,
-  css`
-    ha-card {
-      border: 0;
-      box-shadow: none;
-      background: transparent;
-      overflow: visible;
+export const roomDirectoryCardStyles: CSSResultGroup = css`
+  :host {
+    display: block;
+    min-width: 0;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  ha-card {
+    display: block;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+    overflow: visible;
+    color: var(--primary-text-color);
+  }
+  button {
+    font: inherit;
+    color: inherit;
+  }
+  .head {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+    padding: 0 2px;
+  }
+  .open-view {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 44px;
+    padding: 0;
+    cursor: pointer;
+  }
+  .open-view ha-icon {
+    color: var(--secondary-text-color);
+    --mdc-icon-size: 17px;
+  }
+  .open-view h2 {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.2;
+    font-weight: 500;
+  }
+  .edit,
+  .room-edit {
+    appearance: none;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: var(--dashboard-radius-control, 8px);
+    background: transparent;
+    color: var(--secondary-text-color);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+  .edit ha-icon,
+  .room-edit ha-icon {
+    --mdc-icon-size: 16px;
+  }
+  .edit:hover,
+  .edit:focus-visible,
+  .room-edit:hover,
+  .room-edit:focus-visible,
+  .open-view:focus-visible {
+    background: var(--dashboard-card-muted-surface, var(--secondary-background-color));
+    color: var(--primary-text-color);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .group {
+    grid-column: 1 / -1;
+    min-height: 28px;
+    padding: 3px 2px 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--secondary-text-color);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .group:after {
+    content: "";
+    height: 1px;
+    background: var(--divider-color);
+    flex: 1;
+  }
+  .room {
+    appearance: none;
+    min-width: 0;
+    min-height: 56px;
+    padding: 0 12px 0 10px;
+    border: var(--dashboard-card-border, 1px solid var(--divider-color));
+    border-radius: var(--dashboard-radius-card, 8px);
+    background: var(--dashboard-card-surface, var(--card-background-color));
+    text-align: left;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+  }
+  .room:active {
+    background: var(--dashboard-card-muted-surface, var(--secondary-background-color));
+  }
+  .room:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+  }
+  .ico {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    color: var(--secondary-text-color);
+  }
+  .ico ha-icon {
+    --mdc-icon-size: 19px;
+  }
+  .copy {
+    min-width: 0;
+  }
+  .name,
+  .summary {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .name {
+    font-size: 13px;
+    line-height: 1.25;
+    font-weight: 500;
+  }
+  .summary {
+    margin-top: 3px;
+    font-size: 12px;
+    line-height: 1.25;
+    font-weight: 400;
+    color: var(--secondary-text-color);
+  }
+  .room.active .ico {
+    color: color-mix(in srgb, var(--primary-color) 55%, var(--secondary-text-color));
+  }
+  .room.warning {
+    border-left-color: var(--warning-color, #f9a825);
+  }
+  .room.warning .ico {
+    color: var(--warning-color, #f9a825);
+  }
+  .room.critical {
+    border-left-color: var(--error-color);
+  }
+  .room.critical .ico {
+    color: var(--error-color);
+  }
+  dialog {
+    width: min(720px, calc(100vw - 24px));
+    height: min(760px, calc(100dvh - 32px));
+    min-height: min(560px, calc(100dvh - 32px));
+    margin: auto;
+    padding: 0;
+    border: var(--dashboard-card-border, 1px solid var(--divider-color));
+    border-radius: var(--dashboard-radius-dialog, 10px);
+    background: var(--card-background-color);
+    color: var(--primary-text-color);
+    box-shadow: var(--dashboard-dialog-shadow, 0 16px 48px rgba(0, 0, 0, 0.22));
+    overflow: hidden;
+  }
+  dialog::backdrop {
+    background: var(--dashboard-modal-scrim, rgba(0, 0, 0, 0.16));
+    backdrop-filter: blur(3px);
+  }
+  .sheet {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+    transition: transform 0.18s ease;
+  }
+  .sheet.dragging {
+    transition: none;
+  }
+  .sheet-head {
+    flex: 0 0 auto;
+    min-height: 54px;
+    padding: 5px 6px 5px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--divider-color);
+    touch-action: pan-y;
+  }
+  .identity {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .identity ha-icon {
+    color: var(--secondary-text-color);
+    --mdc-icon-size: 18px;
+  }
+  .sheet-name {
+    font-size: 14px;
+    line-height: 1.2;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .environment {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    min-width: 0;
+    color: var(--secondary-text-color);
+  }
+  .metric {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    min-height: 44px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+    cursor: pointer;
+    color: inherit;
+    font-size: 12px;
+  }
+  .metric ha-icon {
+    --mdc-icon-size: 15px;
+    color: var(--secondary-text-color);
+  }
+  .dot {
+    font-size: 11px;
+    color: var(--disabled-text-color, var(--secondary-text-color));
+  }
+  .close {
+    appearance: none;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--dashboard-radius-control, 8px);
+    background: transparent;
+    color: var(--secondary-text-color);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    flex: 0 0 auto;
+  }
+  .close ha-icon {
+    --mdc-icon-size: 18px;
+  }
+  .sheet-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 10px 14px max(14px, env(safe-area-inset-bottom));
+    touch-action: pan-y;
+  }
+  @media (max-width: 700px) {
+    dialog {
+      width: 100vw;
+      max-width: 100vw;
+      height: 92dvh;
+      min-height: 92dvh;
+      max-height: 92dvh;
+      margin: auto 0 0;
+      border-width: 1px 0 0;
+      border-radius: var(--dashboard-radius-dialog, 8px) var(--dashboard-radius-dialog, 8px) 0 0;
     }
-    .open-view {
-      display: flex;
-      align-items: center;
-      gap: var(--c-space-2);
-      min-height: var(--c-head-min-height);
+    .sheet-head {
+      padding-left: 12px;
     }
-    .open-view ha-icon {
-      color: var(--secondary-text-color);
-      --mdc-icon-size: var(--c-icon-sm-size);
+    .sheet-body {
+      padding: 8px 12px max(18px, env(safe-area-inset-bottom));
     }
-    .open-view h2 {
-      margin: 0;
-      font-size: var(--c-font-lg);
-      line-height: var(--c-line-height-normal);
-      font-weight: var(--c-font-weight-medium);
+  }
+  @media (max-width: 520px) {
+    .identity ha-icon {
+      display: none;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--c-grid-gap);
+    .sheet-head {
+      gap: 5px;
     }
-    .room {
-      min-width: 0;
-      min-height: var(--c-row-min-height);
-      padding: 0 var(--c-space-4) 0 var(--c-space-3);
-      border: var(--c-card-border);
-      border-radius: var(--c-radius-card);
-      background: var(--c-card-surface);
-      text-align: left;
-      display: grid;
-      grid-template-columns: var(--c-icon-box-size) minmax(0, 1fr);
-      align-items: center;
-      gap: var(--c-space-3);
-      cursor: pointer;
+    .environment {
+      gap: 4px;
     }
-    .room:active {
-      background: var(--c-muted-surface);
+    .metric {
+      font-size: 11.5px;
     }
-    .room.active .ico {
-      color: var(--primary-color);
-    }
-    .room.warning {
-      border-left-color: var(--warning-color, #f9a825);
-    }
-    .room.warning .ico {
-      color: var(--warning-color, #f9a825);
-    }
-    .room.critical {
-      border-left-color: var(--error-color);
-    }
-    .room.critical .ico {
-      color: var(--error-color);
-    }
-    .summary {
-      font-weight: var(--c-font-weight-normal);
-    }
+    .room-edit,
     .close {
-      margin-left: auto;
+      width: 44px;
+      height: 44px;
     }
-  `,
-];
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sheet {
+      transition: none;
+    }
+  }
+`;
+

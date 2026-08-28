@@ -9,7 +9,7 @@ import type {
   LovelaceCard,
   LovelaceGridOptions,
 } from "../../types/home-assistant";
-import { interaction, InteractionHandle } from "../../utils/interaction";
+import { InteractionHandle } from "../../utils/interaction";
 import { registerCard } from "../../utils/registration";
 
 const APPLE_TV_REMOTE_COMMANDS = Object.freeze([
@@ -119,11 +119,16 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
   }
 
   private async _remoteCommand(command: string): Promise<void> {
-    if (this._config?.demo || !this.hass || !this._config?.remote_entity)
+    const remoteId =
+      this._config?.remote_entity ||
+      (this._config?.entity?.startsWith("remote.")
+        ? this._config?.entity
+        : this._config?.entity?.replace(/^media_player\./, "remote."));
+    if (this._config?.demo || !this.hass || !remoteId)
       return;
     try {
       await this.hass.callService("remote", "send_command", {
-        entity_id: this._config.remote_entity,
+        entity_id: remoteId,
         command,
       });
     } catch (error) {
@@ -158,52 +163,13 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
     }
   }
 
-  protected override updated(): void {
-    for (const h of this._interactionHandles) h.destroy();
-    this._interactionHandles = [];
-
-    const buttons = this.renderRoot.querySelectorAll(
-      ".remote button[data-cmd]",
-    );
-    buttons.forEach((btn) => {
-      const cmd = (btn as HTMLElement).dataset.cmd;
-      if (cmd) {
-        this._interactionHandles.push(
-          interaction(btn as HTMLElement, {
-            primary: () => this._remoteCommand(cmd),
-            feedback: true,
-          }),
-        );
-      }
-    });
-
-    const setBtn = this.renderRoot.querySelector(
-      ".keyboard-set",
-    ) as HTMLElement | null;
-    const clearBtn = this.renderRoot.querySelector(
-      ".keyboard-clear",
-    ) as HTMLElement | null;
-    if (setBtn) {
-      this._interactionHandles.push(
-        interaction(setBtn, {
-          primary: () => this._keyboardAction("set_keyboard_text"),
-          feedback: true,
-        }),
-      );
-    }
-    if (clearBtn) {
-      this._interactionHandles.push(
-        interaction(clearBtn, {
-          primary: () => this._keyboardAction("clear_keyboard_text"),
-          feedback: true,
-        }),
-      );
-    }
-  }
-
   protected override render(): TemplateResult {
     if (!this._config) return html``;
-    const remoteEntity = this._config.remote_entity;
+    const remoteEntity =
+      this._config.remote_entity ||
+      (this._config.entity?.startsWith("remote.")
+        ? this._config.entity
+        : this._config.entity?.replace(/^media_player\./, "remote."));
     const remote = remoteEntity && this.hass?.states?.[remoteEntity];
     const remoteAvailable =
       this._config.demo ||
@@ -252,6 +218,7 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
                         data-cmd="wakeup"
                         aria-label="Wake"
                         ?disabled=${!remoteAvailable}
+                        @click=${() => this._remoteCommand("wakeup")}
                       >
                         <ha-icon icon="mdi:power-on"></ha-icon>
                         <span>Wake</span>
@@ -261,6 +228,7 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
                         data-cmd="suspend"
                         aria-label="Sleep"
                         ?disabled=${!remoteAvailable}
+                        @click=${() => this._remoteCommand("suspend")}
                       >
                         <ha-icon icon="mdi:power-sleep"></ha-icon>
                         <span>Sleep</span>
@@ -310,6 +278,7 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
                           data-cmd="${cmd}"
                           aria-label="${labelText}"
                           ?disabled=${!remoteAvailable}
+                          @click=${() => this._remoteCommand(cmd)}
                         >
                           <ha-icon icon="${icon}"></ha-icon>
                         </button>
@@ -325,6 +294,7 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
                           data-cmd="${cmd}"
                           aria-label="${labelText}"
                           ?disabled=${!remoteAvailable}
+                          @click=${() => this._remoteCommand(cmd)}
                         >
                           <ha-icon icon="${icon}"></ha-icon>
                           <span>${labelText}</span>
@@ -353,6 +323,7 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
                               type="button"
                               aria-label="Set keyboard text"
                               ?disabled=${!keyboardFocused}
+                              @click=${() => this._keyboardAction("set_keyboard_text")}
                             >
                               <ha-icon icon="mdi:keyboard"></ha-icon>
                             </button>
@@ -361,6 +332,7 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
                               type="button"
                               aria-label="Clear keyboard text"
                               ?disabled=${!keyboardFocused}
+                              @click=${() => this._keyboardAction("clear_keyboard_text")}
                             >
                               <ha-icon icon="mdi:backspace-outline"></ha-icon>
                             </button>

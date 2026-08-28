@@ -155,17 +155,23 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
     const speeds = numberRows.filter((e) => match(e, /\bspeed\b/i));
     const intensities = numberRows.filter((e) => match(e, /\bintensity\b/i));
     const dev = this._registries?.devices?.find((x) => x.id === deviceId);
+    const mainEntity = main?.entity_id || this._config.entity;
+    const effectLights = effectRows.length
+      ? effectRows.map((e) => e.entity_id)
+      : this.hass.states[mainEntity]?.attributes?.effect_list
+        ? [mainEntity]
+        : [];
     const deviceName =
       dev?.name_by_user ||
       dev?.name ||
-      this.hass?.states[main?.entity_id || ""]?.attributes?.friendly_name ||
+      this.hass?.states[mainEntity]?.attributes?.friendly_name ||
       "WLED";
 
     return {
       deviceId: deviceId || undefined,
       deviceName,
-      main: main?.entity_id || this._config.entity,
-      effectLights: effectRows.map((e) => e.entity_id),
+      main: mainEntity,
+      effectLights,
       preset: preset?.entity_id || null,
       palettes: palettes.map((e) => e.entity_id),
       speeds: speeds.map((e) => e.entity_id),
@@ -179,16 +185,16 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
   }
 
   private async _togglePower(): Promise<void> {
-    const id = this._bundle?.main;
+    const id = this._bundle?.main || this._config?.entity;
     const state = id ? this.hass?.states?.[id] : null;
-    if (!id || !state || !this.hass) return;
-    const wasOn = state.state === "on";
+    if (!id || !this.hass) return;
+    const wasOn = state?.state === "on";
     await this.hass.callService("light", "toggle", { entity_id: id });
     await waitForEntityState(
       this.hass,
       id,
       (value) => value === (wasOn ? "off" : "on"),
-      { timeout: 9000 },
+      { timeout: 5000 },
     );
   }
 
@@ -452,7 +458,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
           <span class="ico"
             ><ha-icon icon="mdi:led-strip-variant"></ha-icon
           ></span>
-          <button class="identity" type="button">
+          <button class="identity" type="button" @click=${() => this._openAdvanced(false)}>
             <span class="name">${this.esc(bundle.deviceName)}</span>
             <span class="status">${this.esc(status)}</span>
           </button>
@@ -462,6 +468,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
             aria-label="Toggle WLED"
             ?disabled=${!controllable}
             aria-pressed="${String(on)}"
+            @click=${() => this._togglePower()}
           >
             <ha-icon icon="mdi:power"></ha-icon>
           </button>
@@ -500,6 +507,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                       type="button"
                       ?disabled=${!presetOk}
                       aria-label="WLED presets"
+                      @click=${() => this._openAdvanced(true)}
                     >
                       <ha-icon icon="mdi:bookmark-multiple-outline"></ha-icon>
                       <span>Presets</span>
@@ -509,6 +517,10 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                       type="button"
                       ?disabled=${!effectOk}
                       aria-label="WLED colour"
+                      @click=${() =>
+                        this.moreInfo(
+                          bundle.effectLights?.[0] || bundle.main,
+                        )}
                     >
                       <ha-icon icon="mdi:palette-outline"></ha-icon>
                       <span>Colour</span>
@@ -518,6 +530,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                       type="button"
                       ?disabled=${!(presetOk || effectOk || paletteOk || speedOk || intensityOk)}
                       aria-label="WLED advanced settings"
+                      @click=${() => this._openAdvanced(false)}
                     >
                       <ha-icon icon="mdi:tune-variant"></ha-icon>
                       <span>Advanced</span>

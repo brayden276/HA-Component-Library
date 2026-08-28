@@ -173,6 +173,7 @@ export class ComponentRoomSheetV2 extends LitBaseCard<RoomSheetCardConfig> {
                           data-row="${index}"
                           type="button"
                           aria-label="${this.esc(ariaLabel)}"
+                          @click=${action}
                         >
                           <ha-icon
                             icon="${this.esc(icon)}"

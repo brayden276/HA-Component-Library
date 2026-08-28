@@ -76,8 +76,8 @@ export class ComponentGarageDoorControllerV1 extends LitBaseCard<GarageDoorContr
   }
 
   private _controlEntityId(): string | null {
-    const entityId = String(this._config?.control_entity || "");
-    return entityId.startsWith("button.") ? entityId : null;
+    const entityId = String(this._config?.control_entity || this._config?.entity || "");
+    return entityId || null;
   }
 
   private _status() {
@@ -173,9 +173,22 @@ export class ComponentGarageDoorControllerV1 extends LitBaseCard<GarageDoorContr
     try {
       confirmation = this._waitForConfirmation(expected);
       void confirmation.catch(() => {});
-      await this.hass.callService("button", "press", {
-        entity_id: this._controlEntityId(),
-      });
+
+      const controlId = this._controlEntityId();
+      if (!controlId) return;
+      const domain = controlId.split(".")[0];
+      if (domain === "cover") {
+        await this.hass.callService("cover", "toggle", { entity_id: controlId });
+      } else if (domain === "switch") {
+        await this.hass.callService("switch", "toggle", { entity_id: controlId });
+      } else if (domain === "button") {
+        await this.hass.callService("button", "press", { entity_id: controlId });
+      } else if (domain === "script") {
+        await this.hass.callService("script", "turn_on", { entity_id: controlId });
+      } else {
+        await this.hass.callService("homeassistant", "toggle", { entity_id: controlId });
+      }
+
       if (generation !== this._requestGeneration) return;
       this._pendingLabel =
         expected === "on"
@@ -290,6 +303,7 @@ export class ComponentGarageDoorControllerV1 extends LitBaseCard<GarageDoorContr
               class="identity"
               type="button"
               aria-label="Open details for ${this.esc(name)}"
+              @click=${() => this.moreInfo(this._config?.entity || this._config?.control_entity)}
             >
               <span class="well ${status.notClosed ? "not-closed" : ""}">
                 <ha-icon
@@ -314,6 +328,7 @@ export class ComponentGarageDoorControllerV1 extends LitBaseCard<GarageDoorContr
               type="button"
               ?disabled=${disabled}
               aria-disabled="${String(disabled)}"
+              @click=${() => this._requestAction()}
               aria-label="${
                 status.controllerUnavailable
                   ? "Garage door controller unavailable"

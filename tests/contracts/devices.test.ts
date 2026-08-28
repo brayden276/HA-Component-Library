@@ -82,12 +82,25 @@ describe('Stage 4 Device Controllers Contract Tests', () => {
     el.remove();
   });
 
-  it('component-split-controller-v4 requires climate entity and renders temperature', async () => {
+  it('component-split-controller-v4 requires climate entity and toggles power via service call', async () => {
+    let calledDomain = '';
+    let calledService = '';
+    let calledData: any = null;
+
+    const testHass = {
+      ...hass,
+      callService: async (domain: string, service: string, data: any) => {
+        calledDomain = domain;
+        calledService = service;
+        calledData = data;
+      }
+    };
+
     const el = document.createElement('component-split-controller-v4') as any;
     expect(() => el.setConfig({})).toThrowError('A climate entity is required');
 
     el.setConfig({ entity: 'climate.living_room_split' });
-    el.hass = hass;
+    el.hass = testHass;
     document.body.appendChild(el);
     await el.updateComplete;
 
@@ -95,22 +108,137 @@ describe('Stage 4 Device Controllers Contract Tests', () => {
     expect(el.shadowRoot.textContent).toContain('Living Room Split');
     expect(el.shadowRoot.textContent).toContain('21°');
     expect(el.shadowRoot.textContent).toContain('23°');
+
+    const powerBtn = el.shadowRoot.querySelector('button.power-btn');
+    expect(powerBtn).not.toBeNull();
+    powerBtn.click();
+    await el.updateComplete;
+
+    expect(calledDomain).toBe('climate');
+    expect(calledService).toBe('set_hvac_mode');
+    expect(calledData.entity_id).toBe('climate.living_room_split');
+    expect(calledData.hvac_mode).toBe('off');
+
+    const increaseBtn = el.shadowRoot.querySelector('button.increase');
+    expect(increaseBtn).not.toBeNull();
+    increaseBtn.click();
+    await el.updateComplete;
+    expect(calledDomain).toBe('climate');
+    expect(calledService).toBe('set_temperature');
+    expect(calledData.temperature).toBe(23.5);
+
     el.remove();
   });
 
-  it('component-apple-tv-controller-v1 renders remote when remote_entity is configured', async () => {
+  it('component-wled-controller-v1 toggles power via service call', async () => {
+    let calledDomain = '';
+    let calledService = '';
+    let calledData: any = null;
+
+    const testHass = {
+      ...hass,
+      callService: async (domain: string, service: string, data: any) => {
+        calledDomain = domain;
+        calledService = service;
+        calledData = data;
+      }
+    };
+
+    const el = document.createElement('component-wled-controller-v1') as any;
+    el.setConfig({ entity: 'light.wled_strip' });
+    el.hass = testHass;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const powerBtn = el.shadowRoot.querySelector('button.power');
+    expect(powerBtn).not.toBeNull();
+    powerBtn.click();
+    await el.updateComplete;
+
+    expect(calledDomain).toBe('light');
+    expect(calledService).toBe('toggle');
+    expect(calledData.entity_id).toBe('light.wled_strip');
+    el.remove();
+  });
+
+  it('component-garage-door-controller-v1 triggers action via service call', async () => {
+    let calledDomain = '';
+    let calledService = '';
+    let calledData: any = null;
+
+    const testHass = {
+      ...hass,
+      callService: async (domain: string, service: string, data: any) => {
+        calledDomain = domain;
+        calledService = service;
+        calledData = data;
+      }
+    };
+
+    const el = document.createElement('component-garage-door-controller-v1') as any;
+    el.setConfig({
+      entity: 'binary_sensor.garage_door',
+      control_entity: 'button.garage_door_operator'
+    });
+    el.hass = testHass;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    const actionBtn = el.shadowRoot.querySelector('button.action');
+    expect(actionBtn).not.toBeNull();
+    actionBtn.click();
+    await el.updateComplete;
+
+    expect(calledDomain).toBe('button');
+    expect(calledService).toBe('press');
+    expect(calledData.entity_id).toBe('button.garage_door_operator');
+    el.remove();
+  });
+
+  it('component-apple-tv-controller-v1 renders remote and banner with interactive controls', async () => {
+    let calledDomain = '';
+    let calledService = '';
+    let calledData: any = null;
+
+    const testHass = {
+      ...hass,
+      callService: async (domain: string, service: string, data: any) => {
+        calledDomain = domain;
+        calledService = service;
+        calledData = data;
+      }
+    };
+
     const el = document.createElement('component-apple-tv-controller-v1') as any;
     el.setConfig({
       entity: 'media_player.apple_tv',
       remote_entity: 'remote.apple_tv'
     });
-    el.hass = hass;
+    el.hass = testHass;
     document.body.appendChild(el);
     await el.updateComplete;
 
     expect(el.getCardSize()).toBe(4);
     expect(el.shadowRoot.querySelector('.remote')).not.toBeNull();
     expect(el.shadowRoot.querySelector('.dpad')).not.toBeNull();
+
+    const playPauseBtn = el.shadowRoot.querySelector('.play-pause');
+    if (playPauseBtn) {
+      playPauseBtn.click();
+      await el.updateComplete;
+      expect(calledDomain).toBe('media_player');
+      expect(calledService).toBe('media_play_pause');
+    }
+
+    const wakeBtn = el.shadowRoot.querySelector('button[data-cmd="wakeup"]');
+    if (wakeBtn) {
+      wakeBtn.click();
+      await el.updateComplete;
+      expect(calledDomain).toBe('remote');
+      expect(calledService).toBe('send_command');
+      expect(calledData.command).toBe('wakeup');
+    }
+
     el.remove();
   });
 

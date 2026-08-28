@@ -393,6 +393,21 @@ export class ComponentControlRowV2 extends LitBaseCard<ControlRowCardConfig> {
                   class="i row"
                   type="button"
                   ?disabled=${live && !available}
+                  @click=${() => {
+                    if (!live) {
+                      if (m === "switch") this._on = !this._on;
+                      else if (m === "slider") {
+                        this._val = (this._val + 20) % 120;
+                        if (this._val > 100) this._val = 0;
+                      }
+                    } else if (m === "switch") {
+                      this._toggle(reportedOn);
+                    } else if (m === "action") {
+                      this._serviceAction();
+                    } else {
+                      this.moreInfo(this._config?.entity);
+                    }
+                  }}
                 >
                   ${inner}
                 </button>
