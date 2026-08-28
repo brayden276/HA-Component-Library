@@ -1,55 +1,69 @@
 import { css, CSSResultGroup } from "lit";
-import { presentationalCardStyles } from "../../utils/styles";
+import { cardBaseStyles, feedbackStyles } from "../../styles";
 
 export const noticeCardStyles: CSSResultGroup = [
-  presentationalCardStyles,
+  cardBaseStyles,
+  feedbackStyles,
   css`
     .wrap {
-      padding: 8px 11px;
+      padding: 12px 14px;
       display: grid;
-      grid-template-columns: 28px minmax(0, 1fr);
-      align-items: center;
-      gap: 8px;
+      grid-template-columns: 20px minmax(0, 1fr);
+      align-items: flex-start;
+      gap: 10px;
       min-height: 48px;
+      font-size: 12.5px;
+      line-height: 1.35;
+      border-radius: var(--dashboard-radius-control);
+      background: var(--dashboard-card-muted-surface);
+      color: var(--primary-text-color);
+    }
+    .wrap.warning {
+      background: var(--dashboard-warning-surface);
+      border: 1px solid var(--warning-color);
+      color: var(--warning-color);
+    }
+    .wrap.error,
+    .wrap.critical {
+      background: var(--dashboard-critical-surface);
+      border: 1px solid var(--error-color);
+      color: var(--error-color);
+    }
+    .wrap.success {
+      background: color-mix(
+        in srgb,
+        var(--success-color) 10%,
+        var(--card-background-color)
+      );
+      border: 1px solid var(--success-color);
+      color: var(--success-color);
     }
     .icon {
-      width: 28px;
-      height: 28px;
       display: grid;
       place-items: center;
-      border-radius: 6px;
-      background: var(--secondary-background-color);
-      color: var(--primary-color);
-    }
-    .warning .icon {
-      color: var(--warning-color, var(--primary-color));
-    }
-    .error .icon {
-      color: var(--error-color, var(--primary-color));
-    }
-    .success .icon {
-      color: var(--success-color, var(--primary-color));
+      color: inherit;
     }
     ha-icon {
-      --mdc-icon-size: 16px;
+      --mdc-icon-size: 20px;
     }
     .title {
-      font-size: 12px;
-      font-weight: 500;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.25;
     }
     .message {
       margin-top: 2px;
-      font-size: 10px;
+      font-size: 12px;
       line-height: 1.25;
-      color: var(--secondary-text-color);
+      color: inherit;
+      opacity: 0.9;
     }
     .wrap.actionable {
       cursor: pointer;
     }
     .wrap.actionable:focus-visible {
       outline: 2px solid var(--primary-color);
-      outline-offset: -2px;
-      border-radius: var(--ha-card-border-radius, 16px);
+      outline-offset: 2px;
     }
   `,
 ];

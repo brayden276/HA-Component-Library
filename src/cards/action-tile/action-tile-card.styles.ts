@@ -1,8 +1,11 @@
 import { css, CSSResultGroup } from "lit";
-import { commonCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, badgeProgressStyles, iconWellStyles } from "../../styles";
 
 export const actionTileCardStyles: CSSResultGroup = [
-  commonCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  badgeProgressStyles,
+  iconWellStyles,
   css`
     :host {
       --tile-active-color: var(--primary-color, #03a9f4);
@@ -10,71 +13,67 @@ export const actionTileCardStyles: CSSResultGroup = [
 
     .tile-card {
       height: 100%;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-card);
+      background: var(--dashboard-card-surface);
+      color: var(--primary-text-color);
       transition:
-        transform 0.15s ease,
-        box-shadow 0.15s ease,
-        background-color 0.2s ease;
+        transform 0.12s ease,
+        background-color 0.15s ease;
+      cursor: pointer;
     }
 
     .tile-card.active {
-      background: linear-gradient(
-        135deg,
-        var(--ha-card-background, #ffffff) 60%,
-        rgba(3, 169, 244, 0.08) 100%
-      );
+      background: var(--dashboard-active-surface);
+      border-color: var(--primary-color);
     }
 
     .tile-body {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 10px 12px;
-      min-height: 64px;
+      padding: 12px 14px;
+      min-height: 72px;
       box-sizing: border-box;
+      gap: 8px;
     }
 
     .tile-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 6px;
+      gap: 8px;
     }
 
     .tile-icon-box {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      border-radius: 6px;
-      background-color: var(
-        --secondary-background-color,
-        rgba(128, 128, 128, 0.1)
-      );
-      color: var(--secondary-text-color, #757575);
-      transition: all 0.25s ease;
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--dashboard-radius-control);
+      background-color: var(--secondary-background-color);
+      color: var(--secondary-text-color);
+      transition: all 0.15s ease;
+      flex-shrink: 0;
     }
 
     .tile-icon-box ha-icon {
-      --mdc-icon-size: 16px;
+      --mdc-icon-size: 18px;
     }
 
     .tile-icon-box.active {
-      background-color: var(--tile-active-color);
-      color: #ffffff;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      background-color: var(--primary-color);
+      color: var(--text-primary-color);
     }
 
     .badge-pill {
-      padding: 2px 6px;
-      border-radius: 8px;
-      font-size: 0.7rem;
-      font-weight: 500;
-      background-color: var(
-        --secondary-background-color,
-        rgba(128, 128, 128, 0.12)
-      );
-      color: var(--primary-text-color, #212121);
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 650;
+      background-color: var(--dashboard-card-muted-surface);
+      color: var(--secondary-text-color);
+      border: var(--dashboard-card-border);
     }
 
     .tile-content {
@@ -84,14 +83,13 @@ export const actionTileCardStyles: CSSResultGroup = [
     }
 
     .tile-card.unavailable {
-      opacity: 0.55;
+      opacity: 0.45;
       cursor: not-allowed;
     }
 
     .tile-card:focus-visible {
-      outline: 2px solid var(--primary-color, #03a9f4);
+      outline: 2px solid var(--primary-color);
       outline-offset: 2px;
     }
   `,
 ];
-

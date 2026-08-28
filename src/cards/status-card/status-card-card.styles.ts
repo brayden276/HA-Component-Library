@@ -1,34 +1,36 @@
 import { css, CSSResultGroup } from "lit";
-import { commonCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, controlStyles, iconWellStyles } from "../../styles";
 
 export const statusCardCardStyles: CSSResultGroup = [
-  commonCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  controlStyles,
+  iconWellStyles,
   css`
     .card-body {
       display: flex;
       align-items: center;
-      padding: 12px 16px;
-      gap: 14px;
+      padding: 12px 14px;
+      gap: 12px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-card);
+      background: var(--dashboard-card-surface);
     }
 
     .icon-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background-color: var(
-        --secondary-background-color,
-        rgba(128, 128, 128, 0.1)
-      );
-      color: var(--secondary-text-color, #757575);
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--dashboard-radius-control);
+      background-color: var(--secondary-background-color);
+      color: var(--secondary-text-color);
       flex-shrink: 0;
     }
 
     .icon-container.active {
-      color: var(--primary-color, #03a9f4);
-      background-color: color-mix(in srgb, var(--primary-color, #03a9f4) 12%, transparent);
+      color: var(--primary-color);
+      background-color: var(--dashboard-active-surface);
     }
 
     .icon-container ha-icon {
@@ -44,17 +46,19 @@ export const statusCardCardStyles: CSSResultGroup = [
     }
 
     .primary-title {
-      font-size: 0.95rem;
+      font-size: 13px;
       font-weight: 600;
-      color: var(--primary-text-color, #212121);
+      line-height: 1.25;
+      color: var(--primary-text-color);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .secondary-text {
-      font-size: 0.8rem;
-      color: var(--secondary-text-color, #757575);
+      font-size: 12px;
+      line-height: 1.25;
+      color: var(--secondary-text-color);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -65,7 +69,7 @@ export const statusCardCardStyles: CSSResultGroup = [
       color: var(--state-color, inherit);
     }
 
-    /* Native Custom Toggle Switch */
+    /* Native Custom Toggle Switch adhering to Section 7 */
     .toggle-btn {
       background: none;
       border: none;
@@ -80,49 +84,54 @@ export const statusCardCardStyles: CSSResultGroup = [
     }
 
     .toggle-btn:focus-visible {
-      outline: 2px solid var(--primary-color, #03a9f4);
+      outline: 2px solid var(--primary-color);
       outline-offset: 2px;
-      border-radius: 12px;
+      border-radius: var(--dashboard-radius-control);
     }
 
     .toggle-track {
       position: relative;
-      width: 44px;
-      height: 24px;
-      background-color: var(--divider-color, rgba(128, 128, 128, 0.3));
-      border-radius: 12px;
-      transition: background-color 0.25s ease;
+      width: 38px;
+      height: 22px;
+      background-color: var(--divider-color);
+      border-radius: var(--dashboard-radius-control);
+      padding: 3px;
+      box-sizing: border-box;
+      transition: background-color 0.12s ease;
     }
 
     .toggle-thumb {
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 20px;
-      height: 20px;
-      background-color: #ffffff;
+      display: block;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      background-color: var(--secondary-text-color);
+      transition:
+        transform 0.12s ease,
+        background-color 0.12s ease;
     }
 
-    .card-body.state-unavailable {
-      opacity: 0.55;
+    .toggle-track.active {
+      background-color: color-mix(
+        in srgb,
+        var(--primary-color) 35%,
+        var(--divider-color)
+      );
     }
 
-    ha-card.interactive:focus-visible {
-      outline: 2px solid var(--primary-color, #03a9f4);
-      outline-offset: 2px;
+    .toggle-track.active .toggle-thumb {
+      transform: translateX(16px);
+      background-color: var(--primary-color);
     }
 
-    .toggle-btn:disabled {
+    .status-card.unavailable {
+      opacity: 0.45;
       cursor: not-allowed;
-      opacity: 0.4;
     }
 
-    .toggle-btn.active .toggle-btn:disabled .toggle-track {
-      opacity: 0.5;
+    .status-card:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
     }
   `,
 ];
-

@@ -1,20 +1,14 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, telemetryStyles } from "../../styles";
 
 export const historyGraphCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  telemetryStyles,
   css`
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    ha-card {
-      overflow: hidden;
-      border-radius: var(--ha-card-border-radius, 16px);
-    }
     .wrap {
       box-sizing: border-box;
-      padding: 4px 5px 5px;
+      padding: 6px 8px 8px;
     }
     .top {
       min-height: 44px;
@@ -22,10 +16,10 @@ export const historyGraphCardStyles: CSSResultGroup = [
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      padding: 0 5px;
+      padding: 0 6px;
     }
     .meta {
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--secondary-text-color);
       white-space: nowrap;
@@ -58,18 +52,18 @@ export const historyGraphCardStyles: CSSResultGroup = [
     .legend button:focus-visible {
       outline: 2px solid var(--primary-color);
       outline-offset: 2px;
-      border-radius: 5px;
+      border-radius: var(--dashboard-radius-control);
     }
     .sw {
-      width: 17px;
-      height: 3px;
+      width: 18px;
+      height: 4px;
       border-radius: 999px;
     }
     .s1 {
       background: var(--primary-color);
     }
     .s2 {
-      background: var(--warning-color, #f5b942);
+      background: var(--warning-color);
     }
     .s3 {
       background: var(--secondary-text-color);
@@ -77,7 +71,7 @@ export const historyGraphCardStyles: CSSResultGroup = [
     .chart {
       position: relative;
       width: 100%;
-      height: clamp(400px, 48vw, 520px);
+      height: clamp(380px, 46vw, 500px);
     }
     svg {
       display: block;
@@ -100,93 +94,46 @@ export const historyGraphCardStyles: CSSResultGroup = [
     }
     .grid {
       stroke: var(--divider-color);
-      stroke-width: 1;
-      opacity: 0.58;
+      stroke-width: 1px;
     }
-    .zero {
-      stroke: var(--divider-color);
-      stroke-width: 1.35;
-      opacity: 0.95;
-    }
-    .l1 {
-      fill: none;
-      stroke: var(--primary-color);
-      stroke-width: 3;
-      stroke-linejoin: round;
-      stroke-linecap: round;
-      vector-effect: non-scaling-stroke;
-    }
-    .l2 {
-      fill: none;
-      stroke: var(--warning-color, #f5b942);
-      stroke-width: 2.6;
-      stroke-linejoin: round;
-      stroke-linecap: round;
-      vector-effect: non-scaling-stroke;
-    }
-    .f2 {
-      fill: color-mix(in srgb, var(--warning-color, #f5b942) 12%, transparent);
-    }
-    .l3 {
-      fill: none;
-      stroke: var(--secondary-text-color);
-      stroke-width: 2.2;
-      stroke-linejoin: round;
-      stroke-linecap: round;
-      vector-effect: non-scaling-stroke;
-    }
-    .cursor {
-      stroke: var(--secondary-text-color);
-      stroke-width: 1;
-      stroke-dasharray: 3 3;
-    }
-    .tip {
+    .scrub {
       position: absolute;
-      min-width: 145px;
-      padding: 9px 10px;
-      border-radius: 11px;
-      background: var(--card-background-color);
-      border: 1px solid var(--divider-color);
-      box-shadow: 0 7px 22px rgba(0, 0, 0, 0.2);
+      top: 0;
+      bottom: 24px;
+      width: 1px;
+      background: var(--primary-text-color);
       pointer-events: none;
-      opacity: 0;
-      transform: translate(-50%, -100%);
+      opacity: 0.7;
+    }
+    .tooltip {
+      position: absolute;
+      top: 8px;
+      padding: 8px 12px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
+      background: var(--card-background-color);
+      box-shadow: var(--dashboard-dialog-shadow);
       font-size: 11.5px;
-      line-height: 1.45;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 10;
     }
-    .tip.show {
-      opacity: 1;
-    }
-    .tip b {
-      color: var(--primary-text-color);
+    .tooltip-time {
       font-weight: 650;
+      margin-bottom: 4px;
+      color: var(--primary-text-color);
     }
-    .tr {
+    .tooltip-row {
       display: flex;
-      justify-content: space-between;
-      gap: 14px;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
       color: var(--secondary-text-color);
     }
-    @media (max-width: 700px) {
-      .wrap {
-        padding: 3px;
-      }
-      .legend {
-        gap: 9px;
-      }
-      .legend button,
-      .meta {
-        font-size: 10.5px;
-      }
-      .chart {
-        height: 400px;
-      }
-      .axis {
-        font-size: 10px;
-      }
-      .small {
-        font-size: 9.5px;
-      }
+    .tooltip-val {
+      font-weight: 650;
+      color: var(--primary-text-color);
+      font-variant-numeric: tabular-nums;
     }
   `,
 ];

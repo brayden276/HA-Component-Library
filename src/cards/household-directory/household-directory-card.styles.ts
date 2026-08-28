@@ -1,16 +1,12 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, iconWellStyles, surfaceStyles } from "../../styles";
 
 export const householdDirectoryCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  iconWellStyles,
+  surfaceStyles,
   css`
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    * {
-      box-sizing: border-box;
-    }
     ha-card {
       display: block;
       border: 0;
@@ -32,19 +28,20 @@ export const householdDirectoryCardStyles: CSSResultGroup = [
     .heading {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 8px;
     }
     .title-row ha-icon,
     .heading ha-icon {
       color: var(--secondary-text-color);
-      --mdc-icon-size: 17px;
+      --mdc-icon-size: 18px;
     }
     .title-row h2,
     .heading h2 {
       margin: 0;
       font-size: 15px;
       line-height: 1.2;
-      font-weight: 500;
+      font-weight: 650;
+      color: var(--primary-text-color);
     }
     .list,
     .grid {
@@ -54,35 +51,39 @@ export const householdDirectoryCardStyles: CSSResultGroup = [
     }
     .item {
       appearance: none;
-      min-height: 52px;
-      padding: 8px 10px;
-      border: var(--dashboard-card-border, 1px solid var(--divider-color));
-      border-radius: var(--dashboard-radius-card, 8px);
-      background: var(--dashboard-card-surface, var(--card-background-color));
+      min-height: 56px;
+      padding: 8px 12px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-card);
+      background: var(--dashboard-card-surface);
       color: var(--primary-text-color);
       font: inherit;
       text-align: left;
       display: grid;
-      grid-template-columns: 32px minmax(0, 1fr) auto;
+      grid-template-columns: 36px minmax(0, 1fr) auto;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       cursor: pointer;
     }
     .item:hover {
-      background: var(
-        --dashboard-card-muted-surface,
-        var(--secondary-background-color)
-      );
+      background: var(--dashboard-card-muted-surface);
+    }
+    .item.active {
+      background: var(--dashboard-active-surface);
+      border-color: var(--primary-color);
     }
     .item:focus-visible {
       outline: 2px solid var(--primary-color);
-      outline-offset: 1px;
+      outline-offset: 2px;
     }
     .icon {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--dashboard-radius-control);
+      background: var(--secondary-background-color);
       display: grid;
       place-items: center;
+      flex-shrink: 0;
     }
     .item ha-icon,
     .icon ha-icon {
@@ -97,35 +98,25 @@ export const householdDirectoryCardStyles: CSSResultGroup = [
     .name {
       font-size: 13px;
       font-weight: 600;
+      line-height: 1.25;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--primary-text-color);
+    }
+    .state {
+      margin-top: 3px;
+      font-size: 12px;
+      line-height: 1.25;
+      color: var(--secondary-text-color);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .meta {
-      margin-top: 2px;
-      font-size: 11px;
-      color: var(--secondary-text-color);
-    }
-    .arrow {
-      color: var(--secondary-text-color);
-      display: grid;
-      place-items: center;
-    }
-    .arrow ha-icon {
-      --mdc-icon-size: 18px;
-      color: var(--secondary-text-color);
-    }
-    .empty {
-      margin: 0;
-      padding: 9px 2px;
-      color: var(--secondary-text-color);
-      font-size: 13px;
-      line-height: 1.35;
-    }
-    @media (max-width: 340px) {
+    @media (max-width: 700px) {
       .list,
       .grid {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: 1fr;
       }
     }
   `,

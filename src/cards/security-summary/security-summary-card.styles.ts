@@ -1,41 +1,35 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, buttonStyles, iconWellStyles, surfaceStyles } from "../../styles";
 
 export const securitySummaryCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  buttonStyles,
+  iconWellStyles,
+  surfaceStyles,
   css`
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    ha-card {
-      overflow: hidden;
-      border-radius: var(--ha-card-border-radius, 16px);
-    }
     .wrap {
-      padding: 12px 14px;
+      padding: 14px;
     }
     .top {
       min-height: 44px;
       display: grid;
       grid-template-columns: 40px minmax(0, 1fr) auto;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
     .icon {
       width: 40px;
       height: 40px;
-      border-radius: 12px;
+      border-radius: var(--dashboard-radius-control);
       display: grid;
       place-items: center;
       background: var(--secondary-background-color);
       color: var(--secondary-text-color);
+      flex-shrink: 0;
     }
     .icon ha-icon {
-      --mdc-icon-size: 22px;
+      --mdc-icon-size: 20px;
     }
     .ok .icon {
       color: var(--primary-color);
@@ -48,35 +42,36 @@ export const securitySummaryCardStyles: CSSResultGroup = [
       display: block;
     }
     .title {
-      font-size: 15px;
-      line-height: 1.2;
-      font-weight: 650;
+      font-size: 13px;
+      line-height: 1.25;
+      font-weight: 600;
+      color: var(--primary-text-color);
     }
     .detail {
       margin-top: 3px;
       color: var(--secondary-text-color);
-      font-size: 13px;
-      line-height: 1.3;
+      font-size: 12px;
+      line-height: 1.25;
     }
     .count {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--secondary-text-color);
       white-space: nowrap;
     }
     .attention {
       display: grid;
-      gap: 6px;
-      margin-top: 8px;
+      gap: 8px;
+      margin-top: 10px;
     }
     .attention button {
       appearance: none;
       width: 100%;
       min-height: 44px;
-      padding: 8px 10px;
-      border: 1px solid var(--divider-color);
-      border-radius: 12px;
-      background: transparent;
+      padding: 8px 12px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
+      background: var(--dashboard-card-muted-surface);
       color: inherit;
       font: inherit;
       text-align: left;
@@ -86,7 +81,7 @@ export const securitySummaryCardStyles: CSSResultGroup = [
       cursor: pointer;
     }
     .attention button:hover {
-      background: var(--secondary-background-color);
+      background: var(--dashboard-active-surface);
     }
     .attention button:focus-visible {
       outline: 2px solid var(--primary-color);
@@ -94,25 +89,12 @@ export const securitySummaryCardStyles: CSSResultGroup = [
     }
     .attention ha-icon {
       --mdc-icon-size: 18px;
-      color: var(--warning-color, var(--primary-color));
+      color: var(--warning-color);
     }
     .attention span {
-      font-size: 13px;
-      font-weight: 600;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .error {
-      color: var(--error-color);
-    }
-    @media (max-width: 420px) {
-      .wrap {
-        padding: 12px;
-      }
-      .count {
-        display: none;
-      }
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--primary-text-color);
     }
   `,
 ];

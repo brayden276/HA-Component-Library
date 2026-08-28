@@ -1,60 +1,68 @@
 import { css, CSSResultGroup } from "lit";
-import { presentationalCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, buttonStyles, iconWellStyles, rowListStyles } from "../../styles";
 
 export const actionCardStyles: CSSResultGroup = [
-  presentationalCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  buttonStyles,
+  iconWellStyles,
+  rowListStyles,
   css`
     .wrap {
-      padding: 8px 11px;
+      padding: 10px 14px;
       display: grid;
-      grid-template-columns: 28px minmax(0, 1fr) auto;
+      grid-template-columns: 40px minmax(0, 1fr) auto;
       align-items: center;
-      gap: 8px;
-      min-height: 48px;
+      gap: 12px;
+      min-height: 44px;
     }
     .icon {
-      width: 28px;
-      height: 28px;
+      width: 40px;
+      height: 40px;
       display: grid;
       place-items: center;
-      border-radius: 6px;
+      border-radius: var(--dashboard-radius-control);
       background: var(--secondary-background-color);
       color: var(--primary-color);
+      flex-shrink: 0;
     }
     ha-icon {
-      --mdc-icon-size: 16px;
+      --mdc-icon-size: 20px;
     }
     .title {
-      font-size: 12px;
-      font-weight: 500;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.25;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      color: var(--primary-text-color);
     }
     .desc {
-      margin-top: 2px;
-      font-size: 10px;
+      margin-top: 3px;
+      font-size: 12px;
       color: var(--secondary-text-color);
+      line-height: 1.25;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .action {
-      min-height: 28px;
-      padding: 0 8px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      background: var(--secondary-background-color);
+      min-height: 32px;
+      padding: 0 10px;
+      border-radius: var(--dashboard-radius-control);
+      border: var(--dashboard-card-border);
+      background: var(--dashboard-card-muted-surface);
       color: var(--primary-color);
-      font-size: 10.5px;
-      font-weight: 500;
+      font-size: 11.5px;
+      font-weight: 650;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
       white-space: nowrap;
     }
-    @media (max-width: 700px) {
-      .wrap {
-        padding: 12px;
-      }
+    .action:hover {
+      background: var(--dashboard-active-surface);
     }
     .demo-static {
       width: 100%;

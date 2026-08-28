@@ -1,8 +1,9 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import { cardBaseStyles, separatorStyles } from "../../styles";
 
 export const sectionSeparatorCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  separatorStyles,
   css`
     ha-card {
       background: transparent;
@@ -10,25 +11,31 @@ export const sectionSeparatorCardStyles: CSSResultGroup = [
       box-shadow: none;
     }
     .wrap {
-      padding: 7px 2px 5px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      color: var(--secondary-text-color);
+      gap: 10px;
+      margin: 6px 0;
+      padding: 0 2px;
     }
     .wrap ha-icon {
-      color: var(--primary-color);
-      --mdc-icon-size: 18px;
+      color: var(--secondary-text-color);
+      --mdc-icon-size: 14px;
     }
     .label {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--primary-text-color);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 650;
+      color: var(--secondary-text-color);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
     }
     .line {
+      flex: 1;
       height: 1px;
       background: var(--divider-color);
-      flex: 1;
     }
   `,
 ];

@@ -1,17 +1,10 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles } from "../../styles";
 
 export const metricPairCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  typographyStyles,
   css`
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    ha-card {
-      overflow: hidden;
-      border-radius: var(--ha-card-border-radius, 16px);
-    }
     .wrap {
       box-sizing: border-box;
       padding: 12px 14px;
@@ -38,8 +31,8 @@ export const metricPairCardStyles: CSSResultGroup = [
     }
     button:focus-visible {
       outline: 2px solid var(--primary-color);
-      outline-offset: 4px;
-      border-radius: 8px;
+      outline-offset: 2px;
+      border-radius: var(--dashboard-radius-control);
     }
     .left {
       text-align: left;
@@ -56,18 +49,18 @@ export const metricPairCardStyles: CSSResultGroup = [
       align-items: flex-end;
     }
     .left-value {
-      font-size: 27px;
+      font-size: 20px;
       line-height: 1;
-      font-weight: 650;
-      letter-spacing: -0.035em;
+      font-weight: 550;
+      letter-spacing: -0.02em;
       color: var(--primary-text-color);
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
     }
     .left-label {
-      margin-top: 4px;
-      font-size: 13px;
-      line-height: 1.2;
+      margin-top: 3px;
+      font-size: 12px;
+      line-height: 1.25;
       color: var(--secondary-text-color);
       white-space: nowrap;
     }
@@ -80,13 +73,13 @@ export const metricPairCardStyles: CSSResultGroup = [
       gap: 5px;
       max-width: 100%;
       font-size: 13px;
-      line-height: 1.3;
+      line-height: 1.25;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .right-bottom {
-      margin-top: 4px;
+      margin-top: 3px;
     }
     .right-value,
     .right-primary {
@@ -97,7 +90,7 @@ export const metricPairCardStyles: CSSResultGroup = [
     }
     .right-label,
     .right-secondary {
-      font-weight: 500;
+      font-weight: 400;
       color: var(--secondary-text-color);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -107,13 +100,6 @@ export const metricPairCardStyles: CSSResultGroup = [
         padding: 12px;
         grid-template-columns: minmax(76px, auto) minmax(0, 1fr);
         gap: 12px;
-      }
-      .left-value {
-        font-size: 25px;
-      }
-      .right-top,
-      .right-bottom {
-        font-size: 13px;
       }
     }
   `,

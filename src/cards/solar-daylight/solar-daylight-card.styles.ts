@@ -1,17 +1,10 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles } from "../../styles";
 
 export const solarDaylightCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  typographyStyles,
   css`
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    ha-card {
-      overflow: hidden;
-      border-radius: var(--ha-card-border-radius, 16px);
-    }
     button {
       appearance: none;
       width: 100%;
@@ -20,21 +13,22 @@ export const solarDaylightCardStyles: CSSResultGroup = [
       border: 0;
       background: transparent;
       font: inherit;
-      padding: 12px 14px;
+      padding: 10px 14px;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       align-items: center;
-      gap: 16px;
+      gap: 12px;
       cursor: pointer;
-      font-size: 11.5px;
-      line-height: 1.3;
+      font-size: 12px;
+      line-height: 1.25;
       white-space: nowrap;
       overflow: hidden;
+      color: inherit;
     }
     button:focus-visible {
       outline: 2px solid var(--primary-color);
       outline-offset: -2px;
-      border-radius: var(--ha-card-border-radius, 16px);
+      border-radius: var(--dashboard-radius-card);
     }
     .phase {
       color: var(--primary-text-color);
@@ -56,7 +50,7 @@ export const solarDaylightCardStyles: CSSResultGroup = [
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 18px;
+      gap: 12px;
       min-width: 0;
       color: var(--secondary-text-color);
     }
@@ -66,30 +60,26 @@ export const solarDaylightCardStyles: CSSResultGroup = [
       gap: 4px;
     }
     .cloud-label {
-      font-weight: 500;
+      font-weight: 400;
     }
     .cloud-value {
-      font-weight: 600;
+      font-weight: 650;
       color: var(--primary-text-color);
+      font-variant-numeric: tabular-nums;
     }
     @media (max-width: 900px) {
       button {
         gap: 10px;
-        padding: 11px 12px;
-        font-size: 11px;
+        padding: 10px 12px;
       }
       .clouds {
         gap: 10px;
       }
-      .cloud-item {
-        gap: 3px;
-      }
     }
     @media (max-width: 650px) {
       button {
-        font-size: 11px;
         gap: 6px;
-        padding: 10px;
+        padding: 8px 10px;
       }
       .clouds {
         gap: 7px;

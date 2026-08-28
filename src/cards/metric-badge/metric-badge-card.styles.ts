@@ -1,32 +1,40 @@
 import { css, CSSResultGroup } from "lit";
-import { commonCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, iconWellStyles } from "../../styles";
 
 export const metricBadgeCardStyles: CSSResultGroup = [
-  commonCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  iconWellStyles,
   css`
     .metric-badge-card {
-      border-left: 4px solid var(--badge-accent-color);
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-card);
+      background: var(--dashboard-card-surface);
+      border-left: 3px solid var(--badge-accent-color, var(--primary-color));
+      cursor: pointer;
     }
 
     .metric-body {
-      display: flex;
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr);
       align-items: center;
-      padding: 12px 16px;
+      padding: 12px 14px;
       gap: 12px;
     }
 
     .icon-bubble {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background-color: var(
-        --secondary-background-color,
-        rgba(128, 128, 128, 0.1)
-      );
-      color: var(--badge-accent-color);
+      width: 40px;
+      height: 40px;
+      border-radius: var(--dashboard-radius-control);
+      background: var(--secondary-background-color);
+      color: var(--badge-accent-color, var(--primary-color));
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .icon-bubble ha-icon {
+      --mdc-icon-size: 20px;
     }
 
     .metric-data {
@@ -38,25 +46,29 @@ export const metricBadgeCardStyles: CSSResultGroup = [
     .metric-value-line {
       display: flex;
       align-items: baseline;
-      gap: 3px;
+      gap: 4px;
     }
 
     .value-text {
-      font-size: 1.25rem;
-      font-weight: 700;
-      line-height: 1.1;
-      color: var(--primary-text-color, #212121);
+      font-size: 20px;
+      font-weight: 550;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      color: var(--primary-text-color);
     }
 
     .unit-text {
-      font-size: 0.8rem;
+      font-size: 13px;
       font-weight: 600;
-      color: var(--secondary-text-color, #757575);
+      color: var(--secondary-text-color);
     }
 
     .metric-label {
-      font-size: 0.8rem;
-      color: var(--secondary-text-color, #757575);
+      font-size: 12px;
+      color: var(--secondary-text-color);
+      line-height: 1.25;
+      margin-top: 3px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -67,9 +79,8 @@ export const metricBadgeCardStyles: CSSResultGroup = [
     }
 
     .metric-badge-card:focus-visible {
-      outline: 2px solid var(--primary-color, #03a9f4);
+      outline: 2px solid var(--primary-color);
       outline-offset: 2px;
     }
   `,
 ];
-

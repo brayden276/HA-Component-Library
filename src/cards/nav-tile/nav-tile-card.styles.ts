@@ -1,8 +1,10 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, iconWellStyles } from "../../styles";
 
 export const navTileCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  iconWellStyles,
   css`
     .nav {
       width: 100%;
@@ -10,6 +12,7 @@ export const navTileCardStyles: CSSResultGroup = [
     }
     .wrap {
       min-height: 44px;
+      padding: 8px 12px;
       display: grid;
       grid-template-columns: 28px minmax(0, 1fr);
       align-items: center;
@@ -20,12 +23,12 @@ export const navTileCardStyles: CSSResultGroup = [
       height: 28px;
       display: grid;
       place-items: center;
-      border-radius: var(--dashboard-radius-icon, 5px);
+      border-radius: var(--dashboard-radius-icon);
       background: transparent;
       color: var(--primary-color);
     }
     .icon ha-icon {
-      --mdc-icon-size: 17px;
+      --mdc-icon-size: 18px;
     }
     .nav-static {
       border: 0;

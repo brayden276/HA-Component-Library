@@ -1,18 +1,23 @@
 import { css, CSSResultGroup } from "lit";
-import { updateCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, buttonStyles, iconWellStyles, rowListStyles, badgeProgressStyles } from "../../styles";
 
 export const updateRowCardStyles: CSSResultGroup = [
-  updateCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  buttonStyles,
+  iconWellStyles,
+  rowListStyles,
+  badgeProgressStyles,
   css`
     ha-card {
       position: relative;
     }
     .wrap {
-      min-height: 68px;
+      min-height: 56px;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       padding: 0 14px;
     }
     .details {
@@ -25,7 +30,7 @@ export const updateRowCardStyles: CSSResultGroup = [
       display: grid;
       grid-template-columns: 40px minmax(0, 1fr);
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       cursor: default;
     }
     .details.has-entity {
@@ -38,14 +43,14 @@ export const updateRowCardStyles: CSSResultGroup = [
     .action:focus-visible {
       outline: 2px solid var(--primary-color);
       outline-offset: 2px;
-      border-radius: 10px;
+      border-radius: var(--dashboard-radius-control);
     }
     .icon {
       width: 40px;
       height: 40px;
       display: grid;
       place-items: center;
-      border-radius: 12px;
+      border-radius: var(--dashboard-radius-control);
       background: var(--secondary-background-color);
       color: var(--primary-color);
     }
@@ -62,10 +67,12 @@ export const updateRowCardStyles: CSSResultGroup = [
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      color: var(--primary-text-color);
     }
     .versions {
       margin-top: 3px;
-      font-size: 13px;
+      font-size: 11px;
+      font-family: monospace;
       line-height: 1.3;
       color: var(--secondary-text-color);
       white-space: nowrap;
@@ -82,62 +89,47 @@ export const updateRowCardStyles: CSSResultGroup = [
     .action {
       appearance: none;
       border: 0;
-      min-height: 44px;
-      padding: 0 13px;
-      border-radius: 11px;
+      min-height: 36px;
+      padding: 0 14px;
+      border-radius: var(--dashboard-radius-control);
       background: var(--primary-color);
       color: var(--text-primary-color);
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 650;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     .action:disabled {
       cursor: default;
       background: var(--secondary-background-color);
       color: var(--secondary-text-color);
-      opacity: 1;
+      opacity: 0.6;
     }
     .progress {
       position: absolute;
       left: 0;
+      right: 0;
       bottom: 0;
       height: 3px;
-      border-radius: 0 999px 999px 0;
+      background: var(--divider-color);
+      overflow: hidden;
+    }
+    .progress-bar {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 35%;
       background: var(--primary-color);
-      pointer-events: none;
+      animation: indeterminateSlide 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
-    .progress.determinate {
-      width: var(--progress);
-      transition: width 0.25s ease;
-    }
-    .progress.indeterminate {
-      width: 34%;
-      animation: update-slide 1.15s ease-in-out infinite;
-    }
-    @keyframes update-slide {
+    @keyframes indeterminateSlide {
       0% {
-        transform: translateX(-105%);
-      }
-      50% {
-        transform: translateX(150%);
+        left: -35%;
       }
       100% {
-        transform: translateX(305%);
-      }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .progress.indeterminate {
-        animation: none;
-        width: 100%;
-        opacity: 0.55;
-      }
-      .progress.determinate {
-        transition: none;
-      }
-    }
-    @media (max-width: 700px) {
-      .wrap {
-        padding: 0 12px;
+        left: 100%;
       }
     }
   `,

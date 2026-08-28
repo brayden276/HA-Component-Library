@@ -1,9 +1,9 @@
 import { css, CSSResultGroup } from "lit";
-import { cardBaseStyles, headerStyles } from "../../styles";
+import { cardBaseStyles, typographyStyles } from "../../styles";
 
 export const smartCollectionCardStyles: CSSResultGroup = [
   cardBaseStyles,
-  headerStyles,
+  typographyStyles,
   css`
     ha-card {
       border: 0;
@@ -13,23 +13,24 @@ export const smartCollectionCardStyles: CSSResultGroup = [
     }
     .body {
       display: grid;
-      gap: var(--c-card-gap);
+      gap: 8px;
       min-width: 0;
     }
     .empty {
-      min-height: 38px;
-      padding: var(--c-card-padding-dense);
-      border: var(--c-card-border);
-      border-radius: var(--c-radius-card);
+      min-height: 48px;
+      padding: 12px 14px;
+      border: 1px dashed var(--dashboard-card-border-color);
+      border-radius: var(--dashboard-radius-card);
       color: var(--secondary-text-color);
-      font-size: var(--c-font-base);
+      font-size: 12px;
       display: flex;
       align-items: center;
-      gap: var(--c-space-2);
+      justify-content: center;
+      gap: 8px;
     }
     .empty ha-icon {
       color: var(--secondary-text-color);
-      --mdc-icon-size: var(--c-icon-sm-size);
+      --mdc-icon-size: 18px;
     }
   `,
 ];

@@ -1,47 +1,48 @@
 import { css, CSSResultGroup } from "lit";
 import {
   cardBaseStyles,
-  rowStyles,
-  iconBoxStyles,
+  typographyStyles,
+  rowListStyles,
+  iconWellStyles,
   buttonStyles,
+  iconButtonStyles,
 } from "../../styles";
 
 export const mediaRowCardStyles: CSSResultGroup = [
   cardBaseStyles,
-  rowStyles,
-  iconBoxStyles,
+  typographyStyles,
+  rowListStyles,
+  iconWellStyles,
   buttonStyles,
+  iconButtonStyles,
   css`
     .buttons {
       display: flex;
-      gap: var(--c-space-1);
+      gap: 6px;
+      align-items: center;
     }
     .btn {
       position: relative;
       width: 36px;
       height: 36px;
-      border: 0 !important;
-      border-radius: var(--c-radius-control) !important;
-      background: transparent !important;
+      border: var(--dashboard-card-border) !important;
+      border-radius: var(--dashboard-radius-control) !important;
+      background: var(--dashboard-card-muted-surface) !important;
       display: grid;
       place-items: center;
       color: var(--secondary-text-color);
       padding: 0 !important;
+      cursor: pointer;
     }
-    .btn:before {
-      content: "";
-      position: absolute;
-      width: 26px;
-      height: 26px;
-      border: 1px solid var(--c-card-border-color);
-      border-radius: var(--c-radius-control);
+    .btn:hover {
+      background: var(--dashboard-active-surface) !important;
     }
     .btn.main {
       color: var(--primary-color);
     }
     .btn ha-icon {
       position: relative;
-      --mdc-icon-size: var(--c-icon-sm-size);
+      --mdc-icon-size: 18px;
     }
   `,
 ];

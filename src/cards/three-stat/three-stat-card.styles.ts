@@ -1,15 +1,16 @@
 import { css, CSSResultGroup } from "lit";
-import { presentationalCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles } from "../../styles";
 
 export const threeStatCardStyles: CSSResultGroup = [
-  presentationalCardStyles,
+  cardBaseStyles,
+  typographyStyles,
   css`
     .wrap {
-      padding: 8px 11px;
+      padding: 12px 14px;
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
-      min-height: 52px;
+      min-height: 56px;
       align-items: center;
     }
     .stat {
@@ -35,21 +36,23 @@ export const threeStatCardStyles: CSSResultGroup = [
     .stat:focus-visible {
       outline: 2px solid var(--primary-color);
       outline-offset: 2px;
-      border-radius: 6px;
+      border-radius: var(--dashboard-radius-control);
     }
     .value {
       font-size: 16px;
       line-height: 1;
-      font-weight: 500;
+      font-weight: 550;
       letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      color: var(--primary-text-color);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .label {
       margin-top: 3px;
-      font-size: 10px;
-      line-height: 1.2;
+      font-size: 12px;
+      line-height: 1.25;
       color: var(--secondary-text-color);
       white-space: nowrap;
       overflow: hidden;
@@ -58,13 +61,6 @@ export const threeStatCardStyles: CSSResultGroup = [
     @media (max-width: 700px) {
       .wrap {
         padding: 12px;
-        gap: 8px;
-      }
-      .value {
-        font-size: 20px;
-      }
-      .label {
-        font-size: 10px;
       }
     }
     .stat:not(button) {

@@ -1,17 +1,20 @@
 import { css, CSSResultGroup } from "lit";
-import { presentationalCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, buttonStyles, iconWellStyles } from "../../styles";
 
 export const deviceDiscoveryCardStyles: CSSResultGroup = [
-  presentationalCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  buttonStyles,
+  iconWellStyles,
   css`
     .card {
       padding: 4px 14px;
     }
     .summary,
     .state {
-      min-height: 64px;
+      min-height: 56px;
       display: grid;
-      grid-template-columns: 38px minmax(0, 1fr) auto;
+      grid-template-columns: 40px minmax(0, 1fr) auto;
       align-items: center;
       gap: 12px;
     }
@@ -19,13 +22,14 @@ export const deviceDiscoveryCardStyles: CSSResultGroup = [
       padding: 8px 0;
     }
     .icon {
-      width: 38px;
-      height: 38px;
+      width: 40px;
+      height: 40px;
       display: grid;
       place-items: center;
-      border-radius: 12px;
+      border-radius: var(--dashboard-radius-control);
       background: var(--secondary-background-color);
       color: var(--primary-color);
+      flex-shrink: 0;
     }
     ha-icon {
       --mdc-icon-size: 20px;
@@ -33,15 +37,16 @@ export const deviceDiscoveryCardStyles: CSSResultGroup = [
     .title {
       font-size: 13px;
       line-height: 1.25;
-      font-weight: 650;
+      font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      color: var(--primary-text-color);
     }
     .description {
-      margin-top: 4px;
-      font-size: 13px;
-      line-height: 1.35;
+      margin-top: 3px;
+      font-size: 12px;
+      line-height: 1.25;
       color: var(--secondary-text-color);
       white-space: nowrap;
       overflow: hidden;
@@ -51,33 +56,31 @@ export const deviceDiscoveryCardStyles: CSSResultGroup = [
     .review,
     .retry {
       appearance: none;
-      min-width: 44px;
-      min-height: 44px;
-      border: 0;
-      border-radius: 12px;
-      background: var(--secondary-background-color);
+      min-height: 36px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
+      background: var(--dashboard-card-muted-surface);
       color: var(--primary-color);
       font: inherit;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 650;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     .refresh {
-      width: 44px;
+      width: 36px;
       padding: 0;
-      display: grid;
-      place-items: center;
     }
     .review,
     .retry {
       padding: 0 12px;
-      display: grid;
-      place-items: center;
     }
-    .refresh:active,
-    .review:active,
-    .retry:active {
-      transform: scale(0.98);
+    .refresh:hover,
+    .review:hover,
+    .retry:hover {
+      background: var(--dashboard-active-surface);
     }
     .refresh:focus-visible,
     .review:focus-visible,
@@ -86,9 +89,9 @@ export const deviceDiscoveryCardStyles: CSSResultGroup = [
       outline-offset: 2px;
     }
     .row {
-      min-height: 64px;
+      min-height: 56px;
       display: grid;
-      grid-template-columns: 38px minmax(0, 1fr) auto;
+      grid-template-columns: 40px minmax(0, 1fr) auto;
       align-items: center;
       gap: 12px;
       border-top: 1px solid var(--divider-color);
@@ -99,44 +102,21 @@ export const deviceDiscoveryCardStyles: CSSResultGroup = [
     button.row {
       appearance: none;
       width: 100%;
+      border-left: 0;
       border-right: 0;
       border-bottom: 0;
-      border-left: 0;
       background: transparent;
       color: inherit;
       font: inherit;
       text-align: left;
       cursor: pointer;
     }
+    button.row:hover {
+      background: var(--dashboard-card-muted-surface);
+    }
     button.row:focus-visible {
       outline: 2px solid var(--primary-color);
       outline-offset: -2px;
-      border-radius: 8px;
-    }
-    .more {
-      min-height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-top: 1px solid var(--divider-color);
-      color: var(--secondary-text-color);
-      font-size: 13px;
-    }
-    .error .icon {
-      color: var(--error-color, var(--primary-color));
-    }
-    .success .icon {
-      color: var(--success-color, var(--primary-color));
-    }
-    @media (max-width: 700px) {
-      .card {
-        padding: 4px 12px;
-      }
-      .summary,
-      .state,
-      .row {
-        gap: 10px;
-      }
     }
   `,
 ];

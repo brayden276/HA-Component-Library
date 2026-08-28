@@ -1,11 +1,13 @@
 import { css, CSSResultGroup } from "lit";
-import { presentationalCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, badgeProgressStyles } from "../../styles";
 
 export const progressCardStyles: CSSResultGroup = [
-  presentationalCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  badgeProgressStyles,
   css`
     .wrap {
-      padding: 8px 11px;
+      padding: 12px 14px;
       min-height: 56px;
     }
     .head {
@@ -17,29 +19,33 @@ export const progressCardStyles: CSSResultGroup = [
     .value {
       font-size: 20px;
       line-height: 1;
-      font-weight: 500;
-      letter-spacing: -0.025em;
+      font-weight: 550;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      color: var(--primary-text-color);
     }
     .label {
-      margin-top: 2px;
-      font-size: 10.5px;
+      margin-top: 3px;
+      font-size: 12px;
+      line-height: 1.25;
       color: var(--secondary-text-color);
     }
     .target {
       text-align: right;
-      font-size: 10.5px;
+      font-size: 11.5px;
       color: var(--secondary-text-color);
       white-space: nowrap;
     }
     .target b {
-      font-weight: 500;
+      font-weight: 650;
       color: var(--primary-text-color);
+      font-variant-numeric: tabular-nums;
     }
     .track {
-      height: 4px;
+      height: 5px;
       margin-top: 8px;
       border-radius: 999px;
-      background: var(--secondary-background-color);
+      background: var(--divider-color);
       overflow: hidden;
     }
     .fill {
@@ -51,20 +57,14 @@ export const progressCardStyles: CSSResultGroup = [
       .wrap {
         padding: 12px;
       }
-      .value {
-        font-size: 25px;
-      }
-      .target {
-        font-size: 11px;
-      }
     }
     .wrap.actionable {
       cursor: pointer;
     }
     .wrap.actionable:focus-visible {
       outline: 2px solid var(--primary-color);
-      outline-offset: -2px;
-      border-radius: var(--ha-card-border-radius, 16px);
+      outline-offset: 2px;
+      border-radius: var(--dashboard-radius-control);
     }
   `,
 ];

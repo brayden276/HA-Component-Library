@@ -1,16 +1,12 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, iconWellStyles, surfaceStyles } from "../../styles";
 
 export const securityEntryPointsCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  iconWellStyles,
+  surfaceStyles,
   css`
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    * {
-      box-sizing: border-box;
-    }
     .head {
       min-height: 32px;
       padding: 0 2px;
@@ -22,7 +18,8 @@ export const securityEntryPointsCardStyles: CSSResultGroup = [
       margin: 0;
       font-size: 15px;
       line-height: 1.2;
-      font-weight: 600;
+      font-weight: 650;
+      color: var(--primary-text-color);
     }
     .list {
       display: grid;
@@ -32,22 +29,26 @@ export const securityEntryPointsCardStyles: CSSResultGroup = [
     .entry {
       appearance: none;
       min-width: 0;
-      min-height: 60px;
-      padding: 8px 10px;
-      border: 1px solid var(--divider-color);
-      border-radius: var(--ha-card-border-radius, 12px);
-      background: var(--card-background-color);
+      min-height: 56px;
+      padding: 8px 12px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
+      background: var(--dashboard-card-muted-surface);
       color: var(--primary-text-color);
       font: inherit;
       text-align: left;
       display: grid;
       grid-template-columns: 36px minmax(0, 1fr);
       align-items: center;
-      gap: 9px;
+      gap: 10px;
       cursor: pointer;
     }
     .entry:hover {
-      background: var(--secondary-background-color);
+      background: var(--dashboard-card-surface);
+    }
+    .entry.open {
+      border-color: var(--warning-color);
+      background: var(--dashboard-warning-surface);
     }
     .entry:focus-visible {
       outline: 2px solid var(--primary-color);
@@ -56,15 +57,18 @@ export const securityEntryPointsCardStyles: CSSResultGroup = [
     .icon {
       width: 36px;
       height: 36px;
+      border-radius: var(--dashboard-radius-control);
+      background: var(--secondary-background-color);
       display: grid;
       place-items: center;
       color: var(--secondary-text-color);
+      flex-shrink: 0;
     }
     .open .icon {
-      color: var(--warning-color, var(--primary-color));
+      color: var(--warning-color);
     }
     .icon ha-icon {
-      --mdc-icon-size: 21px;
+      --mdc-icon-size: 20px;
     }
     .copy {
       min-width: 0;
@@ -78,11 +82,13 @@ export const securityEntryPointsCardStyles: CSSResultGroup = [
     }
     .name {
       font-size: 13px;
-      font-weight: 650;
+      font-weight: 600;
+      line-height: 1.25;
     }
     .state {
       margin-top: 3px;
-      font-size: 13px;
+      font-size: 12px;
+      line-height: 1.25;
       color: var(--secondary-text-color);
     }
     @media (max-width: 700px) {

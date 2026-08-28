@@ -1,18 +1,18 @@
 import { css, CSSResultGroup } from "lit";
 import {
   cardBaseStyles,
-  headerStyles,
-  rowStyles,
-  iconBoxStyles,
+  typographyStyles,
+  surfaceStyles,
   buttonStyles,
+  iconWellStyles,
 } from "../../styles";
 
 export const favouritesCardStyles: CSSResultGroup = [
   cardBaseStyles,
-  headerStyles,
-  rowStyles,
-  iconBoxStyles,
+  typographyStyles,
+  surfaceStyles,
   buttonStyles,
+  iconWellStyles,
   css`
     ha-card {
       border: 0;
@@ -23,68 +23,137 @@ export const favouritesCardStyles: CSSResultGroup = [
     .wrap {
       padding: 0;
     }
+    .head {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      padding: 0 2px;
+    }
+    .heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .heading ha-icon {
+      color: var(--secondary-text-color);
+      --mdc-icon-size: 18px;
+    }
+    .heading h2 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.2;
+      font-weight: 650;
+      color: var(--primary-text-color);
+    }
     .grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--c-grid-gap);
+      gap: 8px;
       max-width: 448px;
     }
     .item {
       position: relative;
       min-width: 0;
-      min-height: 42px;
+      min-height: 48px;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      border: var(--c-card-border);
-      border-radius: var(--c-radius-card);
-      background: var(--c-card-surface);
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-card);
+      background: var(--dashboard-card-surface);
       overflow: hidden;
+      color: var(--primary-text-color);
     }
     .main {
       min-width: 0;
-      min-height: 42px;
-      padding: 4px 6px;
+      min-height: 48px;
+      padding: 6px 10px;
       text-align: left;
       background: transparent;
       display: grid;
-      grid-template-columns: 26px minmax(0, 1fr);
+      grid-template-columns: 28px minmax(0, 1fr);
       align-items: center;
-      gap: var(--c-space-2);
+      gap: 8px;
+      cursor: pointer;
     }
     .item.has-quick .main {
-      padding-right: 2px;
+      padding-right: 4px;
     }
-    .main:active,
-    .quick:active {
-      background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+    .main:hover,
+    .quick:hover {
+      background: var(--dashboard-card-muted-surface);
     }
     .item.active {
-      background: var(--c-active-surface);
-      box-shadow: inset 2px 0 0 var(--primary-color);
+      background: var(--dashboard-active-surface);
+      border-color: var(--primary-color);
     }
     .item.active .state {
       color: var(--primary-color);
-      font-weight: var(--c-font-weight-medium);
+      font-weight: 600;
     }
     .item.unavailable {
-      opacity: 0.55;
+      opacity: 0.45;
     }
     .quick {
-      width: 36px;
-      min-height: 42px;
-      border-left: 1px solid var(--c-card-border-color);
+      width: 40px;
+      min-height: 48px;
+      border-left: 1px solid var(--divider-color);
+      display: grid;
+      place-items: center;
+      color: var(--secondary-text-color);
+      cursor: pointer;
+    }
+    .icon {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      color: var(--primary-color);
+    }
+    .icon ha-icon {
+      --mdc-icon-size: 18px;
+    }
+    .copy {
+      min-width: 0;
+    }
+    .name {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--primary-text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .state {
+      display: block;
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--secondary-text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .empty,
     .load-error {
       grid-column: 1 / -1;
-      min-height: 38px;
-      padding: var(--c-card-padding-dense);
-      border: 1px dashed var(--c-card-border-color);
-      border-radius: var(--c-radius-card);
+      min-height: 48px;
+      padding: 12px 14px;
+      border: 1px dashed var(--dashboard-card-border-color);
+      border-radius: var(--dashboard-radius-card);
       background: transparent;
       color: var(--secondary-text-color);
-      font-size: var(--c-font-base);
-      line-height: var(--c-line-height-relaxed);
+      font-size: 12px;
+      line-height: 1.35;
+      text-align: center;
+    }
+    @media (max-width: 520px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
     }
   `,
 ];

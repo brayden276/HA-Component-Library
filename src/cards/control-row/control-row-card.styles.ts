@@ -1,16 +1,18 @@
 import { css, CSSResultGroup } from "lit";
 import {
   cardBaseStyles,
-  rowStyles,
-  iconBoxStyles,
+  typographyStyles,
+  rowListStyles,
+  iconWellStyles,
   buttonStyles,
   controlStyles,
 } from "../../styles";
 
 export const controlRowCardStyles: CSSResultGroup = [
   cardBaseStyles,
-  rowStyles,
-  iconBoxStyles,
+  typographyStyles,
+  rowListStyles,
+  iconWellStyles,
   buttonStyles,
   controlStyles,
   css`

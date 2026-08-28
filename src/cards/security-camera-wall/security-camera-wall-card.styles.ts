@@ -1,22 +1,13 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, badgeProgressStyles } from "../../styles";
 
 export const securityCameraWallCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  badgeProgressStyles,
   css`
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    ha-card {
-      overflow: hidden;
-      border-radius: var(--ha-card-border-radius, 16px);
-    }
     .wrap {
-      padding: 12px 14px 14px;
+      padding: 14px;
     }
     .head {
       min-height: 32px;
@@ -24,16 +15,17 @@ export const securityCameraWallCardStyles: CSSResultGroup = [
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     h2 {
       margin: 0;
       font-size: 15px;
       line-height: 1.2;
-      font-weight: 600;
+      font-weight: 650;
+      color: var(--primary-text-color);
     }
     .meta {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--secondary-text-color);
     }
     .grid {
@@ -46,7 +38,7 @@ export const securityCameraWallCardStyles: CSSResultGroup = [
       display: grid;
       place-items: center;
       color: var(--secondary-text-color);
-      font-size: 13px;
+      font-size: 12.5px;
     }
     .empty[hidden] {
       display: none;
@@ -54,9 +46,9 @@ export const securityCameraWallCardStyles: CSSResultGroup = [
     .tile {
       min-width: 0;
       overflow: hidden;
-      border: 1px solid var(--divider-color);
-      border-radius: var(--ha-card-border-radius, 12px);
-      background: var(--secondary-background-color);
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
+      background: var(--dashboard-card-muted-surface);
     }
     button {
       appearance: none;
@@ -72,7 +64,7 @@ export const securityCameraWallCardStyles: CSSResultGroup = [
       aspect-ratio: 16/9;
       overflow: hidden;
       padding: 0;
-      background: var(--dashboard-media-surface, #111);
+      background: #111;
       cursor: pointer;
     }
     .snapshot {
@@ -87,103 +79,44 @@ export const securityCameraWallCardStyles: CSSResultGroup = [
       position: absolute;
       right: 8px;
       bottom: 8px;
-      min-height: 32px;
-      padding: 0 9px;
+      padding: 3px 8px;
       border-radius: 999px;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 5px;
-      background: color-mix(
-        in srgb,
-        var(--dashboard-media-surface, #111) 78%,
-        transparent
-      );
-      color: var(--dashboard-media-on-surface, #fff);
-      font-size: 12px;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      color: #ffffff;
+      font-size: 11px;
       font-weight: 650;
     }
-    .live-label[hidden],
-    .offline .live-label {
-      display: none;
-    }
-    .live-label ha-icon {
-      --mdc-icon-size: 16px;
-    }
-    .offline .media:after {
-      content: "Camera unavailable";
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      padding: 12px;
-      background: color-mix(
-        in srgb,
-        var(--dashboard-media-surface, #111) 74%,
-        transparent
-      );
-      color: var(--dashboard-media-on-surface, #fff);
-      font-size: 13px;
-      font-weight: 600;
-      text-align: center;
+    .live-label:before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--error-color, #e53935);
     }
     .footer {
-      min-height: 52px;
-      padding: 4px 4px 4px 10px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 4px;
-      background: var(--card-background-color);
-    }
-    .identity {
-      min-width: 0;
-      min-height: 44px;
-      padding: 4px 0;
-      text-align: left;
-      cursor: pointer;
-    }
-    .name,
-    .state {
-      display: block;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .name {
-      font-size: 13px;
-      font-weight: 650;
-    }
-    .state {
-      margin-top: 3px;
-      font-size: 13px;
-      color: var(--secondary-text-color);
-    }
-    .more {
-      min-width: 44px;
-      height: 44px;
-      padding: 0 10px;
-      border-radius: 10px;
+      padding: 8px 10px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 6px;
-      color: var(--secondary-text-color);
-      cursor: pointer;
+      justify-content: space-between;
+      gap: 8px;
+      background: var(--dashboard-card-surface);
     }
-    .more:hover {
-      background: var(--secondary-background-color);
+    .name {
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       color: var(--primary-text-color);
     }
-    button:focus-visible {
-      outline: 2px solid var(--primary-color);
-      outline-offset: -2px;
-    }
-    .more ha-icon {
-      --mdc-icon-size: 20px;
-    }
-    .more span {
-      font-size: 13px;
-      font-weight: 600;
+    .state {
+      font-size: 11px;
+      color: var(--secondary-text-color);
+      white-space: nowrap;
     }
     @media (max-width: 700px) {
       .wrap {

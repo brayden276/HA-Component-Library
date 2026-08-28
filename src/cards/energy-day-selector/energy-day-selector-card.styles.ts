@@ -1,38 +1,34 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, buttonStyles, badgeProgressStyles, telemetryStyles } from "../../styles";
 
 export const energyDaySelectorCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  buttonStyles,
+  badgeProgressStyles,
+  telemetryStyles,
   css`
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    ha-card {
-      overflow: hidden;
-      border-radius: var(--ha-card-border-radius, 16px);
-    }
     .row {
-      min-height: 56px;
-      padding: 6px 8px;
+      min-height: 48px;
+      padding: 6px 10px;
       display: grid;
-      grid-template-columns: 44px minmax(0, 1fr) 44px auto;
+      grid-template-columns: 40px minmax(0, 1fr) 40px auto;
       align-items: center;
       gap: 8px;
     }
     button {
       appearance: none;
-      min-width: 44px;
-      min-height: 44px;
-      border: 0;
-      border-radius: 12px;
+      min-width: 40px;
+      min-height: 40px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
       background: transparent;
       color: inherit;
       font: inherit;
       cursor: pointer;
+    }
+    button:hover {
+      background: var(--dashboard-card-muted-surface);
     }
     button:focus-visible,
     .date:focus-within {
@@ -40,28 +36,30 @@ export const energyDaySelectorCardStyles: CSSResultGroup = [
       outline-offset: 2px;
     }
     button:disabled {
-      color: var(--disabled-text-color, var(--secondary-text-color));
+      color: var(--disabled-text-color);
       cursor: default;
       opacity: 0.45;
     }
     .step {
       display: grid;
       place-items: center;
+      color: var(--secondary-text-color);
     }
     ha-icon {
-      --mdc-icon-size: 22px;
+      --mdc-icon-size: 20px;
     }
     .date {
       position: relative;
       min-width: 0;
-      min-height: 44px;
-      padding: 4px 8px;
+      min-height: 40px;
+      padding: 4px 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      border-radius: 12px;
-      background: var(--secondary-background-color);
+      border-radius: var(--dashboard-radius-control);
+      border: var(--dashboard-card-border);
+      background: var(--dashboard-card-muted-surface);
       overflow: hidden;
     }
     .label {
@@ -71,18 +69,22 @@ export const energyDaySelectorCardStyles: CSSResultGroup = [
       white-space: nowrap;
       font-size: 13px;
       font-weight: 650;
+      color: var(--primary-text-color);
     }
     .state {
       flex: 0 0 auto;
-      padding: 3px 7px;
+      padding: 3px 8px;
       border-radius: 999px;
-      background: var(--card-background-color);
+      background: var(--dashboard-card-surface);
+      border: var(--dashboard-card-border);
       color: var(--secondary-text-color);
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 650;
     }
     .state.historical {
       color: var(--primary-color);
+      border-color: var(--primary-color);
+      background: var(--dashboard-active-surface);
     }
     input {
       position: absolute;
@@ -93,27 +95,33 @@ export const energyDaySelectorCardStyles: CSSResultGroup = [
       cursor: pointer;
     }
     .today {
+      min-height: 36px;
       padding: 0 12px;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
       color: var(--primary-color);
-      background: var(--secondary-background-color);
-      font-size: 13px;
+      background: var(--dashboard-card-muted-surface);
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
+      font-size: 12px;
       font-weight: 650;
     }
+    .today:hover {
+      background: var(--dashboard-active-surface);
+    }
     .today:disabled {
-      opacity: 0.55;
+      opacity: 0.45;
     }
     @media (max-width: 420px) {
       .row {
-        grid-template-columns: 44px minmax(0, 1fr) 44px 44px;
+        grid-template-columns: 40px minmax(0, 1fr) 40px 40px;
         gap: 4px;
         padding: 6px;
       }
       .today {
-        width: 44px;
+        width: 40px;
         padding: 0;
       }
       .today span {

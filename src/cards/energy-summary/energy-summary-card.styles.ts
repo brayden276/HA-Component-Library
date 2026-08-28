@@ -1,22 +1,14 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import { cardBaseStyles, typographyStyles, badgeProgressStyles, surfaceStyles } from "../../styles";
 
 export const energySummaryCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  badgeProgressStyles,
+  surfaceStyles,
   css`
-    :host {
-      display: block;
-      min-width: 0;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    ha-card {
-      overflow: hidden;
-      border-radius: var(--ha-card-border-radius, 16px);
-    }
     .wrap {
-      padding: 12px 14px 14px;
+      padding: 14px;
     }
     .head {
       min-height: 32px;
@@ -24,13 +16,14 @@ export const energySummaryCardStyles: CSSResultGroup = [
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     h2 {
       margin: 0;
       font-size: 15px;
       line-height: 1.2;
-      font-weight: 600;
+      font-weight: 650;
+      color: var(--primary-text-color);
     }
     .context {
       display: flex;
@@ -38,7 +31,7 @@ export const energySummaryCardStyles: CSSResultGroup = [
       gap: 7px;
       min-width: 0;
       color: var(--secondary-text-color);
-      font-size: 13px;
+      font-size: 12px;
     }
     .day {
       overflow: hidden;
@@ -47,13 +40,18 @@ export const energySummaryCardStyles: CSSResultGroup = [
     }
     .state {
       flex: 0 0 auto;
-      padding: 3px 7px;
+      padding: 3px 8px;
       border-radius: 999px;
-      background: var(--secondary-background-color);
-      font-weight: 600;
+      background: var(--dashboard-card-muted-surface);
+      border: var(--dashboard-card-border);
+      font-size: 11px;
+      font-weight: 650;
+      color: var(--secondary-text-color);
     }
     .state.now {
       color: var(--primary-color);
+      background: var(--dashboard-active-surface);
+      border-color: var(--primary-color);
     }
     .live {
       display: grid;
@@ -69,11 +67,11 @@ export const energySummaryCardStyles: CSSResultGroup = [
     .metric {
       appearance: none;
       min-width: 0;
-      min-height: 68px;
-      padding: 10px 11px;
-      border: 1px solid var(--divider-color);
-      border-radius: var(--ha-card-border-radius, 12px);
-      background: transparent;
+      min-height: 64px;
+      padding: 10px 12px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
+      background: var(--dashboard-card-muted-surface);
       color: inherit;
       font: inherit;
       text-align: left;
@@ -87,85 +85,35 @@ export const energySummaryCardStyles: CSSResultGroup = [
       opacity: 1;
     }
     .metric:not(:disabled):hover {
-      background: var(--secondary-background-color);
+      background: var(--dashboard-active-surface);
     }
     .metric:focus-visible {
       outline: 2px solid var(--primary-color);
       outline-offset: 2px;
     }
     .value {
-      font-size: 22px;
+      font-size: 20px;
       line-height: 1;
-      font-weight: 650;
-      letter-spacing: -0.025em;
+      font-weight: 550;
+      letter-spacing: -0.02em;
       font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      color: var(--primary-text-color);
     }
     .label {
-      margin-top: 6px;
-      font-size: 13px;
-      line-height: 1.2;
-      font-weight: 500;
+      margin-top: 3px;
+      font-size: 12px;
+      line-height: 1.25;
       color: var(--secondary-text-color);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .daily .value {
-      font-size: 18px;
-    }
-    .daily .metric {
-      min-height: 62px;
-    }
-    .feedback {
-      min-height: 18px;
-      margin-top: 8px;
-      color: var(--secondary-text-color);
-      font-size: 13px;
-      line-height: 1.35;
-    }
-    .feedback.error {
-      color: var(--error-color);
     }
     @media (max-width: 700px) {
       .wrap {
         padding: 12px;
       }
-      .daily {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .value {
-        font-size: 20px;
-      }
-    }
-    @media (max-width: 420px) {
       .live {
         grid-template-columns: 1fr;
       }
-      .metric {
-        min-height: 58px;
-      }
-      .live .metric {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: center;
-      }
-      .live .label {
-        grid-column: 1;
-        grid-row: 1;
-        margin: 0;
-      }
-      .live .value {
-        grid-column: 2;
-        grid-row: 1;
-      }
-      .head {
-        align-items: flex-start;
-      }
-      .context {
-        justify-content: flex-end;
+      .daily {
+        grid-template-columns: repeat(2, 1fr);
       }
     }
   `,
