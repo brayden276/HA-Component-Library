@@ -10,6 +10,7 @@ import {
   computeEntityName,
   formatEntityState,
   getDefaultIconForDomain,
+  isEntityUnavailable,
   handleAction,
 } from "../../utils/entity";
 
@@ -72,22 +73,32 @@ export class HaMetricBadge extends HaBaseCard<HaMetricBadgeConfig> {
     }
 
     const domain = computeDomain(this.config.entity);
+    const isUnavailable = isEntityUnavailable(entity);
     const entityName = this.config.name || computeEntityName(entity);
     const iconName =
       this.config.icon ||
       entity.attributes.icon ||
       getDefaultIconForDomain(domain, entity.state);
-    const numVal = parseFloat(entity.state);
+    const numVal = isUnavailable ? NaN : parseFloat(entity.state);
     const hasNumeric = !isNaN(numVal);
     const badgeColor = hasNumeric
       ? this._computeColor(numVal)
-      : "var(--primary-color, #03a9f4)";
+      : isUnavailable
+        ? "var(--secondary-text-color, #757575)"
+        : "var(--primary-color, #03a9f4)";
     const unit =
-      this.config.unit || entity.attributes.unit_of_measurement || "";
+      isUnavailable
+        ? ""
+        : this.config.unit || entity.attributes.unit_of_measurement || "";
+    const displayValue = isUnavailable
+      ? "Unavailable"
+      : hasNumeric
+        ? numVal
+        : entity.state;
 
     return html`
       <ha-card
-        class="interactive metric-badge-card"
+        class="interactive metric-badge-card ${isUnavailable ? "unavailable" : ""}"
         tabindex="0"
         role="button"
         style="--badge-accent-color: ${badgeColor};"
@@ -98,7 +109,8 @@ export class HaMetricBadge extends HaBaseCard<HaMetricBadgeConfig> {
             this._handleTap();
           }
         }}
-        aria-label="${entityName}: ${hasNumeric ? numVal : entity.state}${unit ? " " + unit : ""}"
+        aria-disabled="${String(isUnavailable)}"
+        aria-label="${entityName}: ${displayValue}${unit ? " " + unit : ""}"
         title="${entityName}: ${formatEntityState(entity, this.hass)}"
       >
         <div class="metric-body">
@@ -107,9 +119,7 @@ export class HaMetricBadge extends HaBaseCard<HaMetricBadgeConfig> {
           </div>
           <div class="metric-data">
             <div class="metric-value-line">
-              <span class="value-text"
-                >${hasNumeric ? numVal : entity.state}</span
-              >
+              <span class="value-text">${displayValue}</span>
               ${unit ? html`<span class="unit-text">${unit}</span>` : ""}
             </div>
             <div class="metric-label" title=${entityName}>${entityName}</div>
@@ -121,3 +131,4 @@ export class HaMetricBadge extends HaBaseCard<HaMetricBadgeConfig> {
 
   public static override styles: CSSResultGroup = metricBadgeCardStyles;
 }
+

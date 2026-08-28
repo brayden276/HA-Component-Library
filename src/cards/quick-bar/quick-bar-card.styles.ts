@@ -70,5 +70,16 @@ export const quickBarCardStyles: CSSResultGroup = [
       background: var(--primary-color, #03a9f4);
       color: #ffffff;
     }
+
+    .quick-item.unavailable {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .quick-item:focus-visible {
+      outline: 2px solid var(--primary-color, #03a9f4);
+      outline-offset: 2px;
+    }
   `,
 ];
+

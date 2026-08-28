@@ -6,6 +6,10 @@ import { html, TemplateResult, CSSResultGroup } from "lit";
 import { customElement } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import { interaction, InteractionHandle } from "../../utils/interaction";
+import {
+  computeEntityDisplayName,
+  formatEntityState,
+} from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
 const DEFAULTS: NoticeCardConfig = {
@@ -64,31 +68,43 @@ export class ComponentNoticeV2 extends LitBaseCard<NoticeCardConfig> {
   protected override render(): TemplateResult {
     if (!this._config) return html``;
     const action = this._getAction();
+    const entity = this._config.entity ? this.hass?.states[this._config.entity] : null;
     const tone = ["warning", "error", "success"].includes(
       this._config.tone || "",
     )
       ? this._config.tone
       : "";
 
+    const title = entity && this._config.title === "Notice title"
+      ? computeEntityDisplayName({ state: entity })
+      : (this._config.title || "Notice title");
+    const message = entity && this._config.message === "Important supporting information appears here."
+      ? formatEntityState(entity, this.hass)
+      : (this._config.message || "");
+
+    const ariaLabel = `${title}${message ? `: ${message}` : ""}`;
+
     return html`
       <ha-card>
         <div
           class="wrap ${tone} ${action ? "actionable" : ""}"
-          role="${action ? "button" : "none"}"
+          role="${action ? "button" : "region"}"
           tabindex="${action ? "0" : "-1"}"
+          aria-label="${this.esc(ariaLabel)}"
         >
           <span class="icon">
             <ha-icon icon="${this.esc(this._config.icon)}"></ha-icon>
           </span>
           <div>
-            <div class="title">${this.esc(this._config.title)}</div>
-            <div class="message">${this.esc(this._config.message)}</div>
+            <div class="title">${this.esc(title)}</div>
+            ${message ? html`<div class="message">${this.esc(message)}</div>` : ""}
           </div>
         </div>
       </ha-card>
     `;
   }
 }
+
 
 registerCard({
   type: "component-notice-v2",

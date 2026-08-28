@@ -9,6 +9,12 @@ import { html, TemplateResult, CSSResultGroup } from "lit";
 import { customElement } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import { interaction, InteractionHandle } from "../../utils/interaction";
+import {
+  computeDomain,
+  computeEntityDisplayName,
+  formatEntityState,
+  getDefaultIconForDomain,
+} from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
 const DEFAULTS: RoomSheetCardConfig = {
@@ -137,10 +143,25 @@ export class ComponentRoomSheetV2 extends LitBaseCard<RoomSheetCardConfig> {
           </div>
           <div class="body">
             ${rows.map((row, index) => {
+              const entity = row.entity && this.hass?.states ? this.hass.states[row.entity] : null;
+              const domain = row.entity ? computeDomain(row.entity) : "";
+
+              const name = entity && (!row.name || row.name === "Control name" || row.name === "Status metric")
+                ? computeEntityDisplayName({ state: entity })
+                : (row.name || "Control name");
+              const state = entity && (!row.state || row.state === "Current state" || row.state === "Supporting context")
+                ? formatEntityState(entity, this.hass)
+                : (row.state || "");
+              const icon = entity && (!row.icon || row.icon === "mdi:circle-outline")
+                ? (entity.attributes.icon || getDefaultIconForDomain(domain, entity.state))
+                : (row.icon || "mdi:circle-outline");
+              const value = row.value || "";
+
               const next = row.section || "Controls";
               const showSep = next !== currentSection;
               if (showSep) currentSection = next;
               const action = this._getAction(row);
+              const ariaLabel = row.aria_label || `${name}: ${state || value}`;
 
               return html`
                 ${showSep ? html`<div class="sep">${this.esc(next)}</div>` : ""}
@@ -151,39 +172,32 @@ export class ComponentRoomSheetV2 extends LitBaseCard<RoomSheetCardConfig> {
                           class="row actionable"
                           data-row="${index}"
                           type="button"
+                          aria-label="${this.esc(ariaLabel)}"
                         >
                           <ha-icon
-                            icon="${this.esc(row.icon || "mdi:circle-outline")}"
+                            icon="${this.esc(icon)}"
                           ></ha-icon>
                           <span>
                             <div class="rname">
-                              ${this.esc(row.name || "Control name")}
+                              ${this.esc(name)}
                             </div>
-                            <div class="rstate">
-                              ${this.esc(row.state || "")}
-                            </div>
+                            ${state ? html`<div class="rstate">${this.esc(state)}</div>` : ""}
                           </span>
-                          <span class="rvalue"
-                            >${this.esc(row.value || "")}</span
-                          >
+                          ${value ? html`<span class="rvalue">${this.esc(value)}</span>` : ""}
                         </button>
                       `
                     : html`
-                        <div class="row" data-row="${index}">
+                        <div class="row" data-row="${index}" aria-label="${this.esc(ariaLabel)}">
                           <ha-icon
-                            icon="${this.esc(row.icon || "mdi:circle-outline")}"
+                            icon="${this.esc(icon)}"
                           ></ha-icon>
                           <span>
                             <div class="rname">
-                              ${this.esc(row.name || "Control name")}
+                              ${this.esc(name)}
                             </div>
-                            <div class="rstate">
-                              ${this.esc(row.state || "")}
-                            </div>
+                            ${state ? html`<div class="rstate">${this.esc(state)}</div>` : ""}
                           </span>
-                          <span class="rvalue"
-                            >${this.esc(row.value || "")}</span
-                          >
+                          ${value ? html`<span class="rvalue">${this.esc(value)}</span>` : ""}
                         </div>
                       `
                 }
@@ -195,6 +209,7 @@ export class ComponentRoomSheetV2 extends LitBaseCard<RoomSheetCardConfig> {
     `;
   }
 }
+
 
 registerCard({
   type: "component-room-sheet-v2",

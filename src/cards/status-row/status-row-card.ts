@@ -8,6 +8,14 @@ import { LitBaseCard } from "../../components/base/lit-base-card";
 import { interaction, InteractionHandle } from "../../utils/interaction";
 import { registerCard } from "../../utils/registration";
 
+import {
+  computeDomain,
+  computeEntityDisplayName,
+  formatEntityState,
+  getDefaultIconForDomain,
+  isEntityUnavailable,
+} from "../../utils/entity";
+
 const DEFAULTS: StatusRowCardConfig = {
   type: "custom:component-status-row-v2",
   title: "Status title",
@@ -68,19 +76,36 @@ export class ComponentStatusRowV2 extends LitBaseCard<StatusRowCardConfig> {
   protected override render(): TemplateResult {
     if (!this._config) return html``;
     const action = this._getAction();
+    const entity = this._config.entity ? this.hass?.states[this._config.entity] : null;
+    const isUnavailable = entity ? isEntityUnavailable(entity) : false;
+
+    const domain = this._config.entity ? computeDomain(this._config.entity) : "";
+    const title = entity && this._config.title === "Status title"
+      ? computeEntityDisplayName({ state: entity })
+      : (this._config.title || "Status title");
+    const statusValue = entity && this._config.status_value === "Active"
+      ? (isUnavailable ? "Unavailable" : formatEntityState(entity, this.hass))
+      : (this._config.status_value || "Active");
+    const icon = entity && this._config.icon === "mdi:information-outline"
+      ? (entity.attributes.icon || getDefaultIconForDomain(domain, entity.state))
+      : (this._config.icon || "mdi:information-outline");
+
+    const description = this._config.description || "";
+    const statusLabel = this._config.status_label || "";
+    const ariaLabel = `${title}: ${statusValue}${statusLabel ? ` (${statusLabel})` : ""}${description ? `. ${description}` : ""}`;
 
     const inner = html`
-      <div class="wrap">
+      <div class="wrap ${isUnavailable ? "unavailable" : ""}">
         <span class="icon">
-          <ha-icon icon="${this.esc(this._config.icon)}"></ha-icon>
+          <ha-icon icon="${this.esc(icon)}"></ha-icon>
         </span>
         <div>
-          <div class="title">${this.esc(this._config.title)}</div>
-          <div class="desc">${this.esc(this._config.description)}</div>
+          <div class="title">${this.esc(title)}</div>
+          ${description ? html`<div class="desc">${this.esc(description)}</div>` : ""}
         </div>
         <div class="status">
-          <b>${this.esc(this._config.status_value)}</b>
-          <span>${this.esc(this._config.status_label)}</span>
+          <b>${this.esc(statusValue)}</b>
+          ${statusLabel ? html`<span>${this.esc(statusLabel)}</span>` : ""}
         </div>
       </div>
     `;
@@ -89,13 +114,14 @@ export class ComponentStatusRowV2 extends LitBaseCard<StatusRowCardConfig> {
       <ha-card>
         ${
           action
-            ? html`<button class="demo" type="button">${inner}</button>`
+            ? html`<button class="demo" type="button" aria-label="${this.esc(ariaLabel)}" aria-disabled="${String(isUnavailable)}">${inner}</button>`
             : html`<div class="demo-static">${inner}</div>`
         }
       </ha-card>
     `;
   }
 }
+
 
 registerCard({
   type: "component-status-row-v2",

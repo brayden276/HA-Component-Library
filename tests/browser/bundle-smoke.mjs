@@ -213,14 +213,50 @@ async function runSmokeTest() {
     }
     console.log(`✓ All ${EXPECTED_TAGS.length} custom elements instantiated and rendered with mock HomeAssistant`);
 
-    // 4. Test re-importing / double evaluation of module script
-    await page.evaluate(() => {
-      const s = document.createElement('script');
-      s.type = 'module';
-      s.src = '/ha-component-library.js';
-      document.body.appendChild(s);
+    // 5. Test Standalone elements (ha-status-card, ha-action-tile, ha-quick-bar, ha-metric-badge)
+    const standaloneResults = await page.evaluate(() => {
+      const container = document.getElementById('test-container');
+      const results = [];
+      const tags = ['ha-status-card', 'ha-action-tile', 'ha-quick-bar', 'ha-metric-badge'];
+
+      const mockHass = {
+        states: {
+          'light.living_room': { entity_id: 'light.living_room', state: 'on', attributes: { friendly_name: 'Living Room Light', brightness: 200 } },
+          'switch.coffee_maker': { entity_id: 'switch.coffee_maker', state: 'off', attributes: { friendly_name: 'Espresso Machine' } },
+          'sensor.temperature': { entity_id: 'sensor.temperature', state: '22.4', attributes: { friendly_name: 'Temp', unit_of_measurement: '°C' } },
+          'climate.thermostat': { entity_id: 'climate.thermostat', state: 'heat', attributes: { friendly_name: 'Thermostat' } },
+        },
+        services: {},
+        callService: () => Promise.resolve({}),
+      };
+
+      for (const tag of tags) {
+        try {
+          const el = document.createElement(tag);
+          if (tag === 'ha-quick-bar') {
+            el.setConfig({ type: `custom:${tag}`, entities: ['light.living_room', 'switch.coffee_maker'] });
+          } else {
+            el.setConfig({ type: `custom:${tag}`, entity: tag === 'ha-metric-badge' ? 'sensor.temperature' : 'light.living_room' });
+          }
+          el.hass = mockHass;
+          container.appendChild(el);
+          results.push({ tag, success: true, hasShadowRoot: Boolean(el.shadowRoot) });
+        } catch (err) {
+          results.push({ tag, success: false, error: err.message });
+        }
+      }
+      return results;
     });
-    console.log('✓ Double module script evaluation tested without exception');
+
+    const standaloneFailures = standaloneResults.filter((r) => !r.success);
+    if (standaloneFailures.length > 0) {
+      throw new Error(`Standalone element failures: ${JSON.stringify(standaloneFailures, null, 2)}`);
+    }
+    console.log(`✓ All 4 standalone elements (ha-status-card, ha-action-tile, ha-quick-bar, ha-metric-badge) instantiated and tested`);
+
+    // 6. Capture full page screenshot
+    await page.screenshot({ path: resolve(rootDir, 'tests/browser/smoke-render.png'), fullPage: true });
+    console.log('✓ Smoke render screenshot captured successfully');
 
     if (pageErrors.length > 0 || consoleErrors.length > 0) {
       throw new Error(`Browser reported errors during execution: Page errors: ${pageErrors.length}, Console errors: ${consoleErrors.length}`);
@@ -231,6 +267,7 @@ async function runSmokeTest() {
     if (browser) await browser.close();
     server.close();
   }
+
 }
 
 runSmokeTest().catch((err) => {

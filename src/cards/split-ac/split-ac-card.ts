@@ -9,8 +9,15 @@ import type {
   LovelaceGridOptions,
   HassEntity,
 } from "../../types/home-assistant";
-import { interaction, InteractionHandle } from "../../utils/interaction";
+import {
+  interaction,
+  InteractionHandle,
+  createRequestCoalescer,
+  RequestCoalescer,
+  waitForEntityState,
+} from "../../utils/interaction";
 import { registerCard } from "../../utils/registration";
+
 
 const unavailable = (st?: HassEntity | null): boolean =>
   !st || ["unknown", "unavailable"].includes(st.state);
@@ -31,7 +38,11 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
   private _activePanel: "mode" | "fan" | "vanes" | "timer" | "settings" | null =
     null;
 
+  @state()
+  private _optimisticTemp: number | null = null;
+
   private _interactionHandles: InteractionHandle[] = [];
+  private _tempCoalescer: RequestCoalescer<number> | null = null;
 
   public static override getGridOptions(): LovelaceGridOptions {
     return { columns: 12, rows: "auto" };
@@ -77,16 +88,49 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
     });
   }
 
-  private _temperature(direction: number): Promise<any> | void {
+  private _getTempCoalescer(): RequestCoalescer<number> {
+    if (this._tempCoalescer) return this._tempCoalescer;
+    this._tempCoalescer = createRequestCoalescer<number>(
+      async (targetTemp: number) => {
+        if (!this._config?.entity || !this.hass) return;
+        await this.hass.callService("climate", "set_temperature", {
+          entity_id: this._config.entity,
+          temperature: targetTemp,
+        });
+        await waitForEntityState(
+          this.hass,
+          this._config.entity,
+          (_st: string | undefined, obj?: HassEntity | null) => {
+            const reported = Number(obj?.attributes?.temperature);
+            return Number.isFinite(reported) && Math.abs(reported - targetTemp) <= 0.1;
+          },
+          { timeout: 5000 },
+        );
+
+      },
+      {
+        onSuccess: (val: number) => {
+          if (this._optimisticTemp === val) this._optimisticTemp = null;
+        },
+        onError: () => {
+          this._optimisticTemp = null;
+        },
+      },
+    );
+    return this._tempCoalescer;
+  }
+
+
+  private _temperature(direction: number): void {
     const attributes = this._state()?.attributes || {};
-    const value = Number(attributes.temperature);
-    const step = Number(attributes.target_temp_step) || 0.5;
-    if (Number.isFinite(value)) {
-      return this._call("climate", "set_temperature", {
-        entity_id: this._config?.entity,
-        temperature: value + direction * step,
-      });
-    }
+    const base = this._optimisticTemp ?? Number(attributes.temperature) ?? 21;
+    const step = Number(attributes.target_temp_step || attributes.step) || 0.5;
+    const min = Number(attributes.min_temp) || 16;
+    const max = Number(attributes.max_temp) || 31;
+
+    const next = Math.min(max, Math.max(min, Number((base + direction * step).toFixed(1))));
+    this._optimisticTemp = next;
+    this._getTempCoalescer().request(next);
   }
 
   private _vanes(): Array<{ axis: string; entity: string; state: HassEntity }> {
@@ -113,6 +157,9 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
   }
 
   public override disconnectedCallback(): void {
+    this._tempCoalescer?.destroy();
+    this._tempCoalescer = null;
+    this._optimisticTemp = null;
     for (const h of this._interactionHandles) h.destroy();
     this._interactionHandles = [];
     super.disconnectedCallback();
@@ -141,6 +188,7 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
     bind(".ta", () => this._openPanel("timer"));
   }
 
+
   protected override render(): TemplateResult {
     if (!this._config) return html``;
     const st = this._state();
@@ -160,6 +208,18 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
         ? label(st?.state)
         : "Off";
 
+    const targetTemp = this._optimisticTemp ?? attributes.temperature;
+    const modeIcons: Record<string, string> = {
+      cool: "mdi:snowflake",
+      heat: "mdi:fire",
+      dry: "mdi:water-percent",
+      fan_only: "mdi:fan",
+      auto: "mdi:thermostat-auto",
+      off: "mdi:power",
+    };
+    const currentMode = String(st?.state || "off").toLowerCase();
+    const modeIcon = modeIcons[currentMode] || "mdi:thermostat";
+
     return html`
       <ha-card>
         <div class="w">
@@ -169,7 +229,7 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
               type="button"
               @click=${() => this.moreInfo(this._config?.entity)}
             >
-              <span class="iw"><ha-icon icon="mdi:thermostat"></ha-icon></span>
+              <span class="iw"><ha-icon icon="${modeIcon}"></ha-icon></span>
               <span class="cp">
                 <span class="nm">${this.esc(name)}</span>
                 <span class="st" role="status">${this.esc(displayState)}</span>
@@ -183,6 +243,7 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
               type="button"
               aria-label="Toggle split system power"
               ?disabled=${unavailable(st)}
+              aria-pressed="${String(on)}"
             >
               <ha-icon icon="mdi:power"></ha-icon>
             </button>
@@ -202,11 +263,12 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                   type="button"
                   aria-label="Decrease target temperature"
                   ?disabled=${!on}
+                  aria-disabled="${String(!on)}"
                 >
                   <ha-icon icon="mdi:minus"></ha-icon>
                 </button>
                 <div class="tp">
-                  <div class="tv">${degrees(attributes.temperature)}</div>
+                  <div class="tv">${degrees(targetTemp)}</div>
                   <div class="ts">Target</div>
                 </div>
                 <button
@@ -214,6 +276,7 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                   type="button"
                   aria-label="Increase target temperature"
                   ?disabled=${!on}
+                  aria-disabled="${String(!on)}"
                 >
                   <ha-icon icon="mdi:plus"></ha-icon>
                 </button>
@@ -226,8 +289,9 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                 type="button"
                 data-panel="mode"
                 aria-expanded="${String(this._activePanel === "mode")}"
+                aria-label="HVAC mode: ${label(st?.state)}"
               >
-                <ha-icon icon="mdi:thermostat"></ha-icon>
+                <ha-icon icon="${modeIcon}"></ha-icon>
                 <span class="al">Mode · ${label(st?.state)}</span>
               </button>
               <button
@@ -235,6 +299,7 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                 type="button"
                 data-panel="fan"
                 aria-expanded="${String(this._activePanel === "fan")}"
+                aria-label="Fan speed: ${label(attributes.fan_mode)}"
               >
                 <ha-icon icon="mdi:fan"></ha-icon>
                 <span class="al">Fan · ${label(attributes.fan_mode)}</span>
@@ -247,6 +312,7 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                         type="button"
                         data-panel="vanes"
                         aria-expanded="${String(this._activePanel === "vanes")}"
+                        aria-label="Vanes: ${vaneSummary}"
                       >
                         <ha-icon icon="mdi:swap-vertical"></ha-icon>
                         <span class="al">Vanes · ${this.esc(vaneSummary)}</span>
@@ -262,6 +328,7 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                         type="button"
                         data-panel="timer"
                         aria-expanded="${String(this._activePanel === "timer")}"
+                        aria-label="Off timer: ${timer?.state === "active" ? "Active" : "Off"}"
                       >
                         <ha-icon icon="mdi:timer-outline"></ha-icon>
                         <span class="al"
@@ -315,7 +382,7 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
               class="x"
               type="button"
               aria-label="Close"
-              @click=${this._closeOverlay}
+              @click=${this._closeDialog}
             >
               <ha-icon icon="mdi:close"></ha-icon>
             </button>
@@ -326,9 +393,21 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
     `;
   }
 
+  private _closeDialog(): void {
+    this._closeOverlay();
+  }
+
   private _renderPanelContent(): TemplateResult {
     const st = this._state();
     const attributes = st?.attributes || {};
+    const modeIcons: Record<string, string> = {
+      cool: "mdi:snowflake",
+      heat: "mdi:fire",
+      dry: "mdi:water-percent",
+      fan_only: "mdi:fan",
+      auto: "mdi:thermostat-auto",
+      off: "mdi:power",
+    };
 
     if (this._activePanel === "mode") {
       const modes: string[] = attributes.hvac_modes || [];
@@ -348,9 +427,9 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                   this._closeOverlay();
                 }}
               >
-                <span></span>
+                <span><ha-icon icon="${modeIcons[mode] || "mdi:thermostat"}"></ha-icon></span>
                 <span>${label(mode)}</span>
-                <span class="oi"></span>
+                <span class="oi"><ha-icon icon="mdi:check"></ha-icon></span>
               </button>
             `,
           )}
@@ -376,15 +455,16 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                   this._closeOverlay();
                 }}
               >
-                <span></span>
+                <span><ha-icon icon="mdi:fan"></ha-icon></span>
                 <span>${label(mode)}</span>
-                <span class="oi"></span>
+                <span class="oi"><ha-icon icon="mdi:check"></ha-icon></span>
               </button>
             `,
           )}
         </div>
       `;
     }
+
 
     if (this._activePanel === "vanes") {
       const vanes = this._vanes();

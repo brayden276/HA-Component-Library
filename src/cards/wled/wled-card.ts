@@ -50,7 +50,14 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
   @state()
   private _brightnessIntent: number | null = null;
 
+  @state()
+  private _speedIntent: number | null = null;
+
+  @state()
+  private _intensityIntent: number | null = null;
+
   private _unsubRegistry: (() => void) | null = null;
+
   private _brightnessCoalescer: RequestCoalescer<number> | null = null;
   private _interactionHandles: InteractionHandle[] = [];
 
@@ -471,6 +478,11 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                       min="0"
                       max="255"
                       step="1"
+                      role="slider"
+                      aria-label="Brightness"
+                      aria-valuemin="0"
+                      aria-valuemax="255"
+                      aria-valuenow="${String(Math.max(0, Math.min(255, Number.isFinite(brightness) ? brightness : 0)))}"
                       .value=${String(Math.max(0, Math.min(255, Number.isFinite(brightness) ? brightness : 0)))}
                       @input=${(e: Event) => {
                         const v = Number((e.target as HTMLInputElement).value);
@@ -487,6 +499,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                       class="action presets"
                       type="button"
                       ?disabled=${!presetOk}
+                      aria-label="WLED presets"
                     >
                       <ha-icon icon="mdi:bookmark-multiple-outline"></ha-icon>
                       <span>Presets</span>
@@ -495,6 +508,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                       class="action colour"
                       type="button"
                       ?disabled=${!effectOk}
+                      aria-label="WLED colour"
                     >
                       <ha-icon icon="mdi:palette-outline"></ha-icon>
                       <span>Colour</span>
@@ -503,6 +517,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                       class="action advanced"
                       type="button"
                       ?disabled=${!(presetOk || effectOk || paletteOk || speedOk || intensityOk)}
+                      aria-label="WLED advanced settings"
                     >
                       <ha-icon icon="mdi:tune-variant"></ha-icon>
                       <span>Advanced</span>
@@ -552,6 +567,8 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                           <button
                             class="preset-btn ${isActive ? "active" : ""}"
                             type="button"
+                            role="button"
+                            aria-pressed="${String(isActive)}"
                             title="${this.esc(opt)}"
                             @click=${async () => {
                               await this._call(
@@ -579,6 +596,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                   <span>Effect</span>
                   <select
                     class="effect"
+                    aria-label="Effect selection"
                     ?disabled=${!effectOk || !fxOptions.length}
                     @change=${(e: Event) => {
                       const val = (e.target as HTMLSelectElement).value;
@@ -612,6 +630,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                   <span>Palette</span>
                   <select
                     class="palette"
+                    aria-label="Palette selection"
                     ?disabled=${!paletteOk || !paletteOptions.length}
                     @change=${(e: Event) => {
                       const val = (e.target as HTMLSelectElement).value;
@@ -650,7 +669,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                   <span class="fine-head">
                     <span>Speed</span>
                     <output class="speed-value"
-                      >${this.esc(speed || "—")}</output
+                      >${this.esc(String((this._speedIntent ?? speed) || "—"))}</output
                     >
                   </span>
                   <input
@@ -659,10 +678,19 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                     min="0"
                     max="255"
                     step="1"
-                    .value=${String(Number(speed) || 0)}
+                    role="slider"
+                    aria-label="Animation speed"
+                    aria-valuemin="0"
+                    aria-valuemax="255"
+                    aria-valuenow="${String((this._speedIntent ?? Number(speed)) || 0)}"
+                    .value=${String((this._speedIntent ?? Number(speed)) || 0)}
                     ?disabled=${!speedOk}
+                    @input=${(e: Event) => {
+                      this._speedIntent = Number((e.target as HTMLInputElement).value);
+                    }}
                     @change=${(e: Event) => {
                       const val = Number((e.target as HTMLInputElement).value);
+                      this._speedIntent = null;
                       this._call("number", "set_value", bundle.speeds, {
                         value: val,
                       });
@@ -674,7 +702,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                   <span class="fine-head">
                     <span>Intensity</span>
                     <output class="intensity-value"
-                      >${this.esc(intensity || "—")}</output
+                      >${this.esc(String((this._intensityIntent ?? intensity) || "—"))}</output
                     >
                   </span>
                   <input
@@ -683,18 +711,29 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                     min="0"
                     max="255"
                     step="1"
-                    .value=${String(Number(intensity) || 0)}
+                    role="slider"
+                    aria-label="Animation intensity"
+                    aria-valuemin="0"
+                    aria-valuemax="255"
+                    aria-valuenow="${String((this._intensityIntent ?? Number(intensity)) || 0)}"
+                    .value=${String((this._intensityIntent ?? Number(intensity)) || 0)}
                     ?disabled=${!intensityOk}
+                    @input=${(e: Event) => {
+                      this._intensityIntent = Number((e.target as HTMLInputElement).value);
+                    }}
                     @change=${(e: Event) => {
                       const val = Number((e.target as HTMLInputElement).value);
+                      this._intensityIntent = null;
                       this._call("number", "set_value", bundle.intensities, {
                         value: val,
                       });
                     }}
                   />
                 </label>
+
               </div>
             </section>
+
 
             <div class="native">
               <button

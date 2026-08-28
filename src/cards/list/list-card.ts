@@ -6,6 +6,10 @@ import { html, TemplateResult, CSSResultGroup } from "lit";
 import { customElement } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import { interaction, InteractionHandle } from "../../utils/interaction";
+import {
+  computeEntityDisplayName,
+  formatEntityState,
+} from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
 const DEFAULTS: ListCardConfig = {
@@ -114,29 +118,42 @@ export class ComponentListV2 extends LitBaseCard<ListCardConfig> {
         <div class="wrap">
           ${rows.map((row, index) => {
             const actions = this._getRowActions(row);
+            const entity = row.entity ? this.hass?.states[row.entity] : null;
+
+            const rawTitle = row.title || "Item";
+            const title = entity && rawTitle.startsWith("Item")
+              ? computeEntityDisplayName({ state: entity })
+              : rawTitle;
+            const value = entity && (row.value === "00" || !row.value)
+              ? formatEntityState(entity, this.hass)
+              : (row.value || "");
+
+            const ariaLabel = `${title}: ${value} ${row.label || ""}${row.description ? `. ${row.description}` : ""}`;
+
             const content = html`
               <span>
-                <div class="title">${this.esc(row.title)}</div>
+                <div class="title">${this.esc(title)}</div>
                 <div class="desc">${this.esc(row.description)}</div>
               </span>
               <span class="metric">
-                <b>${this.esc(row.value)}</b>${this.esc(row.label)}
+                <b>${this.esc(value)}</b>${this.esc(row.label)}
               </span>
             `;
 
             return actions.primary
               ? html`
-                  <button class="row" data-index="${index}" type="button">
+                  <button class="row" data-index="${index}" type="button" aria-label="${this.esc(ariaLabel)}">
                     ${content}
                   </button>
                 `
-              : html`<div class="row" data-index="${index}">${content}</div>`;
+              : html`<div class="row" data-index="${index}" aria-label="${this.esc(ariaLabel)}">${content}</div>`;
           })}
         </div>
       </ha-card>
     `;
   }
 }
+
 
 registerCard({
   type: "component-list-v2",

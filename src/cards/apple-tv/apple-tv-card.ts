@@ -238,7 +238,7 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
 
     return html`
       <div class="stack">
-        <div class="native">${this._nativeCard}</div>
+        <div class="native">${this._nativeCard || this._renderMediaBanner()}</div>
 
         ${
           remoteEntity
@@ -268,7 +268,31 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
                     </span>
                   </div>
 
-                  <div class="dpad" aria-label="Apple TV directional remote">
+                  <div
+                    class="dpad"
+                    aria-label="Apple TV directional remote"
+                    tabindex="0"
+                    role="group"
+                    @keydown=${(e: KeyboardEvent) => {
+                      if (!remoteAvailable) return;
+                      if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        this._remoteCommand("up");
+                      } else if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        this._remoteCommand("down");
+                      } else if (e.key === "ArrowLeft") {
+                        e.preventDefault();
+                        this._remoteCommand("left");
+                      } else if (e.key === "ArrowRight") {
+                        e.preventDefault();
+                        this._remoteCommand("right");
+                      } else if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        this._remoteCommand("select");
+                      }
+                    }}
+                  >
                     ${layout.map((cmd) => {
                       if (!cmd) {
                         return html`<button
@@ -351,7 +375,128 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
       </div>
     `;
   }
+
+  private _renderMediaBanner(): TemplateResult {
+    const mediaEntity = this._config?.entity;
+    const st = mediaEntity ? this.hass?.states?.[mediaEntity] : null;
+    const attr = st?.attributes || {};
+    const isPlaying = st?.state === "playing";
+    const isOff = !st || st.state === "off" || st.state === "unavailable" || st.state === "unknown";
+
+    const title =
+      attr.media_title ||
+      attr.app_name ||
+      this._config?.title ||
+      attr.friendly_name ||
+      "Apple TV";
+
+    const subtitleParts = [
+      attr.app_name && attr.media_title ? attr.app_name : null,
+      attr.media_artist,
+      attr.media_series_title
+        ? `${attr.media_series_title}${attr.media_season ? ` S${attr.media_season}:E${attr.media_episode}` : ""}`
+        : null,
+      !isPlaying && st?.state ? st.state.charAt(0).toUpperCase() + st.state.slice(1) : null,
+    ].filter(Boolean);
+
+    const subtitle = subtitleParts.join(" · ") || (isOff ? "Off" : "Idle");
+
+    return html`
+      <div class="media-banner">
+        <div class="media-info">
+          <div class="media-icon">
+            <ha-icon icon="${attr.icon || "mdi:apple"}"></ha-icon>
+          </div>
+          <div class="media-details">
+            <div class="media-title">${this.esc(title)}</div>
+            <div class="media-sub">${this.esc(subtitle)}</div>
+          </div>
+          <button
+            class="media-power"
+            type="button"
+            aria-label="Toggle Apple TV Power"
+            @click=${() => {
+              if (mediaEntity && this.hass) {
+                this.hass.callService("media_player", "toggle", { entity_id: mediaEntity });
+              }
+            }}
+          >
+            <ha-icon icon="mdi:power"></ha-icon>
+          </button>
+        </div>
+
+        <div class="media-controls">
+          <button
+            type="button"
+            aria-label="Previous Track"
+            ?disabled=${isOff}
+            @click=${() => {
+              if (mediaEntity && this.hass) {
+                this.hass.callService("media_player", "media_previous_track", { entity_id: mediaEntity });
+              }
+            }}
+          >
+            <ha-icon icon="mdi:skip-previous"></ha-icon>
+          </button>
+
+          <button
+            class="play-pause"
+            type="button"
+            aria-label="${isPlaying ? "Pause" : "Play"}"
+            ?disabled=${isOff}
+            @click=${() => {
+              if (mediaEntity && this.hass) {
+                this.hass.callService("media_player", "media_play_pause", { entity_id: mediaEntity });
+              }
+            }}
+          >
+            <ha-icon icon="${isPlaying ? "mdi:pause" : "mdi:play"}"></ha-icon>
+          </button>
+
+          <button
+            type="button"
+            aria-label="Next Track"
+            ?disabled=${isOff}
+            @click=${() => {
+              if (mediaEntity && this.hass) {
+                this.hass.callService("media_player", "media_next_track", { entity_id: mediaEntity });
+              }
+            }}
+          >
+            <ha-icon icon="mdi:skip-next"></ha-icon>
+          </button>
+
+          <button
+            type="button"
+            aria-label="Volume Down"
+            ?disabled=${isOff}
+            @click=${() => {
+              if (mediaEntity && this.hass) {
+                this.hass.callService("media_player", "volume_down", { entity_id: mediaEntity });
+              }
+            }}
+          >
+            <ha-icon icon="mdi:volume-minus"></ha-icon>
+          </button>
+
+          <button
+            type="button"
+            aria-label="Volume Up"
+            ?disabled=${isOff}
+            @click=${() => {
+              if (mediaEntity && this.hass) {
+                this.hass.callService("media_player", "volume_up", { entity_id: mediaEntity });
+              }
+            }}
+          >
+            <ha-icon icon="mdi:volume-plus"></ha-icon>
+          </button>
+        </div>
+      </div>
+    `;
+  }
 }
+
 
 registerCard({
   type: "component-apple-tv-controller-v1",

@@ -109,5 +109,79 @@ export const appleTvCardStyles: CSSResultGroup = [
     .keyboard ha-icon {
       --mdc-icon-size: var(--c-icon-size);
     }
+    .media-banner {
+      padding: var(--c-card-padding);
+      border: var(--c-card-border);
+      border-radius: var(--c-radius-card);
+      background: var(--c-card-surface);
+      color: var(--primary-text-color);
+      display: flex;
+      flex-direction: column;
+      gap: var(--c-space-3);
+    }
+    .media-info {
+      display: flex;
+      align-items: center;
+      gap: var(--c-space-3);
+    }
+    .media-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--c-radius-control);
+      background: var(--secondary-background-color);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .media-icon ha-icon {
+      --mdc-icon-size: 24px;
+    }
+    .media-details {
+      min-width: 0;
+      flex: 1;
+    }
+    .media-title {
+      font-size: var(--c-font-base);
+      font-weight: var(--c-font-weight-medium);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .media-sub {
+      font-size: var(--c-font-sm);
+      color: var(--secondary-text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+    .media-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--c-space-1);
+    }
+    .media-controls button {
+      min-height: var(--c-button-height);
+      min-width: var(--c-button-height);
+      padding: 0 var(--c-space-2);
+      border: 1px solid var(--divider-color);
+      border-radius: var(--c-radius-control);
+      background: var(--secondary-background-color);
+      color: var(--primary-text-color);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+    .media-controls button.play-pause {
+      background: var(--card-background-color);
+      color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+    .media-controls button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
   `,
 ];
+

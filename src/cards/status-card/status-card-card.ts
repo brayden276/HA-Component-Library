@@ -12,6 +12,7 @@ import {
   formatEntityState,
   getDefaultIconForDomain,
   isEntityActive,
+  isEntityUnavailable,
   handleAction,
 } from "../../utils/entity";
 import "./status-card-editor";
@@ -56,9 +57,19 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
     handleAction(this, this.hass, tapAction, this.config.entity);
   }
 
+  private _handleKeyDown(e: KeyboardEvent): void {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      this._handleTap();
+    }
+  }
+
   private async _handleToggle(e: Event): Promise<void> {
     e.stopPropagation();
     if (!this.hass || !this.config?.entity) return;
+    const entity = this.hass.states[this.config.entity];
+    if (isEntityUnavailable(entity)) return;
+
     const domain = computeDomain(this.config.entity);
     const service = domain === "lock" ? "lock" : "toggle";
     await this.hass.callService(domain, service, undefined, {
@@ -68,13 +79,13 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
 
   private _renderIcon(icon: string): TemplateResult {
     if (icon.startsWith("mdi:")) {
-      // If Home Assistant's ha-icon is registered, use it, else fallback to SVG/text
       return html`<ha-icon .icon=${icon}></ha-icon>`;
     }
     return html`<span>${icon}</span>`;
   }
 
-  private _getSecondaryText(entity: any): string {
+  private _getSecondaryText(entity: any, isUnavailable: boolean): string {
+    if (isUnavailable) return "Offline";
     const mode = this.config?.secondary_info || "last-changed";
     if (mode === "none") return "";
     if (mode === "state") return formatEntityState(entity, this.hass);
@@ -102,21 +113,37 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
     }
 
     const domain = computeDomain(this.config.entity);
-    const isActive = isEntityActive(entity);
+    const isUnavailable = isEntityUnavailable(entity);
+    const isActive = !isUnavailable && isEntityActive(entity);
     const entityName = this.config.name || computeEntityName(entity);
     const iconName =
       this.config.icon ||
       entity.attributes.icon ||
       getDefaultIconForDomain(domain, entity.state);
-    const stateDisplay = formatEntityState(entity, this.hass);
-    const secondaryText = this._getSecondaryText(entity);
+    const stateDisplay = isUnavailable
+      ? "Unavailable"
+      : formatEntityState(entity, this.hass);
+    const secondaryText = this._getSecondaryText(entity, isUnavailable);
     const canToggle =
       this.config.show_toggle !== false &&
       ["light", "switch", "input_boolean", "fan", "lock"].includes(domain);
 
+    const stateClass = isUnavailable
+      ? "state-unavailable"
+      : isActive
+        ? "state-active"
+        : "state-inactive";
+
     return html`
-      <ha-card class="interactive" @click=${this._handleTap}>
-        <div class="card-body ${isActive ? "state-active" : "state-inactive"}">
+      <ha-card
+        class="interactive"
+        role="button"
+        tabindex="0"
+        aria-label="${entityName}: ${stateDisplay}"
+        @click=${this._handleTap}
+        @keydown=${this._handleKeyDown}
+      >
+        <div class="card-body ${stateClass}">
           <div class="icon-container ${isActive ? "active" : ""}">
             ${this._renderIcon(iconName)}
           </div>
@@ -134,7 +161,18 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
               ? html`
                   <button
                     class="toggle-btn ${isActive ? "active" : ""}"
+                    role="switch"
+                    aria-checked="${String(isActive)}"
+                    ?disabled=${isUnavailable}
+                    aria-disabled="${String(isUnavailable)}"
                     @click=${this._handleToggle}
+                    @keydown=${(e: KeyboardEvent) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        this._handleToggle(e);
+                      }
+                    }}
                     aria-label="Toggle ${entityName}"
                     title="Toggle state"
                   >
@@ -152,3 +190,4 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
 
   public static override styles: CSSResultGroup = statusCardCardStyles;
 }
+

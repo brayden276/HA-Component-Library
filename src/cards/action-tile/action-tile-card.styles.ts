@@ -82,5 +82,16 @@ export const actionTileCardStyles: CSSResultGroup = [
       flex-direction: column;
       gap: 2px;
     }
+
+    .tile-card.unavailable {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .tile-card:focus-visible {
+      outline: 2px solid var(--primary-color, #03a9f4);
+      outline-offset: 2px;
+    }
   `,
 ];
+

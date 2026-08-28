@@ -8,7 +8,13 @@ import { LitBaseCard } from "../../components/base/lit-base-card";
 import { interaction, InteractionHandle } from "../../utils/interaction";
 import { registerCard } from "../../utils/registration";
 
+import {
+  computeEntityDisplayName,
+  formatEntityState,
+} from "../../utils/entity";
+
 const DEFAULTS: SingleKpiCardConfig = {
+
   type: "custom:component-single-kpi-v2",
   value: "00",
   label: "Primary metric",
@@ -70,6 +76,9 @@ export class ComponentSingleKpiV2 extends LitBaseCard<SingleKpiCardConfig> {
   }
 
   protected override shouldUpdate(changedProperties: Map<string | number | symbol, unknown>): boolean {
+    if (this._config?.entity) {
+      return super.shouldUpdate(changedProperties);
+    }
     if (changedProperties.size === 1 && changedProperties.has("hass")) {
       return false;
     }
@@ -79,17 +88,34 @@ export class ComponentSingleKpiV2 extends LitBaseCard<SingleKpiCardConfig> {
   protected override render(): TemplateResult {
     if (!this._config) return html``;
     const action = this._getAction();
+    const entity = this._config.entity ? this.hass?.states[this._config.entity] : null;
+    const value = entity && this._config.value === "00"
+      ? formatEntityState(entity, this.hass)
+      : (this._config.value || "00");
+    const label = entity && this._config.label === "Primary metric"
+      ? computeEntityDisplayName({ state: entity })
+      : (this._config.label || "Primary metric");
+    const supportValue = this._config.support_value || "";
+    const supportLabel = this._config.support_label || "";
+
+    const ariaLabel = `${label}: ${value}${supportValue || supportLabel ? `. ${supportValue} ${supportLabel}` : ""}`;
 
     const inner = html`
       <div class="wrap">
         <div>
-          <div class="value">${this.esc(this._config.value)}</div>
-          <div class="label">${this.esc(this._config.label)}</div>
+          <div class="value">${this.esc(value)}</div>
+          <div class="label">${this.esc(label)}</div>
         </div>
-        <div class="support">
-          <b>${this.esc(this._config.support_value)}</b>
-          ${this.esc(this._config.support_label)}
-        </div>
+        ${
+          supportValue || supportLabel
+            ? html`
+                <div class="support">
+                  <b>${this.esc(supportValue)}</b>
+                  ${this.esc(supportLabel)}
+                </div>
+              `
+            : ""
+        }
       </div>
     `;
 
@@ -97,13 +123,14 @@ export class ComponentSingleKpiV2 extends LitBaseCard<SingleKpiCardConfig> {
       <ha-card>
         ${
           action
-            ? html`<button class="demo" type="button">${inner}</button>`
+            ? html`<button class="demo" type="button" aria-label="${this.esc(ariaLabel)}">${inner}</button>`
             : html`<div class="demo-static">${inner}</div>`
         }
       </ha-card>
     `;
   }
 }
+
 
 registerCard({
   type: "component-single-kpi-v2",

@@ -89,17 +89,20 @@ export class ComponentContextStripV3 extends LitBaseCard<ContextStripCardConfig>
       <span class="event">${this.esc(this._config.right_text)}</span>
     `;
 
+    const ariaLabel = `${this._config.left_text || ""}. ${[1, 2, 3].map((idx) => `${(this._config as any)[`center_${idx}_label`] || ""}: ${(this._config as any)[`center_${idx}_value`] || ""}`).join(", ")}. ${this._config.right_text || ""}`;
+
     return html`
       <ha-card>
         ${
           action
-            ? html`<button type="button">${content}</button>`
-            : html`<div class="context-static">${content}</div>`
+            ? html`<button type="button" aria-label="${this.esc(ariaLabel)}">${content}</button>`
+            : html`<div class="context-static" aria-label="${this.esc(ariaLabel)}">${content}</div>`
         }
       </ha-card>
     `;
   }
 }
+
 
 registerCard({
   type: "component-context-strip-v3",

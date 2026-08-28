@@ -106,12 +106,23 @@ export const statusCardCardStyles: CSSResultGroup = [
       transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .toggle-btn.active .toggle-track {
-      background-color: var(--primary-color, #03a9f4);
+    .card-body.state-unavailable {
+      opacity: 0.55;
     }
 
-    .toggle-btn.active .toggle-thumb {
-      transform: translateX(20px);
+    ha-card.interactive:focus-visible {
+      outline: 2px solid var(--primary-color, #03a9f4);
+      outline-offset: 2px;
+    }
+
+    .toggle-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
+
+    .toggle-btn.active .toggle-btn:disabled .toggle-track {
+      opacity: 0.5;
     }
   `,
 ];
+

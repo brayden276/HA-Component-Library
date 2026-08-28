@@ -69,17 +69,20 @@ export class ComponentNavigationTileV2 extends LitBaseCard<NavigationTileCardCon
       </div>
     `;
 
+    const ariaLabel = `${this._config.title || "Destination"}${this._config.context ? `: ${this._config.context}` : ""}. Navigate.`;
+
     return html`
       <ha-card>
         ${
           path
-            ? html`<button class="i nav" type="button">${inner}</button>`
-            : html`<div class="nav nav-static">${inner}</div>`
+            ? html`<button class="i nav" type="button" aria-label="${this.esc(ariaLabel)}">${inner}</button>`
+            : html`<div class="nav nav-static" aria-label="${this.esc(ariaLabel)}">${inner}</div>`
         }
       </ha-card>
     `;
   }
 }
+
 
 registerCard({
   type: "component-nav-tile-v2",

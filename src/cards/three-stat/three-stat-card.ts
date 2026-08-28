@@ -8,6 +8,11 @@ import { LitBaseCard } from "../../components/base/lit-base-card";
 import { interaction, InteractionHandle } from "../../utils/interaction";
 import { registerCard } from "../../utils/registration";
 
+import {
+  computeEntityDisplayName,
+  formatEntityState,
+} from "../../utils/entity";
+
 const DEFAULTS: ThreeStatCardConfig = {
   type: "custom:component-three-stat-v2",
   metric_1_value: "00",
@@ -76,19 +81,30 @@ export class ComponentThreeStatV2 extends LitBaseCard<ThreeStatCardConfig> {
     if (!this._config) return html``;
 
     const metrics = [1, 2, 3].map((idx) => {
-      const val = (this._config as any)[`metric_${idx}_value`];
-      const label = (this._config as any)[`metric_${idx}_label`];
+      const entityId = (this._config as any)[`metric_${idx}_entity`];
+      const entity = entityId ? this.hass?.states[entityId] : null;
+
+      let val = (this._config as any)[`metric_${idx}_value`];
+      if (entity && (val === "00" || !val)) {
+        val = formatEntityState(entity, this.hass);
+      }
+      let label = (this._config as any)[`metric_${idx}_label`];
+      if (entity && (label === `Metric ${idx === 1 ? "one" : idx === 2 ? "two" : "three"}` || !label)) {
+        label = computeEntityDisplayName({ state: entity });
+      }
+
       const action = this._getAction(idx);
+      const ariaLabel = `${label}: ${val}`;
       const content = html`
         <div class="value">${this.esc(val)}</div>
         <div class="label">${this.esc(label)}</div>
       `;
 
       return action
-        ? html`<button class="stat" data-index="${idx}" type="button">
+        ? html`<button class="stat" data-index="${idx}" type="button" aria-label="${this.esc(ariaLabel)}">
             ${content}
           </button>`
-        : html`<div class="stat" data-index="${idx}">${content}</div>`;
+        : html`<div class="stat" data-index="${idx}" aria-label="${this.esc(ariaLabel)}">${content}</div>`;
     });
 
     return html`
@@ -98,6 +114,7 @@ export class ComponentThreeStatV2 extends LitBaseCard<ThreeStatCardConfig> {
     `;
   }
 }
+
 
 registerCard({
   type: "component-three-stat-v2",

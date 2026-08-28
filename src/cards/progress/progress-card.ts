@@ -6,6 +6,10 @@ import { html, TemplateResult, CSSResultGroup } from "lit";
 import { customElement } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import { interaction, InteractionHandle } from "../../utils/interaction";
+import {
+  computeEntityDisplayName,
+  formatEntityState,
+} from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
 const DEFAULTS: ProgressCardConfig = {
@@ -65,26 +69,48 @@ export class ComponentProgressV2 extends LitBaseCard<ProgressCardConfig> {
   protected override render(): TemplateResult {
     if (!this._config) return html``;
     const action = this._getAction();
-    const p = Math.min(100, Math.max(0, Number(this._config.progress) || 0));
+    const entity = this._config.entity ? this.hass?.states[this._config.entity] : null;
+    const label = entity && this._config.label === "Progress metric"
+      ? computeEntityDisplayName({ state: entity })
+      : (this._config.label || "Progress metric");
+    const value = entity && this._config.value === "68%"
+      ? formatEntityState(entity, this.hass)
+      : (this._config.value || "68%");
+
+    let p = Math.min(100, Math.max(0, Number(this._config.progress) || 0));
+    if (entity && this._config.progress === 68) {
+      const num = parseFloat(entity.state);
+      if (!isNaN(num)) p = Math.min(100, Math.max(0, num));
+    }
+
+    const ariaLabel = `${label}: ${value}. ${this._config.target_label || "Target"}: ${this._config.target_value || "100%"}`;
 
     return html`
       <ha-card>
         <div
           class="wrap ${action ? "actionable" : ""}"
-          role="${action ? "button" : "none"}"
+          role="${action ? "button" : "region"}"
           tabindex="${action ? "0" : "-1"}"
+          aria-label="${this.esc(ariaLabel)}"
         >
           <div class="head">
             <div>
-              <div class="value">${this.esc(this._config.value)}</div>
-              <div class="label">${this.esc(this._config.label)}</div>
+              <div class="value">${this.esc(value)}</div>
+              <div class="label">${this.esc(label)}</div>
             </div>
             <div class="target">
               <b>${this.esc(this._config.target_value)}</b>
               ${this.esc(this._config.target_label)}
             </div>
           </div>
-          <div class="track">
+          <div
+            class="track"
+            role="progressbar"
+            aria-valuenow="${p}"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-label="${this.esc(label)}"
+          >
             <div class="fill" style="width:${p}%"></div>
           </div>
         </div>
@@ -92,6 +118,7 @@ export class ComponentProgressV2 extends LitBaseCard<ProgressCardConfig> {
     `;
   }
 }
+
 
 registerCard({
   type: "component-progress-v2",

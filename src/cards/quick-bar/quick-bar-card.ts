@@ -11,8 +11,10 @@ import { HaBaseCard } from "../../components/base/lit-base-card";
 import {
   computeDomain,
   computeEntityName,
+  formatEntityState,
   getDefaultIconForDomain,
   isEntityActive,
+  isEntityUnavailable,
   handleAction,
 } from "../../utils/entity";
 
@@ -64,7 +66,7 @@ export class HaQuickBar extends HaBaseCard<HaQuickBarConfig> {
     let activeCount = 0;
     normalizedEntities.forEach((ent) => {
       const stateObj = this.hass?.states[ent.entity];
-      if (stateObj && isEntityActive(stateObj)) {
+      if (stateObj && !isEntityUnavailable(stateObj) && isEntityActive(stateObj)) {
         activeCount++;
       }
     });
@@ -81,6 +83,7 @@ export class HaQuickBar extends HaBaseCard<HaQuickBarConfig> {
                       ? html`
                           <span
                             class="active-badge ${activeCount > 0 ? "highlight" : ""}"
+                            aria-label="${activeCount} devices active"
                           >
                             ${activeCount} Active
                           </span>
@@ -92,22 +95,37 @@ export class HaQuickBar extends HaBaseCard<HaQuickBarConfig> {
             : ""
         }
 
-        <div class="bar-items-container">
+        <div class="bar-items-container" role="group" aria-label="${this.config.title || "Quick Controls"}">
           ${normalizedEntities.map((entConf) => {
             const stateObj = this.hass?.states[entConf.entity];
-            const isActive = isEntityActive(stateObj);
+            const isUnavailable = isEntityUnavailable(stateObj);
+            const isActive = !isUnavailable && isEntityActive(stateObj);
             const domain = computeDomain(entConf.entity);
             const name = entConf.name || computeEntityName(stateObj);
             const icon =
               entConf.icon ||
               stateObj?.attributes?.icon ||
               getDefaultIconForDomain(domain, stateObj?.state);
+            const stateDisplay = isUnavailable
+              ? "Unavailable"
+              : formatEntityState(stateObj, this.hass);
 
             return html`
               <div
-                class="quick-item interactive ${isActive ? "active" : ""}"
+                class="quick-item interactive ${isActive ? "active" : ""} ${isUnavailable ? "unavailable" : ""}"
+                role="button"
+                tabindex="${isUnavailable ? "-1" : "0"}"
+                aria-pressed="${String(isActive)}"
+                aria-disabled="${String(isUnavailable)}"
+                aria-label="${name}: ${stateDisplay}"
+                title="${name}: ${stateDisplay}"
                 @click=${() => this._handleEntityTap(entConf)}
-                title="${name}: ${stateObj?.state || "unknown"}"
+                @keydown=${(e: KeyboardEvent) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    this._handleEntityTap(entConf);
+                  }
+                }}
               >
                 <div class="item-icon-circle ${isActive ? "active" : ""}">
                   <ha-icon .icon=${icon}></ha-icon>
@@ -123,3 +141,4 @@ export class HaQuickBar extends HaBaseCard<HaQuickBarConfig> {
 
   public static override styles: CSSResultGroup = quickBarCardStyles;
 }
+

@@ -61,5 +61,15 @@ export const metricBadgeCardStyles: CSSResultGroup = [
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
+    .metric-badge-card.unavailable {
+      opacity: 0.55;
+    }
+
+    .metric-badge-card:focus-visible {
+      outline: 2px solid var(--primary-color, #03a9f4);
+      outline-offset: 2px;
+    }
   `,
 ];
+

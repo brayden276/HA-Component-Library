@@ -15,9 +15,11 @@ import {
   formatEntityState,
   getDefaultIconForDomain,
   isEntityActive,
+  isEntityUnavailable,
   handleAction,
 } from "../../utils/entity";
 import "./action-tile-editor";
+
 
 @customElement("ha-action-tile")
 export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
@@ -100,6 +102,13 @@ export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
     return nothing;
   }
 
+  private _handleKeyDown(e: KeyboardEvent): void {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      this._handleTileTap();
+    }
+  }
+
   protected override render(): TemplateResult {
     if (!this.hass || !this.config?.entity) {
       return this.renderError("No entity configured for ha-action-tile");
@@ -111,20 +120,29 @@ export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
     }
 
     const domain = computeDomain(this.config.entity);
-    const isActive = isEntityActive(entity);
+    const isUnavailable = isEntityUnavailable(entity);
+    const isActive = !isUnavailable && isEntityActive(entity);
     const entityName = this.config.name || computeEntityName(entity);
     const iconName =
       this.config.icon ||
       entity.attributes.icon ||
       getDefaultIconForDomain(domain, entity.state);
-    const stateDisplay = formatEntityState(entity, this.hass);
+    const stateDisplay = isUnavailable
+      ? "Unavailable"
+      : formatEntityState(entity, this.hass);
     const activeColor = this.config.color || "#03a9f4";
 
     return html`
       <ha-card
-        class="interactive tile-card ${isActive ? "active" : ""}"
+        class="interactive tile-card ${isActive ? "active" : ""} ${isUnavailable ? "unavailable" : ""}"
         style=${isActive ? `--tile-active-color: ${activeColor};` : ""}
+        role="button"
+        tabindex="${isUnavailable ? "-1" : "0"}"
+        aria-pressed="${String(isActive)}"
+        aria-disabled="${String(isUnavailable)}"
+        aria-label="${entityName}: ${stateDisplay}"
         @click=${this._handleTileTap}
+        @keydown=${this._handleKeyDown}
       >
         <div class="tile-body">
           <div class="tile-header">
@@ -145,3 +163,4 @@ export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
 
   public static override styles: CSSResultGroup = actionTileCardStyles;
 }
+
