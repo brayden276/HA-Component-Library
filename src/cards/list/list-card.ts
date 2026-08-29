@@ -121,12 +121,14 @@ export class ComponentListV2 extends LitBaseCard<ListCardConfig> {
             const entity = row.entity ? this.hass?.states[row.entity] : null;
 
             const rawTitle = row.title || "Item";
-            const title = entity && rawTitle.startsWith("Item")
-              ? computeEntityDisplayName({ state: entity })
-              : rawTitle;
-            const value = entity && (row.value === "00" || !row.value)
-              ? formatEntityState(entity, this.hass)
-              : (row.value || "");
+            const title =
+              entity && rawTitle.startsWith("Item")
+                ? computeEntityDisplayName({ state: entity })
+                : rawTitle;
+            const value =
+              entity && (row.value === "00" || !row.value)
+                ? formatEntityState(entity, this.hass)
+                : row.value || "";
 
             const ariaLabel = `${title}: ${value} ${row.label || ""}${row.description ? `. ${row.description}` : ""}`;
 
@@ -142,18 +144,28 @@ export class ComponentListV2 extends LitBaseCard<ListCardConfig> {
 
             return actions.primary
               ? html`
-                  <button class="row" data-index="${index}" type="button" aria-label="${this.esc(ariaLabel)}">
+                  <button
+                    class="row"
+                    data-index="${index}"
+                    type="button"
+                    aria-label="${this.esc(ariaLabel)}"
+                  >
                     ${content}
                   </button>
                 `
-              : html`<div class="row" data-index="${index}" aria-label="${this.esc(ariaLabel)}">${content}</div>`;
+              : html`<div
+                  class="row"
+                  data-index="${index}"
+                  aria-label="${this.esc(ariaLabel)}"
+                >
+                  ${content}
+                </div>`;
           })}
         </div>
       </ha-card>
     `;
   }
 }
-
 
 registerCard({
   type: "component-list-v2",

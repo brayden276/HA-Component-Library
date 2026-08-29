@@ -1,5 +1,9 @@
 import { css, CSSResultGroup } from "lit";
-import { cardBaseStyles, typographyStyles, badgeProgressStyles } from "../../styles";
+import {
+  cardBaseStyles,
+  typographyStyles,
+  badgeProgressStyles,
+} from "../../styles";
 
 export const securityCameraWallCardStyles: CSSResultGroup = [
   cardBaseStyles,

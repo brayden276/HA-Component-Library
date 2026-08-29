@@ -135,7 +135,9 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
   private _openControls(event: Event): void {
     this._controlsOpener = event.currentTarget as HTMLElement;
     void this.updateComplete.then(() => {
-      const dialog = this.renderRoot.querySelector("dialog") as HTMLDialogElement | null;
+      const dialog = this.renderRoot.querySelector(
+        "dialog",
+      ) as HTMLDialogElement | null;
       if (!dialog || dialog.open) return;
       try {
         dialog.showModal();
@@ -147,7 +149,9 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
   }
 
   private _closeControls(): void {
-    const dialog = this.renderRoot.querySelector("dialog") as HTMLDialogElement | null;
+    const dialog = this.renderRoot.querySelector(
+      "dialog",
+    ) as HTMLDialogElement | null;
     if (dialog?.open) dialog.close();
   }
 
@@ -306,7 +310,11 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
           }
         }}
       >
-        <div class="sheet" @click=${(e: MouseEvent) => e.stopPropagation()} @mousedown=${(e: MouseEvent) => e.stopPropagation()}>
+        <div
+          class="sheet"
+          @click=${(e: MouseEvent) => e.stopPropagation()}
+          @mousedown=${(e: MouseEvent) => e.stopPropagation()}
+        >
           <div class="head">
             <span class="sheet-title">${this.esc(name)} controls</span>
             <button
@@ -359,14 +367,14 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
                           @click=${() => this.moreInfo(entityId)}
                         >
                           ${
-                          pic
-                            ? html`<img
-                                class="classification-image"
-                                src="${pic}"
-                                alt="${this.esc(cls.name)}"
-                              />`
-                            : html`<div class="classification-image"></div>`
-                        }
+                            pic
+                              ? html`<img
+                                  class="classification-image"
+                                  src="${pic}"
+                                  alt="${this.esc(cls.name)}"
+                                />`
+                              : html`<div class="classification-image"></div>`
+                          }
                           <span class="classification-copy">
                             <span class="classification-name"
                               >${this.esc(cls.name)}</span
@@ -459,7 +467,9 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
                     ${camera.actions.map((act) => {
                       const entityId = act.entity.entity_id;
                       const confirm = this._confirmId === entityId;
-                      const available = isEntityAvailable(this.hass?.states[entityId]);
+                      const available = isEntityAvailable(
+                        this.hass?.states[entityId],
+                      );
                       const busy = this._busyActionId === entityId;
                       return html`
                         <div class="control">
@@ -467,7 +477,9 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
                             <span class="control-name"
                               >${this.esc(act.entity.name || act.entity.original_name || "Action")}</span
                             >
-                            <span class="control-state">${!available ? "Unavailable" : busy ? "Working…" : "Available"}</span>
+                            <span class="control-state"
+                              >${!available ? "Unavailable" : busy ? "Working…" : "Available"}</span
+                            >
                           </span>
                           <button
                             class="${confirm ? "confirm" : ""}"
@@ -497,13 +509,16 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
                       const st = this.hass?.states[entityId];
                       const available = isEntityAvailable(st);
                       const busy = this._busyActionId === entityId;
-                      const name = ptzEnt.name || ptzEnt.original_name || "PTZ Control";
+                      const name =
+                        ptzEnt.name || ptzEnt.original_name || "PTZ Control";
                       const domain = entityId.split(".")[0];
                       return html`
                         <div class="control">
                           <span class="copy">
                             <span class="control-name">${this.esc(name)}</span>
-                            <span class="control-state">${!available ? "Unavailable" : busy ? "Working…" : st?.state || "Available"}</span>
+                            <span class="control-state"
+                              >${!available ? "Unavailable" : busy ? "Working…" : st?.state || "Available"}</span
+                            >
                           </span>
                           <button
                             type="button"
@@ -517,7 +532,9 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
                               }
                             }}
                           >
-                            <span>${domain === "button" ? "Move" : "Adjust"}</span>
+                            <span
+                              >${domain === "button" ? "Move" : "Adjust"}</span
+                            >
                           </button>
                         </div>
                       `;

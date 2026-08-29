@@ -1,5 +1,9 @@
 import { css, unsafeCSS } from "lit";
-import { GLOBAL_THEME_CSS, GLOBAL_THEME_STYLE_ID, injectGlobalTokens } from "../styles/tokens";
+import {
+  GLOBAL_THEME_CSS,
+  GLOBAL_THEME_STYLE_ID,
+  injectGlobalTokens,
+} from "../styles/tokens";
 export * from "../styles/tokens";
 export * from "../styles/shared-styles";
 

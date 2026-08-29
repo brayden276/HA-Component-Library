@@ -67,7 +67,11 @@ export class HaQuickBar extends HaBaseCard<HaQuickBarConfig> {
     let activeCount = 0;
     normalizedEntities.forEach((ent) => {
       const stateObj = this.hass?.states[ent.entity];
-      if (stateObj && !isEntityUnavailable(stateObj) && isEntityActive(stateObj)) {
+      if (
+        stateObj &&
+        !isEntityUnavailable(stateObj) &&
+        isEntityActive(stateObj)
+      ) {
         activeCount++;
       }
     });
@@ -78,7 +82,9 @@ export class HaQuickBar extends HaBaseCard<HaQuickBarConfig> {
           this.config.title || this.config.show_active_count
             ? html`
                 <div class="quick-header">
-                  <span class="label-title">${this.config.title || "Quick Controls"}</span>
+                  <span class="label-title"
+                    >${this.config.title || "Quick Controls"}</span
+                  >
                   ${
                     this.config.show_active_count !== false
                       ? html`
@@ -96,7 +102,11 @@ export class HaQuickBar extends HaBaseCard<HaQuickBarConfig> {
             : ""
         }
 
-        <div class="quick-actions" role="group" aria-label="${this.config.title || "Quick Controls"}">
+        <div
+          class="quick-actions"
+          role="group"
+          aria-label="${this.config.title || "Quick Controls"}"
+        >
           ${normalizedEntities.map((entConf) => {
             const stateObj = this.hass?.states[entConf.entity];
             const isUnavailable = isEntityUnavailable(stateObj);

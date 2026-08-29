@@ -26,7 +26,9 @@ export class ComponentSectionSeparatorV2 extends LitBaseCard<SectionSeparatorCar
     return 1;
   }
 
-  protected override shouldUpdate(changedProperties: Map<string | number | symbol, unknown>): boolean {
+  protected override shouldUpdate(
+    changedProperties: Map<string | number | symbol, unknown>,
+  ): boolean {
     if (changedProperties.size === 1 && changedProperties.has("hass")) {
       return false;
     }

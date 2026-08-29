@@ -84,7 +84,9 @@ export class ComponentDeviceAwareAutoEntitiesV1 extends LitBaseCard<DeviceAwareA
     if (!this.isConnected || !this._config || !this.hass) return;
     const loadCardHelpers =
       (globalThis as any).loadCardHelpers ||
-      (typeof window !== "undefined" ? (window as any).loadCardHelpers : undefined);
+      (typeof window !== "undefined"
+        ? (window as any).loadCardHelpers
+        : undefined);
     if (typeof loadCardHelpers !== "function") return;
 
     const generation = ++this._generation;

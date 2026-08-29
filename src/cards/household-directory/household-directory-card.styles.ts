@@ -1,5 +1,10 @@
 import { css, CSSResultGroup } from "lit";
-import { cardBaseStyles, typographyStyles, iconWellStyles, surfaceStyles } from "../../styles";
+import {
+  cardBaseStyles,
+  typographyStyles,
+  iconWellStyles,
+  surfaceStyles,
+} from "../../styles";
 
 export const householdDirectoryCardStyles: CSSResultGroup = [
   cardBaseStyles,

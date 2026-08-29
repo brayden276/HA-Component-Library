@@ -181,15 +181,35 @@ export class ComponentGarageDoorControllerV1 extends LitBaseCard<GarageDoorContr
       if (!controlId) return;
       const domain = controlId.split(".")[0];
       if (domain === "cover") {
-        await runServiceAction(this.hass, { domain: "cover", service: "toggle", target: { entity_id: controlId } });
+        await runServiceAction(this.hass, {
+          domain: "cover",
+          service: "toggle",
+          target: { entity_id: controlId },
+        });
       } else if (domain === "switch") {
-        await runServiceAction(this.hass, { domain: "switch", service: "toggle", target: { entity_id: controlId } });
+        await runServiceAction(this.hass, {
+          domain: "switch",
+          service: "toggle",
+          target: { entity_id: controlId },
+        });
       } else if (domain === "button") {
-        await runServiceAction(this.hass, { domain: "button", service: "press", target: { entity_id: controlId } });
+        await runServiceAction(this.hass, {
+          domain: "button",
+          service: "press",
+          target: { entity_id: controlId },
+        });
       } else if (domain === "script") {
-        await runServiceAction(this.hass, { domain: "script", service: "turn_on", target: { entity_id: controlId } });
+        await runServiceAction(this.hass, {
+          domain: "script",
+          service: "turn_on",
+          target: { entity_id: controlId },
+        });
       } else {
-        await runServiceAction(this.hass, { domain: "homeassistant", service: "toggle", target: { entity_id: controlId } });
+        await runServiceAction(this.hass, {
+          domain: "homeassistant",
+          service: "toggle",
+          target: { entity_id: controlId },
+        });
       }
 
       if (generation !== this._requestGeneration) return;

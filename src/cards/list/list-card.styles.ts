@@ -12,7 +12,9 @@ export const listCardStyles: CSSResultGroup = [
   rowListStyles,
   assemblyStyles,
   css`
-    .list-wrap { margin: -4px 0; }
+    .list-wrap {
+      margin: -4px 0;
+    }
     .row {
       appearance: none;
       width: 100%;

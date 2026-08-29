@@ -90,7 +90,10 @@ export class ComponentControlRowV2 extends LitBaseCard<ControlRowCardConfig> {
     if (domain === "media_player") {
       return Math.max(
         0,
-        Math.min(100, Math.round(Number(state.attributes?.volume_level ?? 0) * 100)),
+        Math.min(
+          100,
+          Math.round(Number(state.attributes?.volume_level ?? 0) * 100),
+        ),
       );
     }
     if (domain === "climate") {

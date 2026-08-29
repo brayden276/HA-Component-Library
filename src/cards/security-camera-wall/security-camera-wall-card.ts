@@ -224,17 +224,17 @@ export class ComponentSecurityCameraWallV3 extends LitBaseCard<SecurityCameraWal
                             @click=${(e: MouseEvent) => this._requestViewer(camera, e.currentTarget as HTMLElement)}
                           >
                             ${
-                            snapshotUrl
-                              ? html`
-                                  <img
-                                    class="snapshot ready"
-                                    src="${snapshotUrl}"
-                                    alt="${this.esc(camera.name)} camera snapshot"
-                                    loading="lazy"
-                                  />
-                                `
-                              : ""
-                          }
+                              snapshotUrl
+                                ? html`
+                                    <img
+                                      class="snapshot ready"
+                                      src="${snapshotUrl}"
+                                      alt="${this.esc(camera.name)} camera snapshot"
+                                      loading="lazy"
+                                    />
+                                  `
+                                : ""
+                            }
                             <span class="live-label">
                               <ha-icon icon="mdi:fullscreen"></ha-icon>
                               <span>Full view</span>

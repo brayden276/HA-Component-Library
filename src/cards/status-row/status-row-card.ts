@@ -76,19 +76,29 @@ export class ComponentStatusRowV2 extends LitBaseCard<StatusRowCardConfig> {
   protected override render(): TemplateResult {
     if (!this._config) return html``;
     const action = this._getAction();
-    const entity = this._config.entity ? this.hass?.states[this._config.entity] : null;
+    const entity = this._config.entity
+      ? this.hass?.states[this._config.entity]
+      : null;
     const isUnavailable = entity ? isEntityUnavailable(entity) : false;
 
-    const domain = this._config.entity ? computeDomain(this._config.entity) : "";
-    const title = entity && this._config.title === "Status title"
-      ? computeEntityDisplayName({ state: entity })
-      : (this._config.title || "Status title");
-    const statusValue = entity && this._config.status_value === "Active"
-      ? (isUnavailable ? "Unavailable" : formatEntityState(entity, this.hass))
-      : (this._config.status_value || "Active");
-    const icon = entity && this._config.icon === "mdi:information-outline"
-      ? (entity.attributes.icon || getDefaultIconForDomain(domain, entity.state))
-      : (this._config.icon || "mdi:information-outline");
+    const domain = this._config.entity
+      ? computeDomain(this._config.entity)
+      : "";
+    const title =
+      entity && this._config.title === "Status title"
+        ? computeEntityDisplayName({ state: entity })
+        : this._config.title || "Status title";
+    const statusValue =
+      entity && this._config.status_value === "Active"
+        ? isUnavailable
+          ? "Unavailable"
+          : formatEntityState(entity, this.hass)
+        : this._config.status_value || "Active";
+    const icon =
+      entity && this._config.icon === "mdi:information-outline"
+        ? entity.attributes.icon ||
+          getDefaultIconForDomain(domain, entity.state)
+        : this._config.icon || "mdi:information-outline";
 
     const description = this._config.description || "";
     const statusLabel = this._config.status_label || "";
@@ -114,14 +124,21 @@ export class ComponentStatusRowV2 extends LitBaseCard<StatusRowCardConfig> {
       <ha-card class="surface-card">
         ${
           action
-            ? html`<button class="demo" type="button" aria-label="${this.esc(ariaLabel)}" aria-disabled="${String(isUnavailable)}" ?disabled=${isUnavailable}>${inner}</button>`
+            ? html`<button
+                class="demo"
+                type="button"
+                aria-label="${this.esc(ariaLabel)}"
+                aria-disabled="${String(isUnavailable)}"
+                ?disabled=${isUnavailable}
+              >
+                ${inner}
+              </button>`
             : html`<div class="demo-static">${inner}</div>`
         }
       </ha-card>
     `;
   }
 }
-
 
 registerCard({
   type: "component-status-row-v2",

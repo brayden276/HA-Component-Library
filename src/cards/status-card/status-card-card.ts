@@ -5,10 +5,7 @@ import { statusCardCardStyles } from "./status-card-card.styles";
 import { CSSResultGroup, html, TemplateResult, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 import { HaBaseCard } from "../../components/base/lit-base-card";
-import {
-  HassEntity,
-  LovelaceCardEditor,
-} from "../../types/home-assistant";
+import { HassEntity, LovelaceCardEditor } from "../../types/home-assistant";
 import {
   computeDomain,
   computeEntityName,
@@ -63,7 +60,12 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
   }
 
   private _handleKeyDown(e: KeyboardEvent): void {
-    if (!this.hass || !this.config || isEntityUnavailable(this.hass.states[this.config.entity])) return;
+    if (
+      !this.hass ||
+      !this.config ||
+      isEntityUnavailable(this.hass.states[this.config.entity])
+    )
+      return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       this._handleTap();
@@ -98,7 +100,10 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
     return html`<span>${icon}</span>`;
   }
 
-  private _getSecondaryText(entity: HassEntity, isUnavailable: boolean): string {
+  private _getSecondaryText(
+    entity: HassEntity,
+    isUnavailable: boolean,
+  ): string {
     if (isUnavailable) return "Offline";
     const mode = this.config?.secondary_info || "last-changed";
     if (mode === "none") return "";
@@ -184,7 +189,9 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
                     aria-label="Toggle ${entityName}"
                     title="Toggle state"
                   >
-                    <span class="switch-pill ${isActive ? "on" : ""}"><span></span></span>
+                    <span class="switch-pill ${isActive ? "on" : ""}"
+                      ><span></span
+                    ></span>
                   </button>
                 `
               : nothing

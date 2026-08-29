@@ -1,5 +1,10 @@
 import { css, CSSResultGroup } from "lit";
-import { cardBaseStyles, typographyStyles, buttonStyles, badgeProgressStyles } from "../../styles";
+import {
+  cardBaseStyles,
+  typographyStyles,
+  buttonStyles,
+  badgeProgressStyles,
+} from "../../styles";
 
 export const updateSummaryCardStyles: CSSResultGroup = [
   cardBaseStyles,

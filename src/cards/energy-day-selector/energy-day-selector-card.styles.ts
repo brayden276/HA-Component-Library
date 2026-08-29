@@ -1,5 +1,11 @@
 import { css, CSSResultGroup } from "lit";
-import { cardBaseStyles, typographyStyles, buttonStyles, badgeProgressStyles, telemetryStyles } from "../../styles";
+import {
+  cardBaseStyles,
+  typographyStyles,
+  buttonStyles,
+  badgeProgressStyles,
+  telemetryStyles,
+} from "../../styles";
 
 export const energyDaySelectorCardStyles: CSSResultGroup = [
   cardBaseStyles,

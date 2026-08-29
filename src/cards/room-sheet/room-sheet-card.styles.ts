@@ -1,5 +1,11 @@
 import { css, CSSResultGroup } from "lit";
-import { cardBaseStyles, typographyStyles, buttonStyles, iconWellStyles, separatorStyles } from "../../styles";
+import {
+  cardBaseStyles,
+  typographyStyles,
+  buttonStyles,
+  iconWellStyles,
+  separatorStyles,
+} from "../../styles";
 
 export const roomSheetCardStyles: CSSResultGroup = [
   cardBaseStyles,

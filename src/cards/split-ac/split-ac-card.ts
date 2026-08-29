@@ -18,7 +18,6 @@ import {
 import { registerCard } from "../../utils/registration";
 import { runServiceAction } from "../../utils/entity";
 
-
 const unavailable = (st?: HassEntity | null): boolean =>
   !st || ["unknown", "unavailable"].includes(st.state);
 
@@ -36,9 +35,9 @@ const label = (value?: unknown): string => {
     "3_center": "3 (Center)",
     "4_right_center": "4 (Right Mid)",
     "5_right": "5 (Right)",
-    "left_right": "Split (Left/Right)",
-    "fan_only": "Fan",
-    "heat_cool": "Auto",
+    left_right: "Split (Left/Right)",
+    fan_only: "Fan",
+    heat_cool: "Auto",
   };
   const lower = str.toLowerCase();
   if (mitsubishiMap[lower]) return mitsubishiMap[lower];
@@ -67,14 +66,18 @@ interface SplitResumeState {
 
 const splitResumeCache = new Map<string, SplitResumeState>();
 
-const getStorageKey = (entityId: string): string => `ha_split_resume_${entityId}`;
+const getStorageKey = (entityId: string): string =>
+  `ha_split_resume_${entityId}`;
 
 const loadResumeState = (entityId: string): SplitResumeState | null => {
   if (splitResumeCache.has(entityId)) {
     return splitResumeCache.get(entityId)!;
   }
   try {
-    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(getStorageKey(entityId)) : null;
+    const raw =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem(getStorageKey(entityId))
+        : null;
     if (raw) {
       const parsed = JSON.parse(raw) as SplitResumeState;
       if (parsed && typeof parsed.hvacMode === "string") {
@@ -88,7 +91,10 @@ const loadResumeState = (entityId: string): SplitResumeState | null => {
   return null;
 };
 
-const saveResumeState = (entityId: string, stateData: SplitResumeState): void => {
+const saveResumeState = (
+  entityId: string,
+  stateData: SplitResumeState,
+): void => {
   splitResumeCache.set(entityId, stateData);
   try {
     if (typeof localStorage !== "undefined") {
@@ -167,10 +173,14 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
 
     const resumeData: SplitResumeState = {
       hvacMode: st.state,
-      temperature: Number.isFinite(Number(attrs.temperature)) ? Number(attrs.temperature) : undefined,
+      temperature: Number.isFinite(Number(attrs.temperature))
+        ? Number(attrs.temperature)
+        : undefined,
       fanMode: attrs.fan_mode ? String(attrs.fan_mode) : undefined,
       swingMode: attrs.swing_mode ? String(attrs.swing_mode) : undefined,
-      swingHorizontalMode: attrs.swing_horizontal_mode ? String(attrs.swing_horizontal_mode) : undefined,
+      swingHorizontalMode: attrs.swing_horizontal_mode
+        ? String(attrs.swing_horizontal_mode)
+        : undefined,
       verticalVaneOption: vertVane?.entity ? vertVane.current : undefined,
       horizontalVaneOption: horizVane?.entity ? horizVane.current : undefined,
       updatedAt: Date.now(),
@@ -203,9 +213,15 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
       const saved = loadResumeState(this._config.entity);
       const modes: string[] = st.attributes?.hvac_modes || [];
       const resumeMode =
-        (saved?.hvacMode && modes.includes(saved.hvacMode) && saved.hvacMode !== "off")
+        saved?.hvacMode &&
+        modes.includes(saved.hvacMode) &&
+        saved.hvacMode !== "off"
           ? saved.hvacMode
-          : (modes.includes("cool") ? "cool" : modes.includes("heat") ? "heat" : modes.find((m) => m !== "off") || "cool");
+          : modes.includes("cool")
+            ? "cool"
+            : modes.includes("heat")
+              ? "heat"
+              : modes.find((m) => m !== "off") || "cool";
 
       try {
         await runServiceAction(this.hass, {
@@ -235,7 +251,11 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
         }
       }
 
-      if (saved?.fanMode && Array.isArray(st.attributes?.fan_modes) && st.attributes.fan_modes.includes(saved.fanMode)) {
+      if (
+        saved?.fanMode &&
+        Array.isArray(st.attributes?.fan_modes) &&
+        st.attributes.fan_modes.includes(saved.fanMode)
+      ) {
         try {
           await runServiceAction(this.hass, {
             domain: "climate",
@@ -248,7 +268,11 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
         }
       }
 
-      if (saved?.swingMode && Array.isArray(st.attributes?.swing_modes) && st.attributes.swing_modes.includes(saved.swingMode)) {
+      if (
+        saved?.swingMode &&
+        Array.isArray(st.attributes?.swing_modes) &&
+        st.attributes.swing_modes.includes(saved.swingMode)
+      ) {
         try {
           await runServiceAction(this.hass, {
             domain: "climate",
@@ -279,7 +303,10 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
           this._config.entity,
           (_st: string | undefined, obj?: HassEntity | null) => {
             const reported = Number(obj?.attributes?.temperature);
-            return Number.isFinite(reported) && Math.abs(reported - targetTemp) <= 0.1;
+            return (
+              Number.isFinite(reported) &&
+              Math.abs(reported - targetTemp) <= 0.1
+            );
           },
           { timeout: 5000 },
         );
@@ -299,12 +326,16 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
   private _temperature(direction: number): void {
     const attributes = this._state()?.attributes || {};
     const reported = Number(attributes.temperature);
-    const base = this._optimisticTemp ?? (Number.isFinite(reported) ? reported : 21);
+    const base =
+      this._optimisticTemp ?? (Number.isFinite(reported) ? reported : 21);
     const step = Number(attributes.target_temp_step || attributes.step) || 0.5;
     const min = Number(attributes.min_temp) || 16;
     const max = Number(attributes.max_temp) || 31;
 
-    const next = Math.min(max, Math.max(min, Number((base + direction * step).toFixed(1))));
+    const next = Math.min(
+      max,
+      Math.max(min, Number((base + direction * step).toFixed(1))),
+    );
     this._optimisticTemp = next;
     this._getTempCoalescer().request(next);
   }
@@ -418,12 +449,13 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
     panel: "mode" | "fan" | "vanes" | "timer" | "settings",
   ): void {
     const activeElement = this.renderRoot.querySelector(":focus");
-    this._lastFocused = activeElement instanceof HTMLElement
-      ? activeElement
-      : null;
+    this._lastFocused =
+      activeElement instanceof HTMLElement ? activeElement : null;
     this._activePanel = panel;
     this.updateComplete.then(() =>
-      this.renderRoot.querySelector<HTMLElement>(".pn [data-dialog-close]")?.focus(),
+      this.renderRoot
+        .querySelector<HTMLElement>(".pn [data-dialog-close]")
+        ?.focus(),
     );
   }
 
@@ -478,10 +510,14 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
               type="button"
               @click=${() => this.moreInfo(this._config?.entity)}
             >
-              <span class="icon-well"><ha-icon icon="${modeIcon}"></ha-icon></span>
+              <span class="icon-well"
+                ><ha-icon icon="${modeIcon}"></ha-icon
+              ></span>
               <span class="copy-block">
                 <span class="label-title">${this.esc(name)}</span>
-                <span class="label-sub" role="status">${this.esc(displayState)}</span>
+                <span class="label-sub" role="status"
+                  >${this.esc(displayState)}</span
+                >
               </span>
             </button>
             <button
@@ -524,7 +560,9 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                       <span class="kpi-metric-lg"
                         >${degrees(attributes.current_temperature)}</span
                       >
-                      <span class="label-sub room-temperature">Room temperature</span>
+                      <span class="label-sub room-temperature"
+                        >Room temperature</span
+                      >
                     </div>
                     <div class="stepper-control">
                       <button
@@ -538,7 +576,9 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                         <ha-icon icon="mdi:minus"></ha-icon>
                       </button>
                       <div class="stepper-display">
-                        <div class="stepper-main-val">${degrees(targetTemp)}</div>
+                        <div class="stepper-main-val">
+                          ${degrees(targetTemp)}
+                        </div>
                         <div class="stepper-sub-lbl">Target</div>
                       </div>
                       <button
@@ -565,7 +605,9 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                       @click=${() => this._openPanel("mode")}
                     >
                       <ha-icon icon="${modeIcon}"></ha-icon>
-                      <span class="action-label">Mode · ${label(st?.state)}</span>
+                      <span class="action-label"
+                        >Mode · ${label(st?.state)}</span
+                      >
                     </button>
                     <button
                       class="btn-action-pill action-pill"
@@ -577,7 +619,9 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                       @click=${() => this._openPanel("fan")}
                     >
                       <ha-icon icon="mdi:fan"></ha-icon>
-                      <span class="action-label">Fan · ${label(attributes.fan_mode)}</span>
+                      <span class="action-label"
+                        >Fan · ${label(attributes.fan_mode)}</span
+                      >
                     </button>
                     ${
                       vaneSummary
@@ -592,7 +636,9 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                               @click=${() => this._openPanel("vanes")}
                             >
                               <ha-icon icon="mdi:swap-vertical"></ha-icon>
-                              <span class="action-label">Vanes · ${this.esc(vaneSummary)}</span>
+                              <span class="action-label"
+                                >Vanes · ${this.esc(vaneSummary)}</span
+                              >
                             </button>
                           `
                         : ""
@@ -661,7 +707,11 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
           this._backdropMouseDown = false;
         }}
       >
-        <div class="pd" @click=${(e: MouseEvent) => e.stopPropagation()} @mousedown=${(e: MouseEvent) => e.stopPropagation()}>
+        <div
+          class="pd"
+          @click=${(e: MouseEvent) => e.stopPropagation()}
+          @mousedown=${(e: MouseEvent) => e.stopPropagation()}
+        >
           <div class="ph">
             <h3 class="pt">${title}</h3>
             <button
@@ -714,7 +764,11 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                   });
                 }}
               >
-                <span><ha-icon icon="${modeIcons[mode] || "mdi:thermostat"}"></ha-icon></span>
+                <span
+                  ><ha-icon
+                    icon="${modeIcons[mode] || "mdi:thermostat"}"
+                  ></ha-icon
+                ></span>
                 <span>${label(mode)}</span>
                 <span class="oi"><ha-icon icon="mdi:check"></ha-icon></span>
               </button>
@@ -752,7 +806,6 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
       `;
     }
 
-
     if (this._activePanel === "vanes") {
       const vanes = this._vanes();
       return html`
@@ -789,7 +842,9 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                     >
                       <span><ha-icon icon="mdi:swap-vertical"></ha-icon></span>
                       <span>${label(opt)}</span>
-                      <span class="oi">${opt === vane.current ? html`<ha-icon icon="mdi:check"></ha-icon>` : ""}</span>
+                      <span class="oi"
+                        >${opt === vane.current ? html`<ha-icon icon="mdi:check"></ha-icon>` : ""}</span
+                      >
                     </button>
                   `,
                 )}
@@ -864,7 +919,9 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                 >
                   <span><ha-icon icon="mdi:swap-vertical"></ha-icon></span>
                   <span>Vane settings</span>
-                  <span class="oi"><ha-icon icon="mdi:chevron-right"></ha-icon></span>
+                  <span class="oi"
+                    ><ha-icon icon="mdi:chevron-right"></ha-icon
+                  ></span>
                 </button>
               `
             : ""
@@ -882,17 +939,22 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                 >
                   <span><ha-icon icon="mdi:timer-outline"></ha-icon></span>
                   <span>Off timer</span>
-                  <span class="oi"><ha-icon icon="mdi:chevron-right"></ha-icon></span>
+                  <span class="oi"
+                    ><ha-icon icon="mdi:chevron-right"></ha-icon
+                  ></span>
                 </button>
               `
             : ""
         }
       </div>
       ${
-        Array.isArray(attributes.preset_modes) && attributes.preset_modes.length > 0
+        Array.isArray(attributes.preset_modes) &&
+        attributes.preset_modes.length > 0
           ? html`
               <div class="og">
-                <p class="fb" style="margin-bottom: 6px; font-weight: 600;">Preset mode</p>
+                <p class="fb" style="margin-bottom: 6px; font-weight: 600;">
+                  Preset mode
+                </p>
                 <div class="qs choices">
                   ${(attributes.preset_modes as string[]).map(
                     (preset) => html`
@@ -910,7 +972,9 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                       >
                         <span><ha-icon icon="mdi:tune"></ha-icon></span>
                         <span>${label(preset)}</span>
-                        <span class="oi">${preset === attributes.preset_mode ? html`<ha-icon icon="mdi:check"></ha-icon>` : ""}</span>
+                        <span class="oi"
+                          >${preset === attributes.preset_mode ? html`<ha-icon icon="mdi:check"></ha-icon>` : ""}</span
+                        >
                       </button>
                     `,
                   )}

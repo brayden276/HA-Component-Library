@@ -79,7 +79,8 @@ export class ComponentHouseholdAttentionV2 extends LitBaseCard<HouseholdAttentio
     }
     if (this.hass && !this._config?.demo) {
       this._bindRegistry();
-      if (!this._registry || changedProps.has("hass")) void this._loadRegistry();
+      if (!this._registry || changedProps.has("hass"))
+        void this._loadRegistry();
     }
   }
 
@@ -319,7 +320,14 @@ export class ComponentHouseholdAttentionV2 extends LitBaseCard<HouseholdAttentio
 }
 
 @customElement("component-household-attention-v1")
-export class ComponentHouseholdAttentionV1 extends ComponentHouseholdAttentionV2 {}
+export class ComponentHouseholdAttentionV1 extends ComponentHouseholdAttentionV2 {
+  public override setConfig(config: HouseholdAttentionConfig): void {
+    super.setConfig({
+      ...config,
+      type: "custom:component-household-attention-v1",
+    });
+  }
+}
 
 registerCard({
   type: "component-household-attention-v1",

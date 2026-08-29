@@ -20,7 +20,6 @@ import {
 } from "../../utils/entity";
 import "./action-tile-editor";
 
-
 @customElement("ha-action-tile")
 export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
   public static async getConfigElement(): Promise<LovelaceCardEditor> {
@@ -104,7 +103,12 @@ export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
   }
 
   private _handleKeyDown(e: KeyboardEvent): void {
-    if (!this.hass || !this.config || isEntityUnavailable(this.hass.states[this.config.entity])) return;
+    if (
+      !this.hass ||
+      !this.config ||
+      isEntityUnavailable(this.hass.states[this.config.entity])
+    )
+      return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       this._handleTileTap();
@@ -148,7 +152,7 @@ export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
       >
         <div class="header-row tile-row">
           <div class="icon-well control-radius ${isActive ? "active" : ""}">
-              <ha-icon .icon=${iconName}></ha-icon>
+            <ha-icon .icon=${iconName}></ha-icon>
           </div>
           <div class="copy-block">
             <div class="label-title" title=${entityName}>${entityName}</div>

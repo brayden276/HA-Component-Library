@@ -43,7 +43,8 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
   public static override styles: CSSResultGroup = appleTvCardStyles;
 
   public override setConfig(config: AppleTvControllerConfig): void {
-    if (!config?.entity && !config?.demo) throw new Error("An Apple TV media_player entity is required");
+    if (!config?.entity && !config?.demo)
+      throw new Error("An Apple TV media_player entity is required");
     this._activePanel = null;
     this._actionError = null;
     super.setConfig({
@@ -53,10 +54,13 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
       demo: Boolean(config?.demo),
       remote_entity: config?.remote_entity || null,
       keyboard_entity: config?.keyboard_entity || null,
-      keyboard_config_entry_id: config?.keyboard_config_entry_id || config?.config_entry_id || null,
+      keyboard_config_entry_id:
+        config?.keyboard_config_entry_id || config?.config_entry_id || null,
     });
   }
-  public override getCardSize(): number { return this._config?.remote_entity ? 4 : 2; }
+  public override getCardSize(): number {
+    return this._config?.remote_entity ? 4 : 2;
+  }
   public override disconnectedCallback(): void {
     this._activePanel = null;
     this._lastFocused = null;
@@ -64,31 +68,58 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
   }
   protected override updated(changed: PropertyValues): void {
     if (changed.has("_activePanel") && this._activePanel) {
-      this.updateComplete.then(() => this.renderRoot.querySelector<HTMLElement>("[data-dialog-close]")?.focus());
+      this.updateComplete.then(() =>
+        this.renderRoot
+          .querySelector<HTMLElement>("[data-dialog-close]")
+          ?.focus(),
+      );
     }
   }
 
   private _isAvailable(entityId?: string | null): boolean {
     const value = entityId ? this.hass?.states?.[entityId]?.state : undefined;
-    return value !== undefined && value !== "unavailable" && value !== "unknown";
+    return (
+      value !== undefined && value !== "unavailable" && value !== "unknown"
+    );
   }
   private _serviceSupported(domain: string, service: string): boolean {
     const services = this.hass?.services;
-    return !services || Object.keys(services).length === 0 || Boolean(services[domain]?.[service]);
+    return (
+      !services ||
+      Object.keys(services).length === 0 ||
+      Boolean(services[domain]?.[service])
+    );
   }
   private _remoteEntity(): string | null {
     const entity = this._config?.entity;
-    return this._config?.remote_entity || (entity ? entity.startsWith("remote.") ? entity : entity.replace(/^media_player\./, "remote.") : null);
+    return (
+      this._config?.remote_entity ||
+      (entity
+        ? entity.startsWith("remote.")
+          ? entity
+          : entity.replace(/^media_player\./, "remote.")
+        : null)
+    );
   }
   private _remoteAvailable(): boolean {
     const entity = this._remoteEntity();
-    return Boolean(this._config?.demo || (entity && this._isAvailable(entity) && this._serviceSupported("remote", "send_command")));
+    return Boolean(
+      this._config?.demo ||
+      (entity &&
+        this._isAvailable(entity) &&
+        this._serviceSupported("remote", "send_command")),
+    );
   }
   private _mediaAvailable(service: string): boolean {
-    return Boolean(this._config?.demo || (this._isAvailable(this._config?.entity) && this._serviceSupported("media_player", service)));
+    return Boolean(
+      this._config?.demo ||
+      (this._isAvailable(this._config?.entity) &&
+        this._serviceSupported("media_player", service)),
+    );
   }
   private _openPanel(panel: Exclude<Panel, null>, event: Event): void {
-    this._lastFocused = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+    this._lastFocused =
+      event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
     this._actionError = null;
     this._activePanel = panel;
   }
@@ -99,39 +130,84 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
     lastFocused?.focus();
   }
   private _setPowerActionFeedback(busy: boolean, failed = false): void {
-    for (const button of this.renderRoot.querySelectorAll<HTMLButtonElement>("[data-remote-command='wakeup'], [data-remote-command='suspend']")) {
+    for (const button of this.renderRoot.querySelectorAll<HTMLButtonElement>(
+      "[data-remote-command='wakeup'], [data-remote-command='suspend']",
+    )) {
       button.setAttribute("aria-busy", String(busy));
       button.disabled = busy || !this._remoteAvailable();
       if (failed) button.setAttribute("data-interaction-error", "true");
       else button.removeAttribute("data-interaction-error");
     }
   }
-  private async _callService(key: string, domain: string, service: string, data?: Record<string, unknown>, targetEntity?: string | null): Promise<void> {
-    if (!this.hass || !this._serviceSupported(domain, service) || (targetEntity && !this._isAvailable(targetEntity)) || this._inFlightActions.has(key)) return;
+  private async _callService(
+    key: string,
+    domain: string,
+    service: string,
+    data?: Record<string, unknown>,
+    targetEntity?: string | null,
+  ): Promise<void> {
+    if (
+      !this.hass ||
+      !this._serviceSupported(domain, service) ||
+      (targetEntity && !this._isAvailable(targetEntity)) ||
+      this._inFlightActions.has(key)
+    )
+      return;
     this._inFlightActions.add(key);
     this._busyAction = key;
     if (key === "remote:power") this._setPowerActionFeedback(true);
     this._actionError = null;
     try {
-      await runServiceAction(this.hass, { domain, service, data, target: targetEntity ? { entity_id: targetEntity } : undefined });
+      await runServiceAction(this.hass, {
+        domain,
+        service,
+        data,
+        target: targetEntity ? { entity_id: targetEntity } : undefined,
+      });
     } catch {
-      this._actionError = "Action failed. Check that the Apple TV is available.";
+      this._actionError =
+        "Action failed. Check that the Apple TV is available.";
       if (key === "remote:power") this._setPowerActionFeedback(true, true);
     } finally {
       this._inFlightActions.delete(key);
       if (this._busyAction === key) this._busyAction = null;
-      if (key === "remote:power") this._setPowerActionFeedback(false, this._actionError !== null);
+      if (key === "remote:power")
+        this._setPowerActionFeedback(false, this._actionError !== null);
     }
   }
-  private _mediaAction(service: string): Promise<void> { return this._callService(`media:${service}`, "media_player", service, undefined, this._config?.entity); }
-  private _remoteAction(command: string): Promise<void> {
-    return this._callService(`remote:${command === "wakeup" || command === "suspend" ? "power" : command}`, "remote", "send_command", { command }, this._remoteEntity());
+  private _mediaAction(service: string): Promise<void> {
+    return this._callService(
+      `media:${service}`,
+      "media_player",
+      service,
+      undefined,
+      this._config?.entity,
+    );
   }
-  private async _keyboardAction(service: "set_keyboard_text" | "clear_keyboard_text"): Promise<void> {
+  private _remoteAction(command: string): Promise<void> {
+    return this._callService(
+      `remote:${command === "wakeup" || command === "suspend" ? "power" : command}`,
+      "remote",
+      "send_command",
+      { command },
+      this._remoteEntity(),
+    );
+  }
+  private async _keyboardAction(
+    service: "set_keyboard_text" | "clear_keyboard_text",
+  ): Promise<void> {
     const config = this._config;
-    if (!config?.keyboard_entity || !config.keyboard_config_entry_id || !this._isAvailable(config.keyboard_entity)) return;
-    const input = this.renderRoot.querySelector<HTMLInputElement>(".keyboard input");
-    const data: Record<string, unknown> = { config_entry_id: config.keyboard_config_entry_id };
+    if (
+      !config?.keyboard_entity ||
+      !config.keyboard_config_entry_id ||
+      !this._isAvailable(config.keyboard_entity)
+    )
+      return;
+    const input =
+      this.renderRoot.querySelector<HTMLInputElement>(".keyboard input");
+    const data: Record<string, unknown> = {
+      config_entry_id: config.keyboard_config_entry_id,
+    };
     if (service === "set_keyboard_text") {
       if (!input?.value.trim()) return;
       data.text = input.value;
@@ -147,8 +223,18 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
     const isPlaying = state?.state === "playing";
     const available = this._mediaAvailable("toggle");
     const title = this._config.title || attributes.friendly_name || "Apple TV";
-    const subtitle = state?.state === "unavailable" || state?.state === "unknown" ? "Unavailable" : [isPlaying ? "Playing" : state?.state === "off" ? "Off" : "Idle", attributes.app_name || attributes.media_title].filter(Boolean).join(" · ");
-    const appCount = Array.isArray(attributes.source_list) ? attributes.source_list.length : 0;
+    const subtitle =
+      state?.state === "unavailable" || state?.state === "unknown"
+        ? "Unavailable"
+        : [
+            isPlaying ? "Playing" : state?.state === "off" ? "Off" : "Idle",
+            attributes.app_name || attributes.media_title,
+          ]
+            .filter(Boolean)
+            .join(" · ");
+    const appCount = Array.isArray(attributes.source_list)
+      ? attributes.source_list.length
+      : 0;
     return html`
       <ha-card>
         <div class="apple-card">
@@ -158,26 +244,87 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
               type="button"
               aria-label="Show ${title} details"
               @click=${() => this.moreInfo(this._config?.entity)}
-            ><ha-icon icon=${attributes.icon || "mdi:apple"}></ha-icon></button>
+            >
+              <ha-icon icon=${attributes.icon || "mdi:apple"}></ha-icon>
+            </button>
             <div class="copy-block">
               <div class="label-title">${this.esc(title)}</div>
-              <div class="label-sub" role="status">${this.esc(subtitle || "Idle")}</div>
+              <div class="label-sub" role="status">
+                ${this.esc(subtitle || "Idle")}
+              </div>
             </div>
             <div class="apple-header-actions">
-              <button class="btn-icon-44 ${isPlaying ? "on" : ""}" type="button" aria-label="Play or pause" ?disabled=${!this._mediaAvailable("media_play_pause")} @click=${() => void this._mediaAction("media_play_pause")}><ha-icon class="sm" icon="${isPlaying ? "mdi:pause" : "mdi:play"}"></ha-icon></button>
-              <button class="btn-icon-44" type="button" aria-label="Volume down" ?disabled=${!this._mediaAvailable("volume_down")} @click=${() => void this._mediaAction("volume_down")}><ha-icon class="sm" icon="mdi:volume-minus"></ha-icon></button>
-              <button class="btn-icon-44" type="button" aria-label="Volume up" ?disabled=${!this._mediaAvailable("volume_up")} @click=${() => void this._mediaAction("volume_up")}><ha-icon class="sm" icon="mdi:volume-plus"></ha-icon></button>
-              <button class="btn-icon-44 ${available ? "on" : ""}" type="button" aria-label="Toggle Apple TV power" aria-pressed=${String(state?.state !== "off")} ?disabled=${!available} @click=${() => void this._mediaAction("toggle")}><ha-icon class="sm" icon="mdi:power"></ha-icon></button>
+              <button
+                class="btn-icon-44 ${isPlaying ? "on" : ""}"
+                type="button"
+                aria-label="Play or pause"
+                ?disabled=${!this._mediaAvailable("media_play_pause")}
+                @click=${() => void this._mediaAction("media_play_pause")}
+              >
+                <ha-icon
+                  class="sm"
+                  icon="${isPlaying ? "mdi:pause" : "mdi:play"}"
+                ></ha-icon>
+              </button>
+              <button
+                class="btn-icon-44"
+                type="button"
+                aria-label="Volume down"
+                ?disabled=${!this._mediaAvailable("volume_down")}
+                @click=${() => void this._mediaAction("volume_down")}
+              >
+                <ha-icon class="sm" icon="mdi:volume-minus"></ha-icon>
+              </button>
+              <button
+                class="btn-icon-44"
+                type="button"
+                aria-label="Volume up"
+                ?disabled=${!this._mediaAvailable("volume_up")}
+                @click=${() => void this._mediaAction("volume_up")}
+              >
+                <ha-icon class="sm" icon="mdi:volume-plus"></ha-icon>
+              </button>
+              <button
+                class="btn-icon-44 ${available ? "on" : ""}"
+                type="button"
+                aria-label="Toggle Apple TV power"
+                aria-pressed=${String(state?.state !== "off")}
+                ?disabled=${!available}
+                @click=${() => void this._mediaAction("toggle")}
+              >
+                <ha-icon class="sm" icon="mdi:power"></ha-icon>
+              </button>
             </div>
           </div>
           <div class="apple-launchers">
-            <button class="btn-action-pill apple-launcher launcher" type="button" @click=${(event: Event) => this._openPanel("remote", event)}>
-              <div class="icon-well control-radius apple-launch-icon"><ha-icon class="sm" icon="mdi:remote"></ha-icon></div>
-              <div class="copy-block apple-launch-copy"><div class="label-title">Remote</div><div class="label-sub">Navigation</div></div>
+            <button
+              class="btn-action-pill apple-launcher launcher"
+              type="button"
+              @click=${(event: Event) => this._openPanel("remote", event)}
+            >
+              <div class="icon-well control-radius apple-launch-icon">
+                <ha-icon class="sm" icon="mdi:remote"></ha-icon>
+              </div>
+              <div class="copy-block apple-launch-copy">
+                <div class="label-title">Remote</div>
+                <div class="label-sub">Navigation</div>
+              </div>
             </button>
-            <button class="btn-action-pill apple-launcher launcher" type="button" ?disabled=${!available} @click=${(event: Event) => this._openPanel("apps", event)}>
-              <div class="icon-well control-radius apple-launch-icon"><ha-icon class="sm" icon="mdi:apps"></ha-icon></div>
-              <div class="copy-block apple-launch-copy"><div class="label-title">Apps</div><div class="label-sub">${appCount ? `${appCount} available` : "Sources"}</div></div>
+            <button
+              class="btn-action-pill apple-launcher launcher"
+              type="button"
+              ?disabled=${!available}
+              @click=${(event: Event) => this._openPanel("apps", event)}
+            >
+              <div class="icon-well control-radius apple-launch-icon">
+                <ha-icon class="sm" icon="mdi:apps"></ha-icon>
+              </div>
+              <div class="copy-block apple-launch-copy">
+                <div class="label-title">Apps</div>
+                <div class="label-sub">
+                  ${appCount ? `${appCount} available` : "Sources"}
+                </div>
+              </div>
             </button>
           </div>
           ${this._actionError ? html`<p class="action-error" role="alert">${this._actionError}</p>` : ""}
@@ -231,9 +378,11 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
           </button>
         </header>
         <div class="dialog-body">
-          ${this._activePanel === "remote"
-            ? this._renderRemote()
-            : this._renderApps()}
+          ${
+            this._activePanel === "remote"
+              ? this._renderRemote()
+              : this._renderApps()
+          }
         </div>
       </section>
     </section>`;
@@ -248,18 +397,34 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
       attributes.volume_level !== undefined
         ? Math.round(Number(attributes.volume_level) * 100)
         : null;
-    const layout = [null, "up", null, "left", "select", "right", null, "down", null] as const;
-    const commands = new Map(REMOTE_COMMANDS.map((command) => [command[0], command]));
+    const layout = [
+      null,
+      "up",
+      null,
+      "left",
+      "select",
+      "right",
+      null,
+      "down",
+      null,
+    ] as const;
+    const commands = new Map(
+      REMOTE_COMMANDS.map((command) => [command[0], command]),
+    );
     const keyboardVisible = Boolean(
       this._config?.keyboard_entity && this._config?.keyboard_config_entry_id,
     );
     const keyboardAvailable = Boolean(
       this._config?.demo ||
-        (this._config?.keyboard_entity &&
-          this._isAvailable(this._config.keyboard_entity) &&
-          this.hass?.states?.[this._config.keyboard_entity]?.state === "on"),
+      (this._config?.keyboard_entity &&
+        this._isAvailable(this._config.keyboard_entity) &&
+        this.hass?.states?.[this._config.keyboard_entity]?.state === "on"),
     );
-    return html`<section class="remote" @click=${(e: MouseEvent) => e.stopPropagation()} @mousedown=${(e: MouseEvent) => e.stopPropagation()}>
+    return html`<section
+      class="remote"
+      @click=${(e: MouseEvent) => e.stopPropagation()}
+      @mousedown=${(e: MouseEvent) => e.stopPropagation()}
+    >
       <div class="remote-toolbar">
         <button
           type="button"
@@ -305,13 +470,18 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
           <span>Play/pause</span>
         </button>
       </div>
-      ${volumeLevel !== null
-        ? html`<div class="volume-row" @click=${(e: MouseEvent) => e.stopPropagation()} @mousedown=${(e: MouseEvent) => e.stopPropagation()}>
-            <button
-              class="btn-icon-30"
-              type="button"
-              aria-label="Toggle mute"
-              @click=${(e: Event) => {
+      ${
+        volumeLevel !== null
+          ? html`<div
+              class="volume-row"
+              @click=${(e: MouseEvent) => e.stopPropagation()}
+              @mousedown=${(e: MouseEvent) => e.stopPropagation()}
+            >
+              <button
+                class="btn-icon-30"
+                type="button"
+                aria-label="Toggle mute"
+                @click=${(e: Event) => {
                 e.stopPropagation();
                 void this._callService(
                   "media:volume_mute",
@@ -321,20 +491,20 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
                   this._config?.entity,
                 );
               }}
-            >
-              <ha-icon
-                icon="${attributes.is_volume_muted ? "mdi:volume-off" : "mdi:volume-high"}"
-              ></ha-icon>
-            </button>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              .value=${String(volumeLevel)}
-              aria-label="Volume"
-              @click=${(e: Event) => e.stopPropagation()}
-              @mousedown=${(e: Event) => e.stopPropagation()}
-              @change=${(e: Event) => {
+              >
+                <ha-icon
+                  icon="${attributes.is_volume_muted ? "mdi:volume-off" : "mdi:volume-high"}"
+                ></ha-icon>
+              </button>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                .value=${String(volumeLevel)}
+                aria-label="Volume"
+                @click=${(e: Event) => e.stopPropagation()}
+                @mousedown=${(e: Event) => e.stopPropagation()}
+                @change=${(e: Event) => {
                 e.stopPropagation();
                 const val = Number((e.target as HTMLInputElement).value) / 100;
                 void this._callService(
@@ -345,10 +515,11 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
                   this._config?.entity,
                 );
               }}
-            />
-            <span class="volume-val">${volumeLevel}%</span>
-          </div>`
-        : ""}
+              />
+              <span class="volume-val">${volumeLevel}%</span>
+            </div>`
+          : ""
+      }
       <div
         class="dpad dpad-cluster"
         role="group"
@@ -390,41 +561,48 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
             </button>`,
         )}
       </div>
-      ${keyboardVisible
-        ? html`<div class="keyboard" @click=${(e: MouseEvent) => e.stopPropagation()} @mousedown=${(e: MouseEvent) => e.stopPropagation()}>
-            <input
-              type="text"
-              aria-label="Apple TV keyboard text"
-              placeholder="Type on Apple TV"
-              ?disabled=${!keyboardAvailable}
-              @keydown=${(event: KeyboardEvent) => {
-                if (event.key === "Enter") void this._keyboardAction("set_keyboard_text");
+      ${
+        keyboardVisible
+          ? html`<div
+              class="keyboard"
+              @click=${(e: MouseEvent) => e.stopPropagation()}
+              @mousedown=${(e: MouseEvent) => e.stopPropagation()}
+            >
+              <input
+                type="text"
+                aria-label="Apple TV keyboard text"
+                placeholder="Type on Apple TV"
+                ?disabled=${!keyboardAvailable}
+                @keydown=${(event: KeyboardEvent) => {
+                if (event.key === "Enter")
+                  void this._keyboardAction("set_keyboard_text");
               }}
-            />
-            <button
-              type="button"
-              aria-label="Send keyboard text"
-              ?disabled=${!keyboardAvailable}
-              @click=${(e: Event) => {
+              />
+              <button
+                type="button"
+                aria-label="Send keyboard text"
+                ?disabled=${!keyboardAvailable}
+                @click=${(e: Event) => {
                 e.stopPropagation();
                 void this._keyboardAction("set_keyboard_text");
               }}
-            >
-              <ha-icon icon="mdi:keyboard"></ha-icon>
-            </button>
-            <button
-              type="button"
-              aria-label="Clear keyboard text"
-              ?disabled=${!keyboardAvailable}
-              @click=${(e: Event) => {
+              >
+                <ha-icon icon="mdi:keyboard"></ha-icon>
+              </button>
+              <button
+                type="button"
+                aria-label="Clear keyboard text"
+                ?disabled=${!keyboardAvailable}
+                @click=${(e: Event) => {
                 e.stopPropagation();
                 void this._keyboardAction("clear_keyboard_text");
               }}
-            >
-              <ha-icon icon="mdi:backspace-outline"></ha-icon>
-            </button>
-          </div>`
-        : ""}
+              >
+                <ha-icon icon="mdi:backspace-outline"></ha-icon>
+              </button>
+            </div>`
+          : ""
+      }
     </section>`;
   }
 
@@ -454,7 +632,11 @@ export class ComponentAppleTvControllerV1 extends LitBaseCard<AppleTvControllerC
       ? sources.filter((source): source is string => typeof source === "string")
       : [];
     return apps.length
-      ? html`<div class="app-grid" @click=${(e: MouseEvent) => e.stopPropagation()} @mousedown=${(e: MouseEvent) => e.stopPropagation()}>
+      ? html`<div
+          class="app-grid"
+          @click=${(e: MouseEvent) => e.stopPropagation()}
+          @mousedown=${(e: MouseEvent) => e.stopPropagation()}
+        >
           ${apps.map(
             (app) =>
               html`<button
@@ -487,5 +669,6 @@ registerCard({
   type: "component-apple-tv-controller-v1",
   element: ComponentAppleTvControllerV1,
   name: "Apple TV Controller",
-  description: "Apple TV media, remote and source controls with the established dashboard presentation.",
+  description:
+    "Apple TV media, remote and source controls with the established dashboard presentation.",
 });

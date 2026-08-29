@@ -6,11 +6,7 @@ import { html, TemplateResult, CSSResultGroup } from "lit";
 import { customElement } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type { LovelaceGridOptions } from "../../types/home-assistant";
-import {
-  localeOf,
-  timeZoneOf,
-  numberFormat,
-} from "../../utils/formatting";
+import { localeOf, timeZoneOf, numberFormat } from "../../utils/formatting";
 import { createMinuteScheduler } from "../../utils/lifecycle";
 import { interaction, InteractionHandle } from "../../utils/interaction";
 import { registerCard } from "../../utils/registration";
@@ -44,7 +40,9 @@ export class ComponentWelcomeHeaderV1 extends LitBaseCard<WelcomeHeaderConfig> {
 
   public override connectedCallback(): void {
     super.connectedCallback();
-    this._cancelMinuteScheduler = createMinuteScheduler(() => this.requestUpdate());
+    this._cancelMinuteScheduler = createMinuteScheduler(() =>
+      this.requestUpdate(),
+    );
   }
 
   public override disconnectedCallback(): void {

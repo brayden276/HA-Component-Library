@@ -78,8 +78,8 @@ export const textEffectCardStyles: CSSResultGroup = [
         transparent 100%
       );
       background-size: 220% 100%;
-      animation: stampSweep var(--effect-speed, 2.6s) cubic-bezier(0.4, 0, 0.2, 1)
-        infinite;
+      animation: stampSweep var(--effect-speed, 2.6s)
+        cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
     .typewave .title:after {
       content: attr(data-text);
@@ -88,8 +88,8 @@ export const textEffectCardStyles: CSSResultGroup = [
       inset: 0;
       color: var(--primary-color);
       clip-path: inset(0 100% 0 0);
-      animation: textSweep var(--effect-speed, 2.6s) cubic-bezier(0.4, 0, 0.2, 1)
-        infinite;
+      animation: textSweep var(--effect-speed, 2.6s)
+        cubic-bezier(0.4, 0, 0.2, 1) infinite;
       pointer-events: none;
     }
     .overprint .title:after {

@@ -21,7 +21,10 @@ export const actionTileCardStyles: CSSResultGroup = [
     }
 
     .tile-card {
-      --action-glow-color: var(--tile-active-color, var(--primary-color, #03a9f4));
+      --action-glow-color: var(
+        --tile-active-color,
+        var(--primary-color, #03a9f4)
+      );
       transition:
         background-color 0.25s ease,
         border-color 0.4s ease,
@@ -32,8 +35,10 @@ export const actionTileCardStyles: CSSResultGroup = [
 
     .tile-card.interactive:active:not(.unavailable) {
       border-color: var(--action-glow-color) !important;
-      box-shadow: 0 0 0 1px var(--action-glow-color),
-                  0 0 16px 3px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+      box-shadow:
+        0 0 0 1px var(--action-glow-color),
+        0 0 16px 3px
+          color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
       transform: scale(0.985);
     }
 

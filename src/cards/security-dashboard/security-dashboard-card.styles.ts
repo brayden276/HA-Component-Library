@@ -708,7 +708,8 @@ export const securityDashboardCardStyles: CSSResultGroup = [
         max-height: 92dvh;
         margin: auto 0 0;
         border-width: 1px 0 0;
-        border-radius: var(--dashboard-radius-dialog) var(--dashboard-radius-dialog) 0 0;
+        border-radius: var(--dashboard-radius-dialog)
+          var(--dashboard-radius-dialog) 0 0;
       }
       .detections {
         grid-template-columns: 1fr;

@@ -282,12 +282,9 @@ export class EnergyHistoryCardV3 extends LitBaseCard<EnergyHistoryConfig> {
 
     try {
       if (profile) {
-        const result = await energyDayData.get(
-          hass,
-          profile,
-          range.day,
-          { force },
-        );
+        const result = await energyDayData.get(hass, profile, range.day, {
+          force,
+        });
         if (seq !== this._fetchSequence || hass !== this.hass) return;
         this._applyProfileData(result, range);
       } else {

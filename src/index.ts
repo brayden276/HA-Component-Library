@@ -9,8 +9,9 @@ export * from "./types/registry";
 export * from "./utils/index";
 export * from "./styles/index";
 
-// Base Components
+// Base Components & Primitives
 export * from "./components/base/lit-base-card";
+export * from "./components/primitives/index";
 
 // Services
 export * from "./services/registry/dashboard-registry";

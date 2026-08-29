@@ -95,14 +95,20 @@ export class ComponentContextStripV3 extends LitBaseCard<ContextStripCardConfig>
       <ha-card>
         ${
           action
-            ? html`<button type="button" aria-label="${this.esc(ariaLabel)}">${content}</button>`
-            : html`<div class="context-static" aria-label="${this.esc(ariaLabel)}">${content}</div>`
+            ? html`<button type="button" aria-label="${this.esc(ariaLabel)}">
+                ${content}
+              </button>`
+            : html`<div
+                class="context-static"
+                aria-label="${this.esc(ariaLabel)}"
+              >
+                ${content}
+              </div>`
         }
       </ha-card>
     `;
   }
 }
-
 
 registerCard({
   type: "component-context-strip-v3",

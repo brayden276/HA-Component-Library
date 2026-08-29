@@ -67,7 +67,8 @@ export class ComponentTextEffectV1 extends LitBaseCard<TextEffectCardConfig> {
       : "stamp";
     // Keep legacy YAML valid while rendering it through the catalogue's stamp
     // primitive. The room-card presence glow owns the requested rainbow cue.
-    const effect = requestedEffect === "rainbow_stamp" ? "stamp" : requestedEffect;
+    const effect =
+      requestedEffect === "rainbow_stamp" ? "stamp" : requestedEffect;
     const speed = Math.max(1.6, Math.min(6, Number(this._config.speed) || 2.6));
     const text = this._config.text;
 

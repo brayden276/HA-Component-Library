@@ -89,7 +89,12 @@ export class ComponentThreeStatV2 extends LitBaseCard<ThreeStatCardConfig> {
         val = formatEntityState(entity, this.hass);
       }
       let label = (this._config as any)[`metric_${idx}_label`];
-      if (entity && (label === `Metric ${idx === 1 ? "one" : idx === 2 ? "two" : "three"}` || !label)) {
+      if (
+        entity &&
+        (label ===
+          `Metric ${idx === 1 ? "one" : idx === 2 ? "two" : "three"}` ||
+          !label)
+      ) {
         label = computeEntityDisplayName({ state: entity });
       }
 
@@ -101,10 +106,21 @@ export class ComponentThreeStatV2 extends LitBaseCard<ThreeStatCardConfig> {
       `;
 
       return action
-        ? html`<button class="stat" data-index="${idx}" type="button" aria-label="${this.esc(ariaLabel)}">
+        ? html`<button
+            class="stat"
+            data-index="${idx}"
+            type="button"
+            aria-label="${this.esc(ariaLabel)}"
+          >
             ${content}
           </button>`
-        : html`<div class="stat" data-index="${idx}" aria-label="${this.esc(ariaLabel)}">${content}</div>`;
+        : html`<div
+            class="stat"
+            data-index="${idx}"
+            aria-label="${this.esc(ariaLabel)}"
+          >
+            ${content}
+          </div>`;
     });
 
     return html`
@@ -114,7 +130,6 @@ export class ComponentThreeStatV2 extends LitBaseCard<ThreeStatCardConfig> {
     `;
   }
 }
-
 
 registerCard({
   type: "component-three-stat-v2",

@@ -3,10 +3,7 @@ import type {
   DashboardRegistries,
   EntityRegistryEntry,
 } from "../../types/registry";
-import {
-  centralRegistry,
-  areaOf,
-} from "../registry/dashboard-registry";
+import { centralRegistry, areaOf } from "../registry/dashboard-registry";
 import { domainOf } from "../../utils/entity";
 import { dashboardProfiles } from "../profiles/backend-profiles";
 

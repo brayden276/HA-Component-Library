@@ -1,4 +1,7 @@
-import type { EntityRegistryEntry, HassEntity } from "../../types/home-assistant";
+import type {
+  EntityRegistryEntry,
+  HassEntity,
+} from "../../types/home-assistant";
 import { domainOf } from "../../utils/entity";
 
 /**
@@ -100,7 +103,8 @@ export const isDiagnosticOrPeripheral = (
   }
 
   // 3. Name or entity ID matching diagnostic telemetry terms
-  const identity = `${entry.entity_id} ${entry.name || ""} ${entry.original_name || ""} ${state?.attributes?.friendly_name || ""}`.toLowerCase();
+  const identity =
+    `${entry.entity_id} ${entry.name || ""} ${entry.original_name || ""} ${state?.attributes?.friendly_name || ""}`.toLowerCase();
   return DIAGNOSTIC_NAME_PATTERN.test(identity);
 };
 

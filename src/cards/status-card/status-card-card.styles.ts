@@ -26,8 +26,9 @@ export const statusCardCardStyles: CSSResultGroup = [
 
     .status-card.interactive:active:not(.unavailable) {
       border-color: var(--primary-color) !important;
-      box-shadow: 0 0 0 1px var(--primary-color),
-                  0 0 16px 3px color-mix(in srgb, var(--primary-color) 50%, transparent) !important;
+      box-shadow:
+        0 0 0 1px var(--primary-color),
+        0 0 16px 3px color-mix(in srgb, var(--primary-color) 50%, transparent) !important;
       transform: scale(0.985);
     }
 

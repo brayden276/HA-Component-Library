@@ -145,18 +145,31 @@ export class ComponentRoomSheetV2 extends LitBaseCard<RoomSheetCardConfig> {
           </div>
           <div class="body">
             ${rows.map((row, index) => {
-              const entity = row.entity && this.hass?.states ? this.hass.states[row.entity] : null;
+              const entity =
+                row.entity && this.hass?.states
+                  ? this.hass.states[row.entity]
+                  : null;
               const domain = row.entity ? computeDomain(row.entity) : "";
 
-              const name = entity && (!row.name || row.name === "Control name" || row.name === "Status metric")
-                ? computeEntityDisplayName({ state: entity })
-                : (row.name || "Control name");
-              const state = entity && (!row.state || row.state === "Current state" || row.state === "Supporting context")
-                ? formatEntityState(entity, this.hass)
-                : (row.state || "");
-              const icon = entity && (!row.icon || row.icon === "mdi:circle-outline")
-                ? (entity.attributes.icon || getDefaultIconForDomain(domain, entity.state))
-                : (row.icon || "mdi:circle-outline");
+              const name =
+                entity &&
+                (!row.name ||
+                  row.name === "Control name" ||
+                  row.name === "Status metric")
+                  ? computeEntityDisplayName({ state: entity })
+                  : row.name || "Control name";
+              const state =
+                entity &&
+                (!row.state ||
+                  row.state === "Current state" ||
+                  row.state === "Supporting context")
+                  ? formatEntityState(entity, this.hass)
+                  : row.state || "";
+              const icon =
+                entity && (!row.icon || row.icon === "mdi:circle-outline")
+                  ? entity.attributes.icon ||
+                    getDefaultIconForDomain(domain, entity.state)
+                  : row.icon || "mdi:circle-outline";
               const value = row.value || "";
 
               const next = row.section || "Controls";
@@ -176,27 +189,23 @@ export class ComponentRoomSheetV2 extends LitBaseCard<RoomSheetCardConfig> {
                           type="button"
                           aria-label="${this.esc(ariaLabel)}"
                         >
-                          <ha-icon
-                            icon="${this.esc(icon)}"
-                          ></ha-icon>
+                          <ha-icon icon="${this.esc(icon)}"></ha-icon>
                           <span>
-                            <div class="rname">
-                              ${this.esc(name)}
-                            </div>
+                            <div class="rname">${this.esc(name)}</div>
                             ${state ? html`<div class="rstate">${this.esc(state)}</div>` : ""}
                           </span>
                           ${value ? html`<span class="rvalue">${this.esc(value)}</span>` : ""}
                         </button>
                       `
                     : html`
-                        <div class="row" data-row="${index}" aria-label="${this.esc(ariaLabel)}">
-                          <ha-icon
-                            icon="${this.esc(icon)}"
-                          ></ha-icon>
+                        <div
+                          class="row"
+                          data-row="${index}"
+                          aria-label="${this.esc(ariaLabel)}"
+                        >
+                          <ha-icon icon="${this.esc(icon)}"></ha-icon>
                           <span>
-                            <div class="rname">
-                              ${this.esc(name)}
-                            </div>
+                            <div class="rname">${this.esc(name)}</div>
                             ${state ? html`<div class="rstate">${this.esc(state)}</div>` : ""}
                           </span>
                           ${value ? html`<span class="rvalue">${this.esc(value)}</span>` : ""}
@@ -211,7 +220,6 @@ export class ComponentRoomSheetV2 extends LitBaseCard<RoomSheetCardConfig> {
     `;
   }
 }
-
 
 registerCard({
   type: "component-room-sheet-v2",

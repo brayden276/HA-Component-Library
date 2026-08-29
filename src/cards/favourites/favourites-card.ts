@@ -408,8 +408,7 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
               )}
             </div>
           </div>
-        </ha-card>
-      `;
+        </ha-card> `;
     }
 
     return html`${this._renderCompatibilityStyles()}
@@ -423,7 +422,11 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
                       <ha-icon icon="mdi:star-outline"></ha-icon>
                       <h2>${this._config.title || "Favourites"}</h2>
                     </div>
-                    <button class="edit" type="button" aria-label="Edit favourites">
+                    <button
+                      class="edit"
+                      type="button"
+                      aria-label="Edit favourites"
+                    >
                       <ha-icon
                         icon="${this.minimal ? "mdi:dots-horizontal" : "mdi:pencil-outline"}"
                       ></ha-icon>
@@ -474,14 +477,58 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
             }
           </div>
         </div>
-      </ha-card>
-    `;
+      </ha-card> `;
   }
 
   private _renderCompatibilityStyles(): TemplateResult {
     if (!this.minimal) return html``;
     return html`<style>
-      .heading h2{font-size:15px!important;font-weight:500!important}.heading ha-icon{color:var(--secondary-text-color)!important;--mdc-icon-size:17px!important}.edit{min-width:44px!important;min-height:44px!important;padding:0!important;color:var(--secondary-text-color)!important;font-weight:400!important}.edit ha-icon{--mdc-icon-size:16px!important}.edit span{display:none!important}.icon{color:var(--secondary-text-color)!important}.name{font-weight:500!important}.state{font-size:12px!important}.dialog-title,.confirm-title{font-size:16px!important;font-weight:500!important}.subheading,.group-title,.choice-name,.dialog-button{font-weight:500!important}.selected-meta,.choice-meta,.editor-copy{font-size:12px!important}
+      .heading h2 {
+        font-size: 15px !important;
+        font-weight: 500 !important;
+      }
+      .heading ha-icon {
+        color: var(--secondary-text-color) !important;
+        --mdc-icon-size: 17px !important;
+      }
+      .edit {
+        min-width: 44px !important;
+        min-height: 44px !important;
+        padding: 0 !important;
+        color: var(--secondary-text-color) !important;
+        font-weight: 400 !important;
+      }
+      .edit ha-icon {
+        --mdc-icon-size: 16px !important;
+      }
+      .edit span {
+        display: none !important;
+      }
+      .icon {
+        color: var(--secondary-text-color) !important;
+      }
+      .name {
+        font-weight: 500 !important;
+      }
+      .state {
+        font-size: 12px !important;
+      }
+      .dialog-title,
+      .confirm-title {
+        font-size: 16px !important;
+        font-weight: 500 !important;
+      }
+      .subheading,
+      .group-title,
+      .choice-name,
+      .dialog-button {
+        font-weight: 500 !important;
+      }
+      .selected-meta,
+      .choice-meta,
+      .editor-copy {
+        font-size: 12px !important;
+      }
     </style>`;
   }
 }
@@ -503,6 +550,7 @@ export class ComponentFavouritesMinimalV1 extends LitBaseCard<FavouritesConfig> 
     super.setConfig({
       preference_key: "home-control.favourites.v1",
       ...(config || {}),
+      type: "custom:component-favourites-minimal-v1",
     });
   }
 

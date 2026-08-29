@@ -72,7 +72,8 @@ export class ComponentRoomNavigationV1 extends LitBaseCard<RoomNavigationCardCon
     }
     if (this.hass) {
       this._bindRegistry();
-      if (!this._registries || changedProps.has("hass")) void this._loadRegistry();
+      if (!this._registries || changedProps.has("hass"))
+        void this._loadRegistry();
     }
   }
 
@@ -155,9 +156,9 @@ export class ComponentRoomNavigationV1 extends LitBaseCard<RoomNavigationCardCon
       const st = this.hass?.states?.[explicit];
       return Boolean(
         st &&
-          ["on", "home", "occupied", "present", "detected"].includes(
-            String(st.state).toLowerCase(),
-          ),
+        ["on", "home", "occupied", "present", "detected"].includes(
+          String(st.state).toLowerCase(),
+        ),
       );
     }
     return this._getEntities().some((st) => {

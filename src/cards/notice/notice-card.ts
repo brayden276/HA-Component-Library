@@ -46,7 +46,9 @@ export class ComponentNoticeV2 extends LitBaseCard<NoticeCardConfig> {
 
   protected override updated(): void {
     const action = this._getAction();
-    const wrap = this.renderRoot.querySelector(".notice-box") as HTMLElement | null;
+    const wrap = this.renderRoot.querySelector(
+      ".notice-box",
+    ) as HTMLElement | null;
     if (action && wrap) {
       this._interactionHandle?.destroy();
       this._interactionHandle = interaction(wrap, {
@@ -68,15 +70,21 @@ export class ComponentNoticeV2 extends LitBaseCard<NoticeCardConfig> {
   protected override render(): TemplateResult {
     if (!this._config) return html``;
     const action = this._getAction();
-    const entity = this._config.entity ? this.hass?.states[this._config.entity] : null;
-    const tone = this._config.tone === "error" ? "critical" : this._config.tone || "info";
+    const entity = this._config.entity
+      ? this.hass?.states[this._config.entity]
+      : null;
+    const tone =
+      this._config.tone === "error" ? "critical" : this._config.tone || "info";
 
-    const title = entity && this._config.title === "Notice title"
-      ? computeEntityDisplayName({ state: entity })
-      : (this._config.title || "Notice title");
-    const message = entity && this._config.message === "Important supporting information appears here."
-      ? formatEntityState(entity, this.hass)
-      : (this._config.message || "");
+    const title =
+      entity && this._config.title === "Notice title"
+        ? computeEntityDisplayName({ state: entity })
+        : this._config.title || "Notice title";
+    const message =
+      entity &&
+      this._config.message === "Important supporting information appears here."
+        ? formatEntityState(entity, this.hass)
+        : this._config.message || "";
 
     const ariaLabel = `${title}${message ? `: ${message}` : ""}`;
 
@@ -100,7 +108,6 @@ export class ComponentNoticeV2 extends LitBaseCard<NoticeCardConfig> {
     `;
   }
 }
-
 
 registerCard({
   type: "component-notice-v2",

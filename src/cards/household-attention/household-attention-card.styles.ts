@@ -87,8 +87,9 @@ export const householdAttentionCardStyles: CSSResultGroup = [
         background-color 0.25s ease;
     }
     .issue:active {
-      box-shadow: 0 0 0 1px var(--warning-color),
-                  0 0 16px 3px color-mix(in srgb, var(--warning-color) 50%, transparent) !important;
+      box-shadow:
+        0 0 0 1px var(--warning-color),
+        0 0 16px 3px color-mix(in srgb, var(--warning-color) 50%, transparent) !important;
       transform: scale(0.985);
     }
     .issue.critical {
@@ -96,8 +97,9 @@ export const householdAttentionCardStyles: CSSResultGroup = [
       background: var(--dashboard-critical-surface);
     }
     .issue.critical:active {
-      box-shadow: 0 0 0 1px var(--error-color),
-                  0 0 16px 3px color-mix(in srgb, var(--error-color) 50%, transparent) !important;
+      box-shadow:
+        0 0 0 1px var(--error-color),
+        0 0 16px 3px color-mix(in srgb, var(--error-color) 50%, transparent) !important;
     }
     .issue:hover,
     .issue:focus-visible {

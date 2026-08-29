@@ -163,9 +163,7 @@ export class HaDevApp extends LitElement {
           </div>
           ${badge ? html`<span class="showcase-badge">${badge}</span>` : ""}
         </div>
-        <div class="showcase-body">
-          ${cardTemplate}
-        </div>
+        <div class="showcase-body">${cardTemplate}</div>
       </div>
     `;
   }
@@ -175,16 +173,23 @@ export class HaDevApp extends LitElement {
       return html`<div>Loading mock Home Assistant environment...</div>`;
 
     return html`
-      <div class="dev-container ${this._darkMode ? "dark-mode" : ""} viewport-${this._viewport}">
+      <div
+        class="dev-container ${this._darkMode ? "dark-mode" : ""} viewport-${this._viewport}"
+      >
         <header class="dev-header">
           <div class="header-left">
             <h1>HA Component Library — Dev Server Preview</h1>
             <p class="header-sub">
-              Live interactive preview of all 52 custom cards with authentic Home Assistant theme and state integration.
+              Live interactive preview of all 52 custom cards with authentic
+              Home Assistant theme and state integration.
             </p>
           </div>
           <div class="header-controls">
-            <div class="viewport-toggle" role="group" aria-label="Viewport size">
+            <div
+              class="viewport-toggle"
+              role="group"
+              aria-label="Viewport size"
+            >
               <button
                 class="${this._viewport === "desktop" ? "active" : ""}"
                 @click=${() => (this._viewport = "desktop")}
@@ -215,7 +220,9 @@ export class HaDevApp extends LitElement {
 
         <!-- Interactive Entity Playground Bar -->
         <aside class="entity-bar">
-          <div class="entity-bar-title">⚡ Live Entity Controls (Click to mutate states across preview)</div>
+          <div class="entity-bar-title">
+            ⚡ Live Entity Controls (Click to mutate states across preview)
+          </div>
           <div class="entity-chips">
             <button
               class="chip ${this._hass.states["light.living_room"]?.state === "on" ? "active" : ""}"
@@ -240,7 +247,8 @@ export class HaDevApp extends LitElement {
               @click=${() => this._mockHass.cycleClimateState()}
               title="Click to cycle Split AC modes"
             >
-              AC Mode: ${this._hass.states["climate.living_room_ac"]?.state} (${this._hass.states["climate.living_room_ac"]?.attributes?.temperature}°C)
+              AC Mode: ${this._hass.states["climate.living_room_ac"]?.state}
+              (${this._hass.states["climate.living_room_ac"]?.attributes?.temperature}°C)
             </button>
             <button
               class="chip ${this._hass.states["light.wled_strip"]?.state === "on" ? "active" : ""}"
@@ -251,7 +259,12 @@ export class HaDevApp extends LitElement {
             <button
               class="chip ${this._hass.states["media_player.apple_tv"]?.state === "playing" ? "active" : ""}"
               @click=${() => {
-                this._mockHass.callService("media_player", "media_play_pause", undefined, { entity_id: "media_player.apple_tv" });
+                this._mockHass.callService(
+                  "media_player",
+                  "media_play_pause",
+                  undefined,
+                  { entity_id: "media_player.apple_tv" },
+                );
               }}
             >
               Apple TV: ${this._hass.states["media_player.apple_tv"]?.state}
@@ -259,8 +272,11 @@ export class HaDevApp extends LitElement {
             <button
               class="chip ${this._hass.states["cover.garage_door"]?.state === "open" ? "active" : ""}"
               @click=${() => {
-                const isClosed = this._hass.states["cover.garage_door"]?.state === "closed";
-                this._mockHass.updateState("cover.garage_door", { state: isClosed ? "open" : "closed" });
+                const isClosed =
+                  this._hass.states["cover.garage_door"]?.state === "closed";
+                this._mockHass.updateState("cover.garage_door", {
+                  state: isClosed ? "open" : "closed",
+                });
               }}
             >
               Garage: ${this._hass.states["cover.garage_door"]?.state}
@@ -268,9 +284,14 @@ export class HaDevApp extends LitElement {
             <button
               class="chip ${this._hass.states["lock.front_door"]?.state === "locked" ? "active" : ""}"
               @click=${() => {
-                const isLocked = this._hass.states["lock.front_door"]?.state === "locked";
-                this._mockHass.updateState("lock.front_door", { state: isLocked ? "unlocked" : "locked" });
-                this._mockHass.updateState("lock.front_door_lock", { state: isLocked ? "unlocked" : "locked" });
+                const isLocked =
+                  this._hass.states["lock.front_door"]?.state === "locked";
+                this._mockHass.updateState("lock.front_door", {
+                  state: isLocked ? "unlocked" : "locked",
+                });
+                this._mockHass.updateState("lock.front_door_lock", {
+                  state: isLocked ? "unlocked" : "locked",
+                });
               }}
             >
               Lock: ${this._hass.states["lock.front_door"]?.state}
@@ -286,7 +307,8 @@ export class HaDevApp extends LitElement {
               @click=${() => this._mockHass.toggleSolarSim()}
               title="Toggle between peak daylight (2.85kW) and nighttime (0kW)"
             >
-              ☀️ Toggle Solar (${this._hass.states["sensor.ha_component_solar_power"]?.state}W)
+              ☀️ Toggle Solar
+              (${this._hass.states["sensor.ha_component_solar_power"]?.state}W)
             </button>
             <button
               class="chip toggle-unavail"
@@ -301,15 +323,12 @@ export class HaDevApp extends LitElement {
         <!-- Navigation Tabs -->
         <nav class="dev-tabs">
           ${[
-            { id: "all", label: "All Components (52)" },
-            { id: "standalone", label: "1. Standalone (4)" },
-            { id: "presentation", label: "2. Presentation & Status (12)" },
-            { id: "navigation", label: "3. Navigation (4)" },
-            { id: "controls", label: "4. Controls & System (6)" },
-            { id: "devices", label: "5. Device Controllers (6)" },
-            { id: "security", label: "6. Security (4)" },
-            { id: "energy", label: "7. Energy (7)" },
-            { id: "home", label: "8. Home & Overview (10)" },
+            { id: "all", label: "All Canonical Components (34)" },
+            { id: "primitives", label: "1. Primitives & Presentation (10)" },
+            { id: "controls", label: "2. Navigation & Controls (8)" },
+            { id: "devices", label: "3. Specialised Controllers (5)" },
+            { id: "compositions", label: "4. Composed Dashboards & Suites (11)" },
+            { id: "compat", label: "5. Compatibility Aliases (5)" },
           ].map(
             (tab) => html`
               <button
@@ -325,12 +344,15 @@ export class HaDevApp extends LitElement {
         <main class="dev-main">
           <!-- 1. Standalone Cards -->
           ${
-            this._activeTab === "all" || this._activeTab === "standalone"
+            this._activeTab === "all" || this._activeTab === "primitives"
               ? html`
                   <section class="dev-section">
                     <div class="section-header">
                       <h2>1. Standalone Cards</h2>
-                      <p>Independent foundational Lovelace cards: status card, action tile, quick bar, and metric badge</p>
+                      <p>
+                        Independent foundational Lovelace cards: status card,
+                        action tile, quick bar, and metric badge
+                      </p>
                     </div>
 
                     <div class="card-grid">
@@ -351,7 +373,6 @@ export class HaDevApp extends LitElement {
                         `,
                         "custom:ha-status-card",
                       )}
-
                       ${this._renderShowcase(
                         "ha-status-card",
                         "Status Card (Climate State)",
@@ -389,7 +410,6 @@ export class HaDevApp extends LitElement {
                         `,
                         "custom:ha-action-tile",
                       )}
-
                       ${this._renderShowcase(
                         "ha-action-tile",
                         "Action Tile (Living Light)",
@@ -406,7 +426,6 @@ export class HaDevApp extends LitElement {
                         `,
                         "custom:ha-action-tile",
                       )}
-
                       ${this._renderShowcase(
                         "ha-action-tile",
                         "Action Tile (Apple TV)",
@@ -469,7 +488,6 @@ export class HaDevApp extends LitElement {
                         `,
                         "custom:ha-metric-badge",
                       )}
-
                       ${this._renderShowcase(
                         "ha-metric-badge",
                         "Metric Badge (Power Consumption)",
@@ -497,12 +515,15 @@ export class HaDevApp extends LitElement {
 
           <!-- 2. Presentation & Status Cards -->
           ${
-            this._activeTab === "all" || this._activeTab === "presentation"
+            this._activeTab === "all" || this._activeTab === "primitives"
               ? html`
                   <section class="dev-section">
                     <div class="section-header">
                       <h2>2. Presentation & Status Cards</h2>
-                      <p>Context strips, KPIs, status rows, progress gauges, notices, lists, text effects, and empty states</p>
+                      <p>
+                        Context strips, KPIs, status rows, progress gauges,
+                        notices, lists, text effects, and empty states
+                      </p>
                     </div>
 
                     ${this._renderShowcase(
@@ -546,7 +567,6 @@ export class HaDevApp extends LitElement {
                         `,
                         "custom:component-single-kpi-v2",
                       )}
-
                       ${this._renderShowcase(
                         "component-three-stat-v2",
                         "Three Stat V2 (Summary Stat Row)",
@@ -587,7 +607,6 @@ export class HaDevApp extends LitElement {
                       `,
                       "custom:component-status-row-v2",
                     )}
-
                     ${this._renderShowcase(
                       "component-progress-v2",
                       "Progress Bar V2 (Daily Solar Production vs Goal)",
@@ -606,7 +625,6 @@ export class HaDevApp extends LitElement {
                       `,
                       "custom:component-progress-v2",
                     )}
-
                     ${this._renderShowcase(
                       "component-action-v2",
                       "Action Trigger Card V2 (Goodnight Scene)",
@@ -616,7 +634,8 @@ export class HaDevApp extends LitElement {
                           .config=${{
                             type: "custom:component-action-v2",
                             title: "Goodnight Routine",
-                            description: "Turn off all active downlights and arm home security",
+                            description:
+                              "Turn off all active downlights and arm home security",
                             action_text: "Activate",
                             icon: "mdi:bed-clock",
                             entity: "scene.goodnight",
@@ -625,7 +644,6 @@ export class HaDevApp extends LitElement {
                       `,
                       "custom:component-action-v2",
                     )}
-
                     ${this._renderShowcase(
                       "component-list-v2",
                       "List Card V2 (Active High-Draw Appliances)",
@@ -636,16 +654,30 @@ export class HaDevApp extends LitElement {
                             type: "custom:component-list-v2",
                             title: "Active Loads",
                             rows: [
-                              { title: "Living Room Split AC", description: "Climate", value: "21°C", label: "Cooling" },
-                              { title: "Water Heater", description: "Storage", value: "58°C", label: "Ready" },
-                              { title: "Home Office Workstation", description: "Plug", value: "145W", label: "Active" },
+                              {
+                                title: "Living Room Split AC",
+                                description: "Climate",
+                                value: "21°C",
+                                label: "Cooling",
+                              },
+                              {
+                                title: "Water Heater",
+                                description: "Storage",
+                                value: "58°C",
+                                label: "Ready",
+                              },
+                              {
+                                title: "Home Office Workstation",
+                                description: "Plug",
+                                value: "145W",
+                                label: "Active",
+                              },
                             ],
                           }}
                         ></component-list-v2>
                       `,
                       "custom:component-list-v2",
                     )}
-
                     ${this._renderShowcase(
                       "component-notice-v2",
                       "Notice Card V2 (Active Tariff Banner)",
@@ -657,13 +689,13 @@ export class HaDevApp extends LitElement {
                             tone: "info",
                             icon: "mdi:information-outline",
                             title: "Energy Tariff Active",
-                            message: "Off-peak window active until 3:00 PM (14.2¢ / kWh).",
+                            message:
+                              "Off-peak window active until 3:00 PM (14.2¢ / kWh).",
                           }}
                         ></component-notice-v2>
                       `,
                       "custom:component-notice-v2",
                     )}
-
                     ${this._renderShowcase(
                       "component-text-effect-v1",
                       "Text Effect V1 (Motion Signature Status)",
@@ -673,7 +705,8 @@ export class HaDevApp extends LitElement {
                           .config=${{
                             type: "custom:component-text-effect-v1",
                             text: "ALL SYSTEMS NORMAL",
-                            description: "Perimeter armed, climate optimal, solar export active",
+                            description:
+                              "Perimeter armed, climate optimal, solar export active",
                             icon: "mdi:shield-check",
                             effect: "stamp",
                             speed: 2.6,
@@ -682,7 +715,6 @@ export class HaDevApp extends LitElement {
                       `,
                       "custom:component-text-effect-v1",
                     )}
-
                     ${this._renderShowcase(
                       "component-section-separator-v2",
                       "Section Separator V2 (Divider Header)",
@@ -699,41 +731,23 @@ export class HaDevApp extends LitElement {
                       "custom:component-section-separator-v2",
                     )}
 
-                    <div class="card-grid">
-                      ${this._renderShowcase(
-                        "component-empty-state-v3",
-                        "Empty State V3 (Quiet State)",
-                        html`
-                          <component-empty-state-v3
-                            .hass=${this._hass}
-                            .config=${{
-                              type: "custom:component-empty-state-v3",
-                              icon: "mdi:check-circle-outline",
-                              title: "No Active Alerts",
-                              message: "All household systems and sensors reporting normal conditions.",
-                            }}
-                          ></component-empty-state-v3>
-                        `,
-                        "custom:component-empty-state-v3",
-                      )}
-
-                      ${this._renderShowcase(
-                        "component-empty-state-v2",
-                        "Empty State V2 (Legacy Adapter)",
-                        html`
-                          <component-empty-state-v2
-                            .hass=${this._hass}
-                            .config=${{
-                              type: "custom:component-empty-state-v2",
-                              icon: "mdi:clipboard-check-outline",
-                              title: "Queue Empty",
-                              message: "No maintenance actions or pending updates in the queue.",
-                            }}
-                          ></component-empty-state-v2>
-                        `,
-                        "custom:component-empty-state-v2",
-                      )}
-                    </div>
+                    ${this._renderShowcase(
+                      "component-empty-state-v3",
+                      "Empty State V3 (Quiet State)",
+                      html`
+                        <component-empty-state-v3
+                          .hass=${this._hass}
+                          .config=${{
+                            type: "custom:component-empty-state-v3",
+                            icon: "mdi:check-circle-outline",
+                            title: "No Active Alerts",
+                            message:
+                              "All household systems and sensors reporting normal conditions.",
+                          }}
+                        ></component-empty-state-v3>
+                      `,
+                      "custom:component-empty-state-v3",
+                    )}
                   </section>
                 `
               : ""
@@ -741,12 +755,15 @@ export class HaDevApp extends LitElement {
 
           <!-- 3. Navigation Cards -->
           ${
-            this._activeTab === "all" || this._activeTab === "navigation"
+            this._activeTab === "all" || this._activeTab === "controls"
               ? html`
                   <section class="dev-section">
                     <div class="section-header">
                       <h2>3. Navigation Cards</h2>
-                      <p>Nav tiles, quick navigation headers, room navigation buttons, and room master sheets</p>
+                      <p>
+                        Nav tiles, quick navigation headers, room navigation
+                        buttons, and room master sheets
+                      </p>
                     </div>
 
                     <div class="card-grid">
@@ -760,14 +777,14 @@ export class HaDevApp extends LitElement {
                               type: "custom:component-nav-tile-v2",
                               icon: "mdi:lightning-bolt",
                               title: "Energy Dashboard",
-                              context: "Live solar: 2.85 kW · Self-sufficiency: 82%",
+                              context:
+                                "Live solar: 2.85 kW · Self-sufficiency: 82%",
                               navigation_path: "/energy",
                             }}
                           ></component-nav-tile-v2>
                         `,
                         "custom:component-nav-tile-v2",
                       )}
-
                       ${this._renderShowcase(
                         "component-nav-tile-v2",
                         "Nav Tile V2 (Security Center Path)",
@@ -778,7 +795,8 @@ export class HaDevApp extends LitElement {
                               type: "custom:component-nav-tile-v2",
                               icon: "mdi:shield-home-outline",
                               title: "Security Center",
-                              context: "5 perimeter sensors secured · Armed Home",
+                              context:
+                                "5 perimeter sensors secured · Armed Home",
                               navigation_path: "/security",
                             }}
                           ></component-nav-tile-v2>
@@ -809,7 +827,6 @@ export class HaDevApp extends LitElement {
                       `,
                       "custom:component-quick-nav-v2",
                     )}
-
                     ${this._renderShowcase(
                       "component-room-navigation-v1",
                       "Room Navigation V1 (Area Nav Button)",
@@ -827,7 +844,6 @@ export class HaDevApp extends LitElement {
                       `,
                       "custom:component-room-navigation-v1",
                     )}
-
                     ${this._renderShowcase(
                       "component-room-sheet-v2",
                       "Room Sheet V2 (Living Room Detailed Control Sheet)",
@@ -889,7 +905,10 @@ export class HaDevApp extends LitElement {
                   <section class="dev-section">
                     <div class="section-header">
                       <h2>4. Controls & System Cards</h2>
-                      <p>Control rows, media rows, update notifications, and auto-discovery cards</p>
+                      <p>
+                        Control rows, media rows, update notifications, and
+                        auto-discovery cards
+                      </p>
                     </div>
 
                     <div class="card-grid">
@@ -909,7 +928,6 @@ export class HaDevApp extends LitElement {
                         `,
                         "custom:component-control-row-v2",
                       )}
-
                       ${this._renderShowcase(
                         "component-control-row-v2",
                         "Control Row V2 (Toggle Power Control)",
@@ -944,7 +962,6 @@ export class HaDevApp extends LitElement {
                       `,
                       "custom:component-media-row-v2",
                     )}
-
                     ${this._renderShowcase(
                       "component-update-summary-v3",
                       "Update Summary V3 (Core Update Banner)",
@@ -955,13 +972,13 @@ export class HaDevApp extends LitElement {
                             type: "custom:component-update-summary-v3",
                             count: "1",
                             title: "system update ready",
-                            message: "Home Assistant Core 2026.8.1 ready to install.",
+                            message:
+                              "Home Assistant Core 2026.8.1 ready to install.",
                           }}
                         ></component-update-summary-v3>
                       `,
                       "custom:component-update-summary-v3",
                     )}
-
                     ${this._renderShowcase(
                       "component-update-row-v3",
                       "Update Row V3 (HA Core Release Details)",
@@ -994,7 +1011,6 @@ export class HaDevApp extends LitElement {
                         `,
                         "custom:component-device-discovery-v2",
                       )}
-
                       ${this._renderShowcase(
                         "component-device-aware-auto-entities-v1",
                         "Device-Aware Auto-Entities V1 (Dynamic Entity Filter)",
@@ -1008,7 +1024,10 @@ export class HaDevApp extends LitElement {
                                 icon: "mdi:filter-variant",
                               },
                               filter: {
-                                include: [{ domain: "light" }, { domain: "switch" }],
+                                include: [
+                                  { domain: "light" },
+                                  { domain: "switch" },
+                                ],
                               },
                             }}
                           ></component-device-aware-auto-entities-v1>
@@ -1028,7 +1047,10 @@ export class HaDevApp extends LitElement {
                   <section class="dev-section">
                     <div class="section-header">
                       <h2>5. Device Controllers</h2>
-                      <p>Split AC HVAC, WLED strips, Apple TV remote, Garage door, and security camera controllers</p>
+                      <p>
+                        Split AC HVAC, WLED strips, Apple TV remote, Garage
+                        door, and security camera controllers
+                      </p>
                     </div>
 
                     <div class="card-grid">
@@ -1047,7 +1069,6 @@ export class HaDevApp extends LitElement {
                         `,
                         "custom:component-split-controller-v4",
                       )}
-
                       ${this._renderShowcase(
                         "component-wled-controller-v1",
                         "WLED Strip Controller V1 (Presets, Palettes, Speed)",
@@ -1083,7 +1104,6 @@ export class HaDevApp extends LitElement {
                         `,
                         "custom:component-apple-tv-controller-v1",
                       )}
-
                       ${this._renderShowcase(
                         "component-garage-door-controller-v1",
                         "Garage Door Controller V1 (Momentary & Reed Sensor)",
@@ -1102,52 +1122,37 @@ export class HaDevApp extends LitElement {
                       )}
                     </div>
 
-                    <div class="card-grid">
-                      ${this._renderShowcase(
-                        "component-camera-controller-v2",
-                        "Camera Controller V2 (Live Feed & PTZ/Controls)",
-                        html`
-                          <component-camera-controller-v2
-                            .hass=${this._hass}
-                            .config=${{
-                              type: "custom:component-camera-controller-v2",
-                              camera_entity: "camera.front_doorbell",
-                              title: "Front Doorbell Camera",
-                            }}
-                          ></component-camera-controller-v2>
-                        `,
-                        "custom:component-camera-controller-v2",
-                      )}
-
-                      ${this._renderShowcase(
-                        "component-camera-controller-v1",
-                        "Camera Controller V1 (Legacy Compatibility Adapter)",
-                        html`
-                          <component-camera-controller-v1
-                            .hass=${this._hass}
-                            .config=${{
-                              type: "custom:component-camera-controller-v1",
-                              camera_entity: "camera.front_doorbell",
-                              title: "Front Doorbell (V1 Adapter)",
-                            }}
-                          ></component-camera-controller-v1>
-                        `,
-                        "custom:component-camera-controller-v1",
-                      )}
-                    </div>
+                    ${this._renderShowcase(
+                      "component-camera-controller-v2",
+                      "Camera Controller V2 (Live Feed & PTZ/Controls)",
+                      html`
+                        <component-camera-controller-v2
+                          .hass=${this._hass}
+                          .config=${{
+                            type: "custom:component-camera-controller-v2",
+                            camera_entity: "camera.front_doorbell",
+                            title: "Front Doorbell Camera",
+                          }}
+                        ></component-camera-controller-v2>
+                      `,
+                      "custom:component-camera-controller-v2",
+                    )}
                   </section>
                 `
               : ""
           }
 
-          <!-- 6. Security Cards -->
+          <!-- 6. Security Family -->
           ${
-            this._activeTab === "all" || this._activeTab === "security"
+            this._activeTab === "all" || this._activeTab === "compositions"
               ? html`
                   <section class="dev-section">
                     <div class="section-header">
                       <h2>6. Security Family</h2>
-                      <p>Household security overview, live camera wall, entry points status, and comprehensive security dashboard</p>
+                      <p>
+                        Household security overview, live camera wall, entry
+                        points status, and comprehensive security dashboard
+                      </p>
                     </div>
 
                     ${this._renderShowcase(
@@ -1165,7 +1170,6 @@ export class HaDevApp extends LitElement {
                       `,
                       "custom:component-security-summary-v1",
                     )}
-
                     ${this._renderShowcase(
                       "component-security-camera-wall-v3",
                       "Security Camera Wall V3 (Multi-Stream Live Wall)",
@@ -1175,14 +1179,17 @@ export class HaDevApp extends LitElement {
                           .config=${{
                             type: "custom:component-security-camera-wall-v3",
                             title: "Perimeter Camera Wall",
-                            cameras: ["camera.front_doorbell", "camera.front_porch", "camera.driveway"],
+                            cameras: [
+                              "camera.front_doorbell",
+                              "camera.front_porch",
+                              "camera.driveway",
+                            ],
                             columns: 3,
                           }}
                         ></component-security-camera-wall-v3>
                       `,
                       "custom:component-security-camera-wall-v3",
                     )}
-
                     ${this._renderShowcase(
                       "component-security-entry-points-v1",
                       "Security Entry Points V1 (Doors, Windows, Gates & Locks)",
@@ -1198,7 +1205,6 @@ export class HaDevApp extends LitElement {
                       `,
                       "custom:component-security-entry-points-v1",
                     )}
-
                     ${this._renderShowcase(
                       "component-security-dashboard-v1",
                       "Security Dashboard V1 (Full Security Management Center)",
@@ -1219,14 +1225,18 @@ export class HaDevApp extends LitElement {
               : ""
           }
 
-          <!-- 7. Energy Cards -->
+          <!-- 7. Energy Family -->
           ${
-            this._activeTab === "all" || this._activeTab === "energy"
+            this._activeTab === "all" || this._activeTab === "compositions"
               ? html`
                   <section class="dev-section">
                     <div class="section-header">
                       <h2>7. Energy Family</h2>
-                      <p>Day selector, energy summary, solar daylight telemetry, 24h history graphs, metric pairs, and full energy dashboard</p>
+                      <p>
+                        Day selector, energy summary, solar daylight telemetry,
+                        24h history graphs, metric pairs, and full energy
+                        dashboard
+                      </p>
                     </div>
 
                     ${this._renderShowcase(
@@ -1243,7 +1253,6 @@ export class HaDevApp extends LitElement {
                       `,
                       "custom:component-energy-day-selector-v1",
                     )}
-
                     ${this._renderShowcase(
                       "component-energy-summary-v1",
                       "Energy Summary V1 (Live Solar, House, Grid, & Daily Totals)",
@@ -1279,7 +1288,6 @@ export class HaDevApp extends LitElement {
                         `,
                         "custom:solar-daylight-card-v7",
                       )}
-
                       ${this._renderShowcase(
                         "metric-pair-card-v3",
                         "Metric Pair Card V3 (Live Consumption vs Solar Output)",
@@ -1294,8 +1302,10 @@ export class HaDevApp extends LitElement {
                               right_value: "2.85 kW",
                               right_label: "Solar Production",
                               right_sublabel: "Peak generation",
-                              left_more_info_entity: "sensor.ha_component_house_power",
-                              right_more_info_entity: "sensor.ha_component_solar_power",
+                              left_more_info_entity:
+                                "sensor.ha_component_house_power",
+                              right_more_info_entity:
+                                "sensor.ha_component_solar_power",
                             }}
                           ></metric-pair-card-v3>
                         `,
@@ -1320,7 +1330,6 @@ export class HaDevApp extends LitElement {
                       `,
                       "custom:component-history-graph-v2",
                     )}
-
                     ${this._renderShowcase(
                       "energy-history-card-v3",
                       "Energy History Card V3 (24h/Calendar Day Energy Balance)",
@@ -1339,7 +1348,6 @@ export class HaDevApp extends LitElement {
                       `,
                       "custom:energy-history-card-v3",
                     )}
-
                     ${this._renderShowcase(
                       "component-energy-dashboard-v1",
                       "Energy Dashboard V1 (Unified Energy Management Board)",
@@ -1362,12 +1370,16 @@ export class HaDevApp extends LitElement {
 
           <!-- 8. Home Overview & Directories -->
           ${
-            this._activeTab === "all" || this._activeTab === "home"
+            this._activeTab === "all" || this._activeTab === "compositions"
               ? html`
                   <section class="dev-section">
                     <div class="section-header">
                       <h2>8. Home Overview & Composition Cards</h2>
-                      <p>Welcome header, household attention queue, favourites, smart collections, directories, and full home overview boards</p>
+                      <p>
+                        Welcome header, household attention queue, favourites,
+                        smart collections, directories, and full home overview
+                        boards
+                      </p>
                     </div>
 
                     ${this._renderShowcase(
@@ -1386,23 +1398,150 @@ export class HaDevApp extends LitElement {
                       "custom:component-welcome-header-v1",
                     )}
 
+                    ${this._renderShowcase(
+                      "component-household-attention-v2",
+                      "Household Attention V2 (System & Security Queue)",
+                      html`
+                        <component-household-attention-v2
+                          .hass=${this._hass}
+                          .config=${{
+                            type: "custom:component-household-attention-v2",
+                            title: "Household Attention",
+                            demo: true,
+                          }}
+                        ></component-household-attention-v2>
+                      `,
+                      "custom:component-household-attention-v2",
+                    )}
+
+                    ${this._renderShowcase(
+                      "component-favourites-v3",
+                      "Favourites V3 (Frequently Used Device Controls)",
+                      html`
+                        <component-favourites-v3
+                          .hass=${this._hass}
+                          .config=${{
+                            type: "custom:component-favourites-v3",
+                            title: "Quick Access Favourites",
+                            max: 4,
+                            items: [
+                              {
+                                entity_id: "light.living_room",
+                                name: "Living Room",
+                              },
+                              {
+                                entity_id: "climate.living_room_ac",
+                                name: "Living AC",
+                              },
+                              {
+                                entity_id: "switch.coffee_maker",
+                                name: "Espresso",
+                              },
+                              {
+                                entity_id: "cover.garage_door",
+                                name: "Garage",
+                              },
+                            ],
+                          }}
+                        ></component-favourites-v3>
+                      `,
+                      "custom:component-favourites-v3",
+                    )}
+
+                    ${this._renderShowcase(
+                      "component-smart-collection-v3",
+                      "Smart Collection V3 (Auto-Populated Controls Grid)",
+                      html`
+                        <component-smart-collection-v3
+                          .hass=${this._hass}
+                          .config=${{
+                            type: "custom:component-smart-collection-v3",
+                            title: "Smart Control Collection",
+                            mode: "all",
+                            show_header: true,
+                          }}
+                        ></component-smart-collection-v3>
+                      `,
+                      "custom:component-smart-collection-v3",
+                    )}
+                    ${this._renderShowcase(
+                      "component-household-directory-v3",
+                      "Household Directory V3 (Quick Action Grid)",
+                      html`
+                        <component-household-directory-v3
+                          .hass=${this._hass}
+                          .config=${{
+                            type: "custom:component-household-directory-v3",
+                            title: "Household Quick Actions",
+                          }}
+                        ></component-household-directory-v3>
+                      `,
+                      "custom:component-household-directory-v3",
+                    )}
+                    ${this._renderShowcase(
+                      "component-room-directory-v4",
+                      "Room Directory V4 (Area Summary & Sheets)",
+                      html`
+                        <component-room-directory-v4
+                          .hass=${this._hass}
+                          .config=${{
+                            type: "custom:component-room-directory-v4",
+                            title: "Rooms & Areas Directory",
+                          }}
+                        ></component-room-directory-v4>
+                      `,
+                      "custom:component-room-directory-v4",
+                    )}
+                    ${this._renderShowcase(
+                      "component-home-overview-v5",
+                      "Home Overview V5 (Residence Overview Board)",
+                      html`
+                        <component-home-overview-v5
+                          .hass=${this._hass}
+                          .config=${{
+                            type: "custom:component-home-overview-v5",
+                            title: "Complete Home Overview Board",
+                            weather_entity: "weather.forecast_home",
+                          }}
+                        ></component-home-overview-v5>
+                      `,
+                      "custom:component-home-overview-v5",
+                    )}
+                  </section>
+                `
+              : ""
+          }
+
+          <!-- 9. Compatibility Registration Aliases -->
+          ${
+            this._activeTab === "all" || this._activeTab === "compat"
+              ? html`
+                  <section class="dev-section">
+                    <div class="section-header">
+                      <h2>5. Compatibility Registration Aliases (5)</h2>
+                      <p>
+                        Backward-compatible custom element registrations and
+                        adapter cards ensuring legacy Lovelace YAML compatibility
+                        without duplicated domain logic
+                      </p>
+                    </div>
+
                     <div class="card-grid">
                       ${this._renderShowcase(
-                        "component-household-attention-v2",
-                        "Household Attention V2 (System & Security Queue)",
+                        "component-camera-controller-v1",
+                        "Camera Controller V1 (Legacy Compatibility Adapter)",
                         html`
-                          <component-household-attention-v2
+                          <component-camera-controller-v1
                             .hass=${this._hass}
                             .config=${{
-                              type: "custom:component-household-attention-v2",
-                              title: "Household Attention",
-                              demo: true,
+                              type: "custom:component-camera-controller-v1",
+                              camera_entity: "camera.front_doorbell",
+                              title: "Front Doorbell (V1 Adapter)",
                             }}
-                          ></component-household-attention-v2>
+                          ></component-camera-controller-v1>
                         `,
-                        "custom:component-household-attention-v2",
+                        "custom:component-camera-controller-v1",
                       )}
-
                       ${this._renderShowcase(
                         "component-household-attention-v1",
                         "Household Attention V1 (V1 Compatibility Adapter)",
@@ -1422,124 +1561,62 @@ export class HaDevApp extends LitElement {
 
                     <div class="card-grid">
                       ${this._renderShowcase(
-                        "component-favourites-v3",
-                        "Favourites V3 (Frequently Used Device Controls)",
+                        "component-empty-state-v2",
+                        "Empty State V2 (Legacy Adapter)",
                         html`
-                          <component-favourites-v3
+                          <component-empty-state-v2
                             .hass=${this._hass}
                             .config=${{
-                              type: "custom:component-favourites-v3",
-                              title: "Quick Access Favourites",
-                              max: 4,
-                              items: [
-                                { entity_id: "light.living_room", name: "Living Room" },
-                                { entity_id: "climate.living_room_ac", name: "Living AC" },
-                                { entity_id: "switch.coffee_maker", name: "Espresso" },
-                                { entity_id: "cover.garage_door", name: "Garage" },
-                              ],
+                              type: "custom:component-empty-state-v2",
+                              icon: "mdi:clipboard-check-outline",
+                              title: "Queue Empty",
+                              message:
+                                "No maintenance actions or pending updates in the queue.",
                             }}
-                          ></component-favourites-v3>
+                          ></component-empty-state-v2>
                         `,
-                        "custom:component-favourites-v3",
+                        "custom:component-empty-state-v2",
                       )}
-
                       ${this._renderShowcase(
-                        "component-favourites-minimal-v1",
-                        "Favourites Minimal V1 (Condensed Grid Adapter)",
+                        "component-home-overview-v4",
+                        "Home Overview V4 (Legacy Compatibility Adapter)",
                         html`
-                          <component-favourites-minimal-v1
+                          <component-home-overview-v4
                             .hass=${this._hass}
                             .config=${{
-                              type: "custom:component-favourites-minimal-v1",
-                              title: "Favourites (Minimal)",
-                              items: [
-                                { entity_id: "light.living_room", name: "Living Room" },
-                                { entity_id: "climate.living_room_ac", name: "Living AC" },
-                              ],
+                              type: "custom:component-home-overview-v4",
+                              title: "Home Overview Board (V4 Adapter)",
+                              weather_entity: "weather.forecast_home",
                             }}
-                          ></component-favourites-minimal-v1>
+                          ></component-home-overview-v4>
                         `,
-                        "custom:component-favourites-minimal-v1",
+                        "custom:component-home-overview-v4",
                       )}
                     </div>
 
                     ${this._renderShowcase(
-                      "component-smart-collection-v3",
-                      "Smart Collection V3 (Auto-Populated Controls Grid)",
+                      "component-favourites-minimal-v1",
+                      "Favourites Minimal V1 (Condensed Grid Adapter)",
                       html`
-                        <component-smart-collection-v3
+                        <component-favourites-minimal-v1
                           .hass=${this._hass}
                           .config=${{
-                            type: "custom:component-smart-collection-v3",
-                            title: "Smart Control Collection",
-                            mode: "all",
-                            show_header: true,
+                            type: "custom:component-favourites-minimal-v1",
+                            title: "Favourites (Minimal)",
+                            items: [
+                              {
+                                entity_id: "light.living_room",
+                                name: "Living Room",
+                              },
+                              {
+                                entity_id: "climate.living_room_ac",
+                                name: "Living AC",
+                              },
+                            ],
                           }}
-                        ></component-smart-collection-v3>
+                        ></component-favourites-minimal-v1>
                       `,
-                      "custom:component-smart-collection-v3",
-                    )}
-
-                    ${this._renderShowcase(
-                      "component-household-directory-v3",
-                      "Household Directory V3 (Quick Action Grid)",
-                      html`
-                        <component-household-directory-v3
-                          .hass=${this._hass}
-                          .config=${{
-                            type: "custom:component-household-directory-v3",
-                            title: "Household Quick Actions",
-                          }}
-                        ></component-household-directory-v3>
-                      `,
-                      "custom:component-household-directory-v3",
-                    )}
-
-                    ${this._renderShowcase(
-                      "component-room-directory-v4",
-                      "Room Directory V4 (Area Summary & Sheets)",
-                      html`
-                        <component-room-directory-v4
-                          .hass=${this._hass}
-                          .config=${{
-                            type: "custom:component-room-directory-v4",
-                            title: "Rooms & Areas Directory",
-                          }}
-                        ></component-room-directory-v4>
-                      `,
-                      "custom:component-room-directory-v4",
-                    )}
-
-                    ${this._renderShowcase(
-                      "component-home-overview-v4",
-                      "Home Overview V4 (Complete Residence Overview Board)",
-                      html`
-                        <component-home-overview-v4
-                          .hass=${this._hass}
-                          .config=${{
-                            type: "custom:component-home-overview-v4",
-                            title: "Complete Home Overview Board (V4)",
-                            weather_entity: "weather.forecast_home",
-                          }}
-                        ></component-home-overview-v4>
-                      `,
-                      "custom:component-home-overview-v4",
-                    )}
-
-                    ${this._renderShowcase(
-                      "component-home-overview-v5",
-                      "Home Overview V5 (V5 Board Alias)",
-                      html`
-                        <component-home-overview-v5
-                          .hass=${this._hass}
-                          .config=${{
-                            type: "custom:component-home-overview-v5",
-                            title: "Complete Home Overview Board (V5 Alias)",
-                            weather_entity: "weather.forecast_home",
-                          }}
-                        ></component-home-overview-v5>
-                      `,
-                      "custom:component-home-overview-v5",
+                      "custom:component-favourites-minimal-v1",
                     )}
                   </section>
                 `
@@ -1570,7 +1647,9 @@ export class HaDevApp extends LitElement {
     .dev-container {
       margin: 0 auto;
       padding: 0;
-      transition: max-width 0.25s ease, background-color 0.2s ease;
+      transition:
+        max-width 0.25s ease,
+        background-color 0.2s ease;
     }
 
     .viewport-desktop {
@@ -1818,14 +1897,16 @@ export class HaDevApp extends LitElement {
     }
 
     .showcase-tag {
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-family:
+        ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
       font-size: 12px;
       font-weight: 700;
       color: var(--primary-color);
       background: var(--dashboard-card-muted-surface);
       padding: 2px 6px;
       border-radius: 4px;
-      border: 1px solid color-mix(in srgb, var(--primary-color) 25%, transparent);
+      border: 1px solid
+        color-mix(in srgb, var(--primary-color) 25%, transparent);
       white-space: nowrap;
     }
 

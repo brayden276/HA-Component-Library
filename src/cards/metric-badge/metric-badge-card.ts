@@ -87,10 +87,9 @@ export class HaMetricBadge extends HaBaseCard<HaMetricBadgeConfig> {
       : isUnavailable
         ? "var(--secondary-text-color, #757575)"
         : "var(--primary-color, #03a9f4)";
-    const unit =
-      isUnavailable
-        ? ""
-        : this.config.unit || entity.attributes.unit_of_measurement || "";
+    const unit = isUnavailable
+      ? ""
+      : this.config.unit || entity.attributes.unit_of_measurement || "";
     const displayValue = isUnavailable
       ? "Unavailable"
       : hasNumeric

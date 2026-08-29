@@ -55,8 +55,10 @@ export const cardBaseStyles: CSSResultGroup = [
     }
     button:active:not(:disabled) {
       border-color: var(--action-glow-color) !important;
-      box-shadow: 0 0 0 1px var(--action-glow-color),
-                  0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+      box-shadow:
+        0 0 0 1px var(--action-glow-color),
+        0 0 12px 2.5px
+          color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
       transform: scale(0.96);
     }
     :is(button, input, select):focus-visible {
@@ -93,8 +95,10 @@ export const cardBaseStyles: CSSResultGroup = [
     ha-card:has(> .tile-card.interactive):active,
     ha-card:has(> .status-card.interactive):active {
       border-color: var(--action-glow-color) !important;
-      box-shadow: 0 0 0 1px var(--action-glow-color),
-                  0 0 16px 3px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+      box-shadow:
+        0 0 0 1px var(--action-glow-color),
+        0 0 16px 3px
+          color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
       transform: scale(0.985);
     }
     ha-card > button.demo,
@@ -332,8 +336,10 @@ export const buttonStyles = css`
   }
   .btn-primary-solid:active {
     border-color: var(--action-glow-color) !important;
-    box-shadow: 0 0 0 1px var(--action-glow-color),
-                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    box-shadow:
+      0 0 0 1px var(--action-glow-color),
+      0 0 12px 2.5px
+        color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
     transform: scale(0.97);
   }
   .btn-secondary-outline {
@@ -355,8 +361,10 @@ export const buttonStyles = css`
   }
   .btn-secondary-outline:active {
     border-color: var(--action-glow-color) !important;
-    box-shadow: 0 0 0 1px var(--action-glow-color),
-                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    box-shadow:
+      0 0 0 1px var(--action-glow-color),
+      0 0 12px 2.5px
+        color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
     transform: scale(0.97);
   }
   .btn-secondary-outline.danger {
@@ -386,8 +394,10 @@ export const buttonStyles = css`
   }
   .btn-action-pill:active {
     border-color: var(--action-glow-color) !important;
-    box-shadow: 0 0 0 1px var(--action-glow-color),
-                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    box-shadow:
+      0 0 0 1px var(--action-glow-color),
+      0 0 12px 2.5px
+        color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
     transform: scale(0.97);
   }
   .btn-action-pill.active {
@@ -412,8 +422,10 @@ export const buttonStyles = css`
   }
   .btn-compact-pill:active {
     border-color: var(--action-glow-color) !important;
-    box-shadow: 0 0 0 1px var(--action-glow-color),
-                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    box-shadow:
+      0 0 0 1px var(--action-glow-color),
+      0 0 12px 2.5px
+        color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
     transform: scale(0.97);
   }
   .btn-dashed-add {
@@ -435,8 +447,10 @@ export const buttonStyles = css`
   }
   .btn-dashed-add:active {
     border-color: var(--action-glow-color) !important;
-    box-shadow: 0 0 0 1px var(--action-glow-color),
-                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    box-shadow:
+      0 0 0 1px var(--action-glow-color),
+      0 0 12px 2.5px
+        color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
     transform: scale(0.97);
   }
   .option-select-btn {
@@ -460,8 +474,10 @@ export const buttonStyles = css`
   }
   .option-select-btn:active {
     border-color: var(--action-glow-color) !important;
-    box-shadow: 0 0 0 1px var(--action-glow-color),
-                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    box-shadow:
+      0 0 0 1px var(--action-glow-color),
+      0 0 12px 2.5px
+        color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
     transform: scale(0.97);
   }
   .option-select-btn.selected {
@@ -492,8 +508,10 @@ export const iconButtonStyles = css`
   .btn-icon-30:active:not(:disabled),
   .btn-icon-circle:active:not(:disabled) {
     border-color: var(--action-glow-color) !important;
-    box-shadow: 0 0 0 1px var(--action-glow-color),
-                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    box-shadow:
+      0 0 0 1px var(--action-glow-color),
+      0 0 12px 2.5px
+        color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
     transform: scale(0.95);
   }
   .btn-icon-44.power-btn.on,
@@ -696,7 +714,9 @@ export const controlStyles = css`
     height: 16px;
     border-radius: 50%;
     background: var(--secondary-text-color);
-    transition: margin 0.12s, background 0.12s;
+    transition:
+      margin 0.12s,
+      background 0.12s;
   }
   .switch-pill.on {
     background: color-mix(
@@ -752,8 +772,10 @@ export const controlStyles = css`
   }
   .stepper-step-btn:active:not(:disabled) {
     border-color: var(--action-glow-color) !important;
-    box-shadow: 0 0 0 1px var(--action-glow-color),
-                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    box-shadow:
+      0 0 0 1px var(--action-glow-color),
+      0 0 12px 2.5px
+        color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
     transform: scale(0.95);
   }
   .stepper-display {
@@ -829,7 +851,9 @@ export const controlStyles = css`
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
     margin-top: -6px;
     cursor: pointer;
-    transition: transform 0.12s ease, background-color 0.12s ease;
+    transition:
+      transform 0.12s ease,
+      background-color 0.12s ease;
   }
   input[type="range"]::-moz-range-thumb,
   .range-slider-control::-moz-range-thumb {
@@ -1013,7 +1037,8 @@ export const feedbackStyles = css`
     color: var(--error-color);
   }
   .empty-state-dashed {
-    border: 1px dashed var(--catalogue-border, var(--dashboard-card-border-color));
+    border: 1px dashed
+      var(--catalogue-border, var(--dashboard-card-border-color));
     border-radius: var(--dashboard-radius-card);
     padding: 24px 16px;
     display: flex;
@@ -1150,8 +1175,10 @@ export const remoteStyles = css`
   }
   .dpad-btn:active:not(:disabled) {
     border-color: var(--action-glow-color) !important;
-    box-shadow: 0 0 0 1px var(--action-glow-color),
-                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    box-shadow:
+      0 0 0 1px var(--action-glow-color),
+      0 0 12px 2.5px
+        color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
     transform: scale(0.95);
   }
   .dpad-btn.select-center {
@@ -1251,8 +1278,10 @@ export const dialogStyles = css`
     color: var(--primary-text-color);
   }
   dialog .close:active:not(:disabled) {
-    box-shadow: 0 0 0 1px var(--action-glow-color),
-                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    box-shadow:
+      0 0 0 1px var(--action-glow-color),
+      0 0 12px 2.5px
+        color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
     transform: scale(0.95);
   }
   @media (max-width: 700px) {

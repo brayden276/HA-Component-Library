@@ -188,21 +188,28 @@ export class ComponentEnergySummaryV1 extends LitBaseCard<EnergySummaryConfig> {
     this._loading = true;
     this._error = null;
     try {
-      const data = await energyDayData.get(
-        hass,
-        profile,
-        day,
-        { force },
-      );
-      if (sequence === this._sequence && hass === this.hass && day === this._day) {
+      const data = await energyDayData.get(hass, profile, day, { force });
+      if (
+        sequence === this._sequence &&
+        hass === this.hass &&
+        day === this._day
+      ) {
         this._data = data;
       }
     } catch (err: any) {
-      if (sequence === this._sequence && hass === this.hass && day === this._day) {
+      if (
+        sequence === this._sequence &&
+        hass === this.hass &&
+        day === this._day
+      ) {
         this._error = err;
       }
     } finally {
-      if (sequence === this._sequence && hass === this.hass && day === this._day) {
+      if (
+        sequence === this._sequence &&
+        hass === this.hass &&
+        day === this._day
+      ) {
         this._loading = false;
       }
     }

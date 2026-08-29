@@ -49,7 +49,9 @@ export class ComponentHomeOverviewV4 extends LitBaseCard<HomeOverviewConfig> {
 
   public override connectedCallback(): void {
     super.connectedCallback();
-    this._cancelMinuteScheduler = createMinuteScheduler(() => this.requestUpdate());
+    this._cancelMinuteScheduler = createMinuteScheduler(() =>
+      this.requestUpdate(),
+    );
   }
 
   public override disconnectedCallback(): void {
@@ -173,7 +175,14 @@ export class ComponentHomeOverviewV4 extends LitBaseCard<HomeOverviewConfig> {
 }
 
 @customElement("component-home-overview-v5")
-export class ComponentHomeOverviewV5 extends ComponentHomeOverviewV4 {}
+export class ComponentHomeOverviewV5 extends ComponentHomeOverviewV4 {
+  public override setConfig(config: HomeOverviewConfig): void {
+    super.setConfig({
+      ...config,
+      type: "custom:component-home-overview-v5",
+    });
+  }
+}
 
 registerCard({
   type: "component-home-overview-v4",

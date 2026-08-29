@@ -170,7 +170,12 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
   private async _runQuickAction(
     action: SecurityQuickActionItem,
   ): Promise<void> {
-    if (!this.hass || !this._isActionable(action.entityId) || this._busyActionId) return;
+    if (
+      !this.hass ||
+      !this._isActionable(action.entityId) ||
+      this._busyActionId
+    )
+      return;
     this._busyActionId = action.entityId;
     this._actionError = null;
     try {
@@ -189,7 +194,8 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
 
   private async _operateEntry(entry: SecurityEntryItem): Promise<void> {
     const entityId = entry.controlEntityId || entry.entityId;
-    if (!this.hass || !this._isActionable(entityId) || this._busyActionId) return;
+    if (!this.hass || !this._isActionable(entityId) || this._busyActionId)
+      return;
     if (this._entryConfirmId !== entry.entityId) {
       this._entryConfirmId = entry.entityId;
       if (this._entryConfirmTimer) clearTimeout(this._entryConfirmTimer);
@@ -263,11 +269,15 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
     this._viewerOpener = event?.currentTarget as HTMLElement | null;
     this._viewerCamera = camera;
     void this.updateComplete.then(() => {
-      const dialog = this.renderRoot.querySelector(".viewer-dialog") as HTMLDialogElement | null;
+      const dialog = this.renderRoot.querySelector(
+        ".viewer-dialog",
+      ) as HTMLDialogElement | null;
       if (!dialog || dialog.open) return;
       try {
         dialog.showModal();
-        dialog.querySelector<HTMLElement>(".dialog-button[aria-label='Close']")?.focus();
+        dialog
+          .querySelector<HTMLElement>(".dialog-button[aria-label='Close']")
+          ?.focus();
       } catch {
         this._viewerCamera = null;
         this._viewerOpener = null;
@@ -294,11 +304,15 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
     this._settingsOpener = event?.currentTarget as HTMLElement | null;
     this._settingsCamera = camera;
     void this.updateComplete.then(() => {
-      const dialog = this.renderRoot.querySelector(".settings-dialog") as HTMLDialogElement | null;
+      const dialog = this.renderRoot.querySelector(
+        ".settings-dialog",
+      ) as HTMLDialogElement | null;
       if (!dialog || dialog.open) return;
       try {
         dialog.showModal();
-        dialog.querySelector<HTMLElement>(".dialog-button[aria-label='Close']")?.focus();
+        dialog
+          .querySelector<HTMLElement>(".dialog-button[aria-label='Close']")
+          ?.focus();
       } catch {
         this._settingsCamera = null;
         this._settingsOpener = null;
@@ -321,8 +335,12 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
     opener?.focus();
   }
 
-  private async _toggleCameraSwitch(entityId: string, wasOn: boolean): Promise<void> {
-    if (!this.hass || !this._isActionable(entityId) || this._busyActionId) return;
+  private async _toggleCameraSwitch(
+    entityId: string,
+    wasOn: boolean,
+  ): Promise<void> {
+    if (!this.hass || !this._isActionable(entityId) || this._busyActionId)
+      return;
     this._busyActionId = entityId;
     this._actionError = null;
     try {
@@ -444,11 +462,11 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                     >
                   </div>
                   <div class="quick-grid">
-                    ${quickActions.map(
-                      (action) => {
-                        const available = action.available && this._isActionable(action.entityId);
-                        const busy = this._busyActionId === action.entityId;
-                        return html`
+                    ${quickActions.map((action) => {
+                      const available =
+                        action.available && this._isActionable(action.entityId);
+                      const busy = this._busyActionId === action.entityId;
+                      return html`
                         <button
                           class="quick-action"
                           type="button"
@@ -470,8 +488,7 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                           </span>
                         </button>
                       `;
-                      },
-                    )}
+                    })}
                   </div>
                 </section>
               `
@@ -516,13 +533,13 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                             @click=${(event: Event) => this._openViewer(camera, event)}
                           >
                             ${
-                            snapshotUrl
-                              ? html`<img
-                                  src="${snapshotUrl}"
-                                  alt="${this.esc(camera.name)} snapshot"
-                                />`
-                              : ""
-                          }
+                              snapshotUrl
+                                ? html`<img
+                                    src="${snapshotUrl}"
+                                    alt="${this.esc(camera.name)} snapshot"
+                                  />`
+                                : ""
+                            }
                             <span
                               class="camera-badge ${camera.active ? "activity" : ""}"
                             >
@@ -545,10 +562,10 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                             </div>
                             <div class="classification-summary">
                               ${
-                              classifications.length
-                                ? `Recent: ${classifications.map((c) => c.name).join(" · ")}`
-                                : "No detection image entities"
-                            }
+                                classifications.length
+                                  ? `Recent: ${classifications.map((c) => c.name).join(" · ")}`
+                                  : "No detection image entities"
+                              }
                             </div>
                           </div>
                           <div class="camera-actions">
@@ -601,13 +618,15 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                   <div class="entries">
                     ${entries.map((entry) => {
                       const isConfirm = this._entryConfirmId === entry.entityId;
-                      const actionEntityId = entry.controlEntityId || entry.entityId;
-                      const available = entry.available && this._isActionable(actionEntityId);
+                      const actionEntityId =
+                        entry.controlEntityId || entry.entityId;
+                      const available =
+                        entry.available && this._isActionable(actionEntityId);
                       const busy = this._busyActionId === actionEntityId;
                       const canOperate = Boolean(
                         entry.controlEntityId ||
-                          entry.domain === "lock" ||
-                          entry.domain === "cover",
+                        entry.domain === "lock" ||
+                        entry.domain === "cover",
                       );
                       const actionLabel =
                         entry.domain === "lock"
@@ -625,14 +644,14 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                           >
                             <ha-icon
                               icon="${
-                              entry.domain === "lock"
-                                ? entry.open
-                                  ? "mdi:lock-open-outline"
-                                  : "mdi:lock-outline"
-                                : entry.open
-                                  ? "mdi:door-open"
-                                  : "mdi:door-closed"
-                            }"
+                                entry.domain === "lock"
+                                  ? entry.open
+                                    ? "mdi:lock-open-outline"
+                                    : "mdi:lock-outline"
+                                  : entry.open
+                                    ? "mdi:door-open"
+                                    : "mdi:door-closed"
+                              }"
                             ></ha-icon>
                           </span>
                           <span>
@@ -641,16 +660,16 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                             >
                             <span class="entry-state">
                               ${
-                              !available
-                                ? "Unavailable"
-                                : entry.domain === "lock"
-                                  ? entry.open
-                                    ? "Unlocked"
-                                    : "Locked"
-                                  : entry.open
-                                    ? "Open"
-                                    : "Closed"
-                            }
+                                !available
+                                  ? "Unavailable"
+                                  : entry.domain === "lock"
+                                    ? entry.open
+                                      ? "Unlocked"
+                                      : "Locked"
+                                    : entry.open
+                                      ? "Open"
+                                      : "Closed"
+                              }
                             </span>
                           </span>
                           <span class="entry-actions">
@@ -798,9 +817,9 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                                 class="detection"
                                 type="button"
                                 @click=${() => {
-                                this._closeSettings();
-                                this.moreInfo(cls.entity.entity_id);
-                              }}
+                                  this._closeSettings();
+                                  this.moreInfo(cls.entity.entity_id);
+                                }}
                               >
                                 ${pic ? html`<img src="${pic}" alt="${this.esc(cls.name)}" />` : ""}
                                 <span class="detection-copy">

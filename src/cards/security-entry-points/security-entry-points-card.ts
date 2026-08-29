@@ -147,12 +147,14 @@ export class ComponentSecurityEntryPointsV1 extends LitBaseCard<SecurityEntryPoi
             <ha-icon icon="mdi:shield-home-outline"></ha-icon>
           </div>
           <div class="copy-block">
-            <div class="label-title">${this.esc(this._config.title || "Entry points")}</div>
+            <div class="label-title">
+              ${this.esc(this._config.title || "Entry points")}
+            </div>
             <div class="label-sub">${entries.length} monitored</div>
           </div>
         </div>
         <div class="list">
-        ${entries.map((entry) => {
+          ${entries.map((entry) => {
           if (entry.deviceClass === "garage_door" && entry.controlEntityId) {
             return html`
               <component-garage-door-controller-v1

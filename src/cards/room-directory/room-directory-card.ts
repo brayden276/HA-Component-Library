@@ -132,7 +132,7 @@ export class ComponentRoomDirectoryV4 extends LitBaseCard<RoomDirectoryConfig> {
     const opener = this._dialogOpener;
     this._dialogOpener = null;
     opener?.focus?.();
-  }
+  };
 
   protected override render(): TemplateResult {
     if (!this._config) return html``;

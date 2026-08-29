@@ -47,7 +47,9 @@ export class ComponentProgressV2 extends LitBaseCard<ProgressCardConfig> {
 
   protected override updated(): void {
     const action = this._getAction();
-    const progressCard = this.renderRoot.querySelector(".progress-card") as HTMLElement | null;
+    const progressCard = this.renderRoot.querySelector(
+      ".progress-card",
+    ) as HTMLElement | null;
     if (action && progressCard) {
       this._interactionHandle?.destroy();
       this._interactionHandle = interaction(progressCard, {
@@ -69,13 +71,17 @@ export class ComponentProgressV2 extends LitBaseCard<ProgressCardConfig> {
   protected override render(): TemplateResult {
     if (!this._config) return html``;
     const action = this._getAction();
-    const entity = this._config.entity ? this.hass?.states[this._config.entity] : null;
-    const label = entity && this._config.label === "Progress metric"
-      ? computeEntityDisplayName({ state: entity })
-      : (this._config.label || "Progress metric");
-    const value = entity && this._config.value === "68%"
-      ? formatEntityState(entity, this.hass)
-      : (this._config.value || "68%");
+    const entity = this._config.entity
+      ? this.hass?.states[this._config.entity]
+      : null;
+    const label =
+      entity && this._config.label === "Progress metric"
+        ? computeEntityDisplayName({ state: entity })
+        : this._config.label || "Progress metric";
+    const value =
+      entity && this._config.value === "68%"
+        ? formatEntityState(entity, this.hass)
+        : this._config.value || "68%";
 
     let p = Math.min(100, Math.max(0, Number(this._config.progress) || 0));
     if (entity && this._config.progress === 68) {
@@ -118,7 +124,6 @@ export class ComponentProgressV2 extends LitBaseCard<ProgressCardConfig> {
     `;
   }
 }
-
 
 registerCard({
   type: "component-progress-v2",

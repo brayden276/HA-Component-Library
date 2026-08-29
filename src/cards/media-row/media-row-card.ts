@@ -248,7 +248,9 @@ export class ComponentMediaRowV2 extends LitBaseCard<MediaRowCardConfig> {
             live
               ? html`
                   <button class="identity" type="button">
-                    <div class="label-title title">${this.esc(this._config.title)}</div>
+                    <div class="label-title title">
+                      ${this.esc(this._config.title)}
+                    </div>
                     <div class="label-sub desc">
                       ${this.esc(this._description(state))}
                     </div>
@@ -256,7 +258,9 @@ export class ComponentMediaRowV2 extends LitBaseCard<MediaRowCardConfig> {
                 `
               : html`
                   <div class="copy-block">
-                    <div class="label-title title">${this.esc(this._config.title)}</div>
+                    <div class="label-title title">
+                      ${this.esc(this._config.title)}
+                    </div>
                     <div class="label-sub desc">
                       ${this.esc(this._description(state))}
                     </div>

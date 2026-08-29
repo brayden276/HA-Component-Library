@@ -5,7 +5,10 @@ import { smartCollectionCardStyles } from "./smart-collection-card.styles";
 import { html, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
-import type { HomeAssistant, LovelaceGridOptions } from "../../types/home-assistant";
+import type {
+  HomeAssistant,
+  LovelaceGridOptions,
+} from "../../types/home-assistant";
 import type { DashboardRegistries } from "../../types/registry";
 import {
   centralRegistry,

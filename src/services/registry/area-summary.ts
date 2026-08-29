@@ -1,5 +1,8 @@
 import type { HomeAssistant, HassEntity } from "../../types/home-assistant";
-import type { AreaRegistryEntry, DashboardRegistries } from "../../types/registry";
+import type {
+  AreaRegistryEntry,
+  DashboardRegistries,
+} from "../../types/registry";
 import {
   isEntityActive,
   isEntityAvailable,

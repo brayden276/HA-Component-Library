@@ -202,8 +202,10 @@ export const splitAcCardStyles: CSSResultGroup = [
 
     .o:active {
       border-color: var(--action-glow-color) !important;
-      box-shadow: 0 0 0 1px var(--action-glow-color),
-                  0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+      box-shadow:
+        0 0 0 1px var(--action-glow-color),
+        0 0 12px 2.5px
+          color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
       transform: scale(0.97);
     }
 
@@ -263,8 +265,10 @@ export const splitAcCardStyles: CSSResultGroup = [
     .tpr button:active,
     .tac button:active {
       border-color: var(--action-glow-color) !important;
-      box-shadow: 0 0 0 1px var(--action-glow-color),
-                  0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+      box-shadow:
+        0 0 0 1px var(--action-glow-color),
+        0 0 12px 2.5px
+          color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
       transform: scale(0.97);
     }
 

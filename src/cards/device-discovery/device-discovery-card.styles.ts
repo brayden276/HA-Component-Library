@@ -1,5 +1,10 @@
 import { css, CSSResultGroup } from "lit";
-import { cardBaseStyles, typographyStyles, buttonStyles, iconWellStyles } from "../../styles";
+import {
+  cardBaseStyles,
+  typographyStyles,
+  buttonStyles,
+  iconWellStyles,
+} from "../../styles";
 
 export const deviceDiscoveryCardStyles: CSSResultGroup = [
   cardBaseStyles,

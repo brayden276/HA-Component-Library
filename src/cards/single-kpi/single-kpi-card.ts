@@ -14,7 +14,6 @@ import {
 } from "../../utils/entity";
 
 const DEFAULTS: SingleKpiCardConfig = {
-
   type: "custom:component-single-kpi-v2",
   value: "00",
   label: "Primary metric",
@@ -75,7 +74,9 @@ export class ComponentSingleKpiV2 extends LitBaseCard<SingleKpiCardConfig> {
     super.disconnectedCallback();
   }
 
-  protected override shouldUpdate(changedProperties: Map<string | number | symbol, unknown>): boolean {
+  protected override shouldUpdate(
+    changedProperties: Map<string | number | symbol, unknown>,
+  ): boolean {
     if (this._config?.entity) {
       return super.shouldUpdate(changedProperties);
     }
@@ -88,13 +89,17 @@ export class ComponentSingleKpiV2 extends LitBaseCard<SingleKpiCardConfig> {
   protected override render(): TemplateResult {
     if (!this._config) return html``;
     const action = this._getAction();
-    const entity = this._config.entity ? this.hass?.states[this._config.entity] : null;
-    const value = entity && this._config.value === "00"
-      ? formatEntityState(entity, this.hass)
-      : (this._config.value || "00");
-    const label = entity && this._config.label === "Primary metric"
-      ? computeEntityDisplayName({ state: entity })
-      : (this._config.label || "Primary metric");
+    const entity = this._config.entity
+      ? this.hass?.states[this._config.entity]
+      : null;
+    const value =
+      entity && this._config.value === "00"
+        ? formatEntityState(entity, this.hass)
+        : this._config.value || "00";
+    const label =
+      entity && this._config.label === "Primary metric"
+        ? computeEntityDisplayName({ state: entity })
+        : this._config.label || "Primary metric";
     const supportValue = this._config.support_value || "";
     const supportLabel = this._config.support_label || "";
 
@@ -123,14 +128,19 @@ export class ComponentSingleKpiV2 extends LitBaseCard<SingleKpiCardConfig> {
       <ha-card class="assembled-card">
         ${
           action
-            ? html`<button class="demo" type="button" aria-label="${this.esc(ariaLabel)}">${inner}</button>`
+            ? html`<button
+                class="demo"
+                type="button"
+                aria-label="${this.esc(ariaLabel)}"
+              >
+                ${inner}
+              </button>`
             : html`<div class="demo-static">${inner}</div>`
         }
       </ha-card>
     `;
   }
 }
-
 
 registerCard({
   type: "component-single-kpi-v2",

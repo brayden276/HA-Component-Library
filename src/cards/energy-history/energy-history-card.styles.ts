@@ -1,5 +1,9 @@
 import { css, CSSResultGroup } from "lit";
-import { cardBaseStyles, typographyStyles, telemetryStyles } from "../../styles";
+import {
+  cardBaseStyles,
+  typographyStyles,
+  telemetryStyles,
+} from "../../styles";
 
 export const energyHistoryCardStyles: CSSResultGroup = [
   cardBaseStyles,

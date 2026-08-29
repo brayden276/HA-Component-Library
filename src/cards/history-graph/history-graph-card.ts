@@ -358,9 +358,11 @@ export class ComponentHistoryGraphV2 extends LitBaseCard<HistoryGraphConfig> {
             >
               <div class="tooltip-time">${this._tooltip.percent}</div>
               ${this._tooltip.rows.map(
-                (row) => html`<div class="tooltip-row">
-                  <span>${row.label}</span><b class="tooltip-val">${row.value}</b>
-                </div>`,
+                (row) =>
+                  html`<div class="tooltip-row">
+                    <span>${row.label}</span
+                    ><b class="tooltip-val">${row.value}</b>
+                  </div>`,
               )}
             </div>
           </div>

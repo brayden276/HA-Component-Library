@@ -1,5 +1,11 @@
 import { css, CSSResultGroup } from "lit";
-import { cardBaseStyles, typographyStyles, buttonStyles, iconWellStyles, rowListStyles } from "../../styles";
+import {
+  cardBaseStyles,
+  typographyStyles,
+  buttonStyles,
+  iconWellStyles,
+  rowListStyles,
+} from "../../styles";
 
 export const actionCardStyles: CSSResultGroup = [
   cardBaseStyles,

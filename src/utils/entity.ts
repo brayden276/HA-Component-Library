@@ -50,23 +50,30 @@ const entityIdPattern = /^[a-z_][a-z0-9_]*\.[a-zA-Z0-9_]+$/;
 
 const entityIdsFromTarget = (target?: HassServiceTarget): string[] => {
   if (!target?.entity_id) return [];
-  return Array.isArray(target.entity_id) ? target.entity_id : [target.entity_id];
+  return Array.isArray(target.entity_id)
+    ? target.entity_id
+    : [target.entity_id];
 };
 
 const hasTarget = (target?: HassServiceTarget): boolean =>
   Boolean(
     target &&
-      (entityIdsFromTarget(target).length > 0 ||
-        (Array.isArray(target.device_id)
-          ? target.device_id.length > 0
-          : target.device_id) ||
-        (Array.isArray(target.area_id) ? target.area_id.length > 0 : target.area_id)),
+    (entityIdsFromTarget(target).length > 0 ||
+      (Array.isArray(target.device_id)
+        ? target.device_id.length > 0
+        : target.device_id) ||
+      (Array.isArray(target.area_id)
+        ? target.area_id.length > 0
+        : target.area_id)),
   );
 
 const validateTargetIds = (value: unknown, field: string): void => {
   if (value === undefined) return;
   const values = Array.isArray(value) ? value : [value];
-  if (values.length === 0 || values.some((id) => typeof id !== "string" || !id.trim())) {
+  if (
+    values.length === 0 ||
+    values.some((id) => typeof id !== "string" || !id.trim())
+  ) {
     throw new HomeAssistantActionError(
       "INVALID_TARGET",
       `Service target ${field} must be a non-empty string or array of strings.`,
@@ -164,7 +171,9 @@ export const runServiceAction = async (
   hass: HomeAssistant,
   action: ServiceAction,
 ): Promise<void> => {
-  const { domain, service } = parseService(`${action.domain}.${action.service}`);
+  const { domain, service } = parseService(
+    `${action.domain}.${action.service}`,
+  );
   const normalized = dataAndLegacyTarget(action.data);
   const target = validateTarget(hass, action.target ?? normalized.target);
   await hass.callService(domain, service, normalized.data, target);
@@ -285,13 +294,23 @@ export function isEntityActive(entity?: HassEntity | null): boolean {
     case "lock":
       return state === "unlocked" || state === "unlocking";
     case "media_player":
-      return state === "playing" || state === "paused" || state === "buffering" || state === "on";
+      return (
+        state === "playing" ||
+        state === "paused" ||
+        state === "buffering" ||
+        state === "on"
+      );
     case "vacuum":
       return state === "cleaning" || state === "on";
     case "binary_sensor":
       return state === "on";
     default:
-      return state === "on" || state === "active" || state === "home" || state === "open";
+      return (
+        state === "on" ||
+        state === "active" ||
+        state === "home" ||
+        state === "open"
+      );
   }
 }
 
@@ -376,7 +395,8 @@ export async function handleAction(
 
   const targetEntityIds = entityIdsFromTarget(actionConfig?.target);
   const targetEntity = targetEntityIds[0] || defaultEntityId;
-  const target = actionConfig?.target ||
+  const target =
+    actionConfig?.target ||
     (targetEntity ? { entity_id: targetEntity } : undefined);
 
   switch (action) {

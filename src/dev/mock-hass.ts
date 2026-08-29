@@ -12,7 +12,11 @@ type StateChangeCallback = (hass: HomeAssistant) => void;
 /**
  * Creates high-fidelity mock SVG data URI for camera video stream previews.
  */
-const createCameraSvg = (title: string, resolution = "1080P", color = "#03a9f4"): string => {
+const createCameraSvg = (
+  title: string,
+  resolution = "1080P",
+  color = "#03a9f4",
+): string => {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="100%" height="100%">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
@@ -50,77 +54,475 @@ export class MockHomeAssistant {
   private _solarSimActive = true;
 
   private _areas: AreaRegistryEntry[] = [
-    { area_id: "living_room", name: "Living Room", icon: "mdi:sofa-outline", picture: null, aliases: [] },
-    { area_id: "kitchen", name: "Kitchen", icon: "mdi:silverware-fork-knife", picture: null, aliases: [] },
-    { area_id: "bedroom", name: "Bedroom", icon: "mdi:bed-outline", picture: null, aliases: [] },
-    { area_id: "garage", name: "Garage", icon: "mdi:garage-open-variant", picture: null, aliases: [] },
-    { area_id: "office", name: "Office", icon: "mdi:desktop-classic", picture: null, aliases: [] },
-    { area_id: "outdoor", name: "Outdoor & Porch", icon: "mdi:tree-outline", picture: null, aliases: [] },
+    {
+      area_id: "living_room",
+      name: "Living Room",
+      icon: "mdi:sofa-outline",
+      picture: null,
+      aliases: [],
+    },
+    {
+      area_id: "kitchen",
+      name: "Kitchen",
+      icon: "mdi:silverware-fork-knife",
+      picture: null,
+      aliases: [],
+    },
+    {
+      area_id: "bedroom",
+      name: "Bedroom",
+      icon: "mdi:bed-outline",
+      picture: null,
+      aliases: [],
+    },
+    {
+      area_id: "garage",
+      name: "Garage",
+      icon: "mdi:garage-open-variant",
+      picture: null,
+      aliases: [],
+    },
+    {
+      area_id: "office",
+      name: "Office",
+      icon: "mdi:desktop-classic",
+      picture: null,
+      aliases: [],
+    },
+    {
+      area_id: "outdoor",
+      name: "Outdoor & Porch",
+      icon: "mdi:tree-outline",
+      picture: null,
+      aliases: [],
+    },
   ];
 
   private _devices: DeviceRegistryEntry[] = [
-    { id: "dev_living_ac", name: "Living Room Split AC", area_id: "living_room", manufacturer: "Mitsubishi", model: "MSZ-AP25", sw_version: "2.1" },
-    { id: "dev_wled", name: "Accent LED Strip", area_id: "living_room", manufacturer: "WLED", model: "ESP32", sw_version: "0.14.0" },
-    { id: "dev_apple_tv", name: "Living Room Apple TV", area_id: "living_room", manufacturer: "Apple", model: "Apple TV 4K", sw_version: "17.4" },
-    { id: "dev_garage", name: "Garage Door Opener", area_id: "garage", manufacturer: "Meross", model: "MSG100", sw_version: "4.2.8" },
-    { id: "dev_front_doorbell", name: "Front Doorbell Camera", area_id: "outdoor", manufacturer: "Reolink", model: "Video Doorbell", sw_version: "3.0" },
-    { id: "dev_front_porch", name: "Front Porch Security Camera", area_id: "outdoor", manufacturer: "UniFi", model: "G4 Bullet", sw_version: "4.64" },
-    { id: "dev_driveway", name: "Driveway Camera", area_id: "outdoor", manufacturer: "UniFi", model: "G4 Pro", sw_version: "4.64" },
-    { id: "dev_thermostat", name: "Main Thermostat", area_id: "living_room", manufacturer: "Nest", model: "Learning 3rd Gen", sw_version: "1.2" },
+    {
+      id: "dev_living_ac",
+      name: "Living Room Split AC",
+      area_id: "living_room",
+      manufacturer: "Mitsubishi",
+      model: "MSZ-AP25",
+      sw_version: "2.1",
+    },
+    {
+      id: "dev_wled",
+      name: "Accent LED Strip",
+      area_id: "living_room",
+      manufacturer: "WLED",
+      model: "ESP32",
+      sw_version: "0.14.0",
+    },
+    {
+      id: "dev_apple_tv",
+      name: "Living Room Apple TV",
+      area_id: "living_room",
+      manufacturer: "Apple",
+      model: "Apple TV 4K",
+      sw_version: "17.4",
+    },
+    {
+      id: "dev_garage",
+      name: "Garage Door Opener",
+      area_id: "garage",
+      manufacturer: "Meross",
+      model: "MSG100",
+      sw_version: "4.2.8",
+    },
+    {
+      id: "dev_front_doorbell",
+      name: "Front Doorbell Camera",
+      area_id: "outdoor",
+      manufacturer: "Reolink",
+      model: "Video Doorbell",
+      sw_version: "3.0",
+    },
+    {
+      id: "dev_front_porch",
+      name: "Front Porch Security Camera",
+      area_id: "outdoor",
+      manufacturer: "UniFi",
+      model: "G4 Bullet",
+      sw_version: "4.64",
+    },
+    {
+      id: "dev_driveway",
+      name: "Driveway Camera",
+      area_id: "outdoor",
+      manufacturer: "UniFi",
+      model: "G4 Pro",
+      sw_version: "4.64",
+    },
+    {
+      id: "dev_thermostat",
+      name: "Main Thermostat",
+      area_id: "living_room",
+      manufacturer: "Nest",
+      model: "Learning 3rd Gen",
+      sw_version: "1.2",
+    },
   ];
 
   private _entityRegistry: EntityRegistryEntry[] = [
-    { entity_id: "light.living_room", name: "Living Room Light", area_id: "living_room", device_id: undefined, platform: "hue" },
-    { entity_id: "light.kitchen", name: "Kitchen Light", area_id: "kitchen", device_id: undefined, platform: "hue" },
-    { entity_id: "light.bedroom", name: "Bedroom Light", area_id: "bedroom", device_id: undefined, platform: "hue" },
-    { entity_id: "switch.coffee_maker", name: "Coffee Maker", area_id: "kitchen", device_id: undefined, platform: "tasmota" },
-    { entity_id: "switch.living_room_fan", name: "Living Room Fan", area_id: "living_room", device_id: undefined, platform: "tuya" },
-    { entity_id: "climate.living_room_ac", name: "Living Room AC", area_id: "living_room", device_id: "dev_living_ac", platform: "climate" },
-    { entity_id: "climate.thermostat", name: "Thermostat", area_id: "living_room", device_id: "dev_thermostat", platform: "nest" },
-    { entity_id: "cover.garage_door", name: "Garage Door", area_id: "garage", device_id: "dev_garage", platform: "cover" },
-    { entity_id: "button.garage_door_operator", name: "Garage Door Operator", area_id: "garage", device_id: "dev_garage", platform: "button" },
-    { entity_id: "media_player.apple_tv", name: "Apple TV", area_id: "living_room", device_id: "dev_apple_tv", platform: "apple_tv" },
-    { entity_id: "remote.living_room_apple_tv", name: "Living Room Apple TV Remote", area_id: "living_room", device_id: "dev_apple_tv", platform: "apple_tv" },
-    { entity_id: "remote.apple_tv", name: "Apple TV Remote", area_id: "living_room", device_id: "dev_apple_tv", platform: "apple_tv" },
-    { entity_id: "camera.front_doorbell", name: "Front Doorbell", area_id: "outdoor", device_id: "dev_front_doorbell", platform: "reolink" },
-    { entity_id: "camera.front_porch", name: "Front Porch Feed", area_id: "outdoor", device_id: "dev_front_porch", platform: "unifi" },
-    { entity_id: "camera.driveway", name: "Driveway Camera", area_id: "outdoor", device_id: "dev_driveway", platform: "unifi" },
-    { entity_id: "update.ha_core", name: "Home Assistant Core", area_id: undefined, device_id: undefined, platform: "homeassistant" },
-    { entity_id: "update.home_assistant_core", name: "Home Assistant Core", area_id: undefined, device_id: undefined, platform: "homeassistant" },
-    { entity_id: "light.wled_strip", name: "Accent Strip", area_id: "living_room", device_id: "dev_wled", platform: "wled" },
-    { entity_id: "select.wled_preset", name: "Accent Strip Preset", area_id: "living_room", device_id: "dev_wled", platform: "wled" },
-    { entity_id: "select.wled_color_palette", name: "Accent Strip Palette", area_id: "living_room", device_id: "dev_wled", platform: "wled" },
-    { entity_id: "number.wled_speed", name: "Accent Strip Speed", area_id: "living_room", device_id: "dev_wled", platform: "wled" },
-    { entity_id: "number.wled_intensity", name: "Accent Strip Intensity", area_id: "living_room", device_id: "dev_wled", platform: "wled" },
-    { entity_id: "lock.front_door", name: "Front Door Lock", area_id: "outdoor", device_id: undefined, platform: "zigbee2mqtt" },
-    { entity_id: "lock.front_door_lock", name: "Front Door Lock", area_id: "outdoor", device_id: undefined, platform: "zigbee2mqtt" },
-    { entity_id: "binary_sensor.front_door", name: "Front Door Contact", area_id: "outdoor", device_id: undefined, platform: "zigbee2mqtt" },
-    { entity_id: "binary_sensor.back_door", name: "Back Door Contact", area_id: "living_room", device_id: undefined, platform: "zigbee2mqtt" },
-    { entity_id: "binary_sensor.garage_entry_door", name: "Garage Entry Door", area_id: "garage", device_id: undefined, platform: "zigbee2mqtt" },
-    { entity_id: "binary_sensor.kitchen_smoke", name: "Kitchen Smoke Alarm", area_id: "kitchen", device_id: undefined, platform: "zigbee2mqtt" },
-    { entity_id: "binary_sensor.living_room_motion", name: "Living Room Motion", area_id: "living_room", device_id: undefined, platform: "zigbee2mqtt" },
-    { entity_id: "alarm_control_panel.home", name: "Home Security Alarm", area_id: "living_room", device_id: undefined, platform: "manual" },
-    { entity_id: "alarm_control_panel.home_alarm", name: "Home Security Alarm", area_id: "living_room", device_id: undefined, platform: "manual" },
-    { entity_id: "sensor.living_room_temperature", name: "Living Room Temperature", area_id: "living_room", device_id: undefined, platform: "sensor" },
-    { entity_id: "sensor.temperature", name: "Primary Temperature", area_id: "living_room", device_id: undefined, platform: "sensor" },
-    { entity_id: "sensor.indoor_temp", name: "Indoor Temperature", area_id: "living_room", device_id: undefined, platform: "sensor" },
-    { entity_id: "sensor.outdoor_temp", name: "Outdoor Temperature", area_id: "outdoor", device_id: undefined, platform: "sensor" },
-    { entity_id: "sensor.living_room_humidity", name: "Living Room Humidity", area_id: "living_room", device_id: undefined, platform: "sensor" },
-    { entity_id: "sensor.power_consumption", name: "Total Power Draw", area_id: undefined, device_id: undefined, platform: "sensor" },
-    { entity_id: "sensor.ha_component_house_power", name: "House Power Consumption", area_id: undefined, device_id: undefined, platform: "sensor" },
-    { entity_id: "sensor.house_consumption_power", name: "House Power Consumption", area_id: undefined, device_id: undefined, platform: "sensor" },
-    { entity_id: "sensor.ha_component_solar_power", name: "Solar Generation Power", area_id: undefined, device_id: undefined, platform: "sensor" },
-    { entity_id: "sensor.solar_generation", name: "Solar Generation Power", area_id: undefined, device_id: undefined, platform: "sensor" },
-    { entity_id: "sensor.total_solar_power", name: "Total Solar Power", area_id: undefined, device_id: undefined, platform: "sensor" },
-    { entity_id: "sensor.ha_component_grid_power", name: "Grid Power Flow", area_id: undefined, device_id: undefined, platform: "sensor" },
-    { entity_id: "sensor.refoss_smart_energy_monitor_em_channel_3_power", name: "Refoss Grid Channel 3 Power", area_id: undefined, device_id: undefined, platform: "sensor" },
-    { entity_id: "weather.forecast_home", name: "Home Weather", area_id: undefined, device_id: undefined, platform: "weather" },
-    { entity_id: "sun.sun", name: "Sun", area_id: undefined, device_id: undefined, platform: "sun" },
-    { entity_id: "scene.goodnight", name: "Goodnight All", area_id: undefined, device_id: undefined, platform: "scene" },
-    { entity_id: "scene.movie_night", name: "Movie Night Cinema", area_id: undefined, device_id: undefined, platform: "scene" },
-    { entity_id: "automation.evening_lighting", name: "Evening Lighting Automation", area_id: undefined, device_id: undefined, platform: "automation" },
-    { entity_id: "script.welcome_home", name: "Welcome Home Sequence", area_id: undefined, device_id: undefined, platform: "script" },
-    { entity_id: "input_button.restart_network", name: "Restart Network", area_id: undefined, device_id: undefined, platform: "input_button" },
+    {
+      entity_id: "light.living_room",
+      name: "Living Room Light",
+      area_id: "living_room",
+      device_id: undefined,
+      platform: "hue",
+    },
+    {
+      entity_id: "light.kitchen",
+      name: "Kitchen Light",
+      area_id: "kitchen",
+      device_id: undefined,
+      platform: "hue",
+    },
+    {
+      entity_id: "light.bedroom",
+      name: "Bedroom Light",
+      area_id: "bedroom",
+      device_id: undefined,
+      platform: "hue",
+    },
+    {
+      entity_id: "switch.coffee_maker",
+      name: "Coffee Maker",
+      area_id: "kitchen",
+      device_id: undefined,
+      platform: "tasmota",
+    },
+    {
+      entity_id: "switch.living_room_fan",
+      name: "Living Room Fan",
+      area_id: "living_room",
+      device_id: undefined,
+      platform: "tuya",
+    },
+    {
+      entity_id: "climate.living_room_ac",
+      name: "Living Room AC",
+      area_id: "living_room",
+      device_id: "dev_living_ac",
+      platform: "climate",
+    },
+    {
+      entity_id: "climate.thermostat",
+      name: "Thermostat",
+      area_id: "living_room",
+      device_id: "dev_thermostat",
+      platform: "nest",
+    },
+    {
+      entity_id: "cover.garage_door",
+      name: "Garage Door",
+      area_id: "garage",
+      device_id: "dev_garage",
+      platform: "cover",
+    },
+    {
+      entity_id: "button.garage_door_operator",
+      name: "Garage Door Operator",
+      area_id: "garage",
+      device_id: "dev_garage",
+      platform: "button",
+    },
+    {
+      entity_id: "media_player.apple_tv",
+      name: "Apple TV",
+      area_id: "living_room",
+      device_id: "dev_apple_tv",
+      platform: "apple_tv",
+    },
+    {
+      entity_id: "remote.living_room_apple_tv",
+      name: "Living Room Apple TV Remote",
+      area_id: "living_room",
+      device_id: "dev_apple_tv",
+      platform: "apple_tv",
+    },
+    {
+      entity_id: "remote.apple_tv",
+      name: "Apple TV Remote",
+      area_id: "living_room",
+      device_id: "dev_apple_tv",
+      platform: "apple_tv",
+    },
+    {
+      entity_id: "camera.front_doorbell",
+      name: "Front Doorbell",
+      area_id: "outdoor",
+      device_id: "dev_front_doorbell",
+      platform: "reolink",
+    },
+    {
+      entity_id: "camera.front_porch",
+      name: "Front Porch Feed",
+      area_id: "outdoor",
+      device_id: "dev_front_porch",
+      platform: "unifi",
+    },
+    {
+      entity_id: "camera.driveway",
+      name: "Driveway Camera",
+      area_id: "outdoor",
+      device_id: "dev_driveway",
+      platform: "unifi",
+    },
+    {
+      entity_id: "update.ha_core",
+      name: "Home Assistant Core",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "homeassistant",
+    },
+    {
+      entity_id: "update.home_assistant_core",
+      name: "Home Assistant Core",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "homeassistant",
+    },
+    {
+      entity_id: "light.wled_strip",
+      name: "Accent Strip",
+      area_id: "living_room",
+      device_id: "dev_wled",
+      platform: "wled",
+    },
+    {
+      entity_id: "select.wled_preset",
+      name: "Accent Strip Preset",
+      area_id: "living_room",
+      device_id: "dev_wled",
+      platform: "wled",
+    },
+    {
+      entity_id: "select.wled_color_palette",
+      name: "Accent Strip Palette",
+      area_id: "living_room",
+      device_id: "dev_wled",
+      platform: "wled",
+    },
+    {
+      entity_id: "number.wled_speed",
+      name: "Accent Strip Speed",
+      area_id: "living_room",
+      device_id: "dev_wled",
+      platform: "wled",
+    },
+    {
+      entity_id: "number.wled_intensity",
+      name: "Accent Strip Intensity",
+      area_id: "living_room",
+      device_id: "dev_wled",
+      platform: "wled",
+    },
+    {
+      entity_id: "lock.front_door",
+      name: "Front Door Lock",
+      area_id: "outdoor",
+      device_id: undefined,
+      platform: "zigbee2mqtt",
+    },
+    {
+      entity_id: "lock.front_door_lock",
+      name: "Front Door Lock",
+      area_id: "outdoor",
+      device_id: undefined,
+      platform: "zigbee2mqtt",
+    },
+    {
+      entity_id: "binary_sensor.front_door",
+      name: "Front Door Contact",
+      area_id: "outdoor",
+      device_id: undefined,
+      platform: "zigbee2mqtt",
+    },
+    {
+      entity_id: "binary_sensor.back_door",
+      name: "Back Door Contact",
+      area_id: "living_room",
+      device_id: undefined,
+      platform: "zigbee2mqtt",
+    },
+    {
+      entity_id: "binary_sensor.garage_entry_door",
+      name: "Garage Entry Door",
+      area_id: "garage",
+      device_id: undefined,
+      platform: "zigbee2mqtt",
+    },
+    {
+      entity_id: "binary_sensor.kitchen_smoke",
+      name: "Kitchen Smoke Alarm",
+      area_id: "kitchen",
+      device_id: undefined,
+      platform: "zigbee2mqtt",
+    },
+    {
+      entity_id: "binary_sensor.living_room_motion",
+      name: "Living Room Motion",
+      area_id: "living_room",
+      device_id: undefined,
+      platform: "zigbee2mqtt",
+    },
+    {
+      entity_id: "alarm_control_panel.home",
+      name: "Home Security Alarm",
+      area_id: "living_room",
+      device_id: undefined,
+      platform: "manual",
+    },
+    {
+      entity_id: "alarm_control_panel.home_alarm",
+      name: "Home Security Alarm",
+      area_id: "living_room",
+      device_id: undefined,
+      platform: "manual",
+    },
+    {
+      entity_id: "sensor.living_room_temperature",
+      name: "Living Room Temperature",
+      area_id: "living_room",
+      device_id: undefined,
+      platform: "sensor",
+    },
+    {
+      entity_id: "sensor.temperature",
+      name: "Primary Temperature",
+      area_id: "living_room",
+      device_id: undefined,
+      platform: "sensor",
+    },
+    {
+      entity_id: "sensor.indoor_temp",
+      name: "Indoor Temperature",
+      area_id: "living_room",
+      device_id: undefined,
+      platform: "sensor",
+    },
+    {
+      entity_id: "sensor.outdoor_temp",
+      name: "Outdoor Temperature",
+      area_id: "outdoor",
+      device_id: undefined,
+      platform: "sensor",
+    },
+    {
+      entity_id: "sensor.living_room_humidity",
+      name: "Living Room Humidity",
+      area_id: "living_room",
+      device_id: undefined,
+      platform: "sensor",
+    },
+    {
+      entity_id: "sensor.power_consumption",
+      name: "Total Power Draw",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "sensor",
+    },
+    {
+      entity_id: "sensor.ha_component_house_power",
+      name: "House Power Consumption",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "sensor",
+    },
+    {
+      entity_id: "sensor.house_consumption_power",
+      name: "House Power Consumption",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "sensor",
+    },
+    {
+      entity_id: "sensor.ha_component_solar_power",
+      name: "Solar Generation Power",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "sensor",
+    },
+    {
+      entity_id: "sensor.solar_generation",
+      name: "Solar Generation Power",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "sensor",
+    },
+    {
+      entity_id: "sensor.total_solar_power",
+      name: "Total Solar Power",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "sensor",
+    },
+    {
+      entity_id: "sensor.ha_component_grid_power",
+      name: "Grid Power Flow",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "sensor",
+    },
+    {
+      entity_id: "sensor.refoss_smart_energy_monitor_em_channel_3_power",
+      name: "Refoss Grid Channel 3 Power",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "sensor",
+    },
+    {
+      entity_id: "weather.forecast_home",
+      name: "Home Weather",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "weather",
+    },
+    {
+      entity_id: "sun.sun",
+      name: "Sun",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "sun",
+    },
+    {
+      entity_id: "scene.goodnight",
+      name: "Goodnight All",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "scene",
+    },
+    {
+      entity_id: "scene.movie_night",
+      name: "Movie Night Cinema",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "scene",
+    },
+    {
+      entity_id: "automation.evening_lighting",
+      name: "Evening Lighting Automation",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "automation",
+    },
+    {
+      entity_id: "script.welcome_home",
+      name: "Welcome Home Sequence",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "script",
+    },
+    {
+      entity_id: "input_button.restart_network",
+      name: "Restart Network",
+      area_id: undefined,
+      device_id: undefined,
+      platform: "input_button",
+    },
   ];
 
   private _states: HassEntities = {
@@ -202,11 +604,35 @@ export class MockHomeAssistant {
         hvac_modes: ["off", "cool", "heat", "fan_only", "dry", "auto"],
         hvac_mode: "cool",
         hvac_action: "cooling",
-        fan_modes: ["auto", "quiet", "speed_1", "speed_2", "speed_3", "speed_4"],
+        fan_modes: [
+          "auto",
+          "quiet",
+          "speed_1",
+          "speed_2",
+          "speed_3",
+          "speed_4",
+        ],
         fan_mode: "auto",
-        swing_modes: ["auto", "1_up", "2_up_middle", "3_middle", "4_down_middle", "5_down", "swing"],
+        swing_modes: [
+          "auto",
+          "1_up",
+          "2_up_middle",
+          "3_middle",
+          "4_down_middle",
+          "5_down",
+          "swing",
+        ],
         swing_mode: "auto",
-        swing_horizontal_modes: ["auto", "1_left", "2_left_center", "3_center", "4_right_center", "5_right", "left_right", "swing"],
+        swing_horizontal_modes: [
+          "auto",
+          "1_left",
+          "2_left_center",
+          "3_center",
+          "4_right_center",
+          "5_right",
+          "left_right",
+          "swing",
+        ],
         swing_horizontal_mode: "auto",
         preset_modes: ["eco", "boost", "comfort"],
         preset_mode: "eco",
@@ -663,7 +1089,15 @@ export class MockHomeAssistant {
         friendly_name: "Accent LED Strip",
         icon: "mdi:led-strip-variant",
         brightness: 180,
-        effect_list: ["Solid", "Blink", "Breathe", "Rainbow", "Fire 2012", "Aurora", "Twinkle"],
+        effect_list: [
+          "Solid",
+          "Blink",
+          "Breathe",
+          "Rainbow",
+          "Fire 2012",
+          "Aurora",
+          "Twinkle",
+        ],
         effect: "Aurora",
       },
       context: { id: "ctx-wled-main" },
@@ -675,7 +1109,13 @@ export class MockHomeAssistant {
       last_updated: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
       attributes: {
         friendly_name: "Accent Strip Preset",
-        options: ["Evening Warm", "Movie Night", "Party Flash", "Aurora Glow", "Relax"],
+        options: [
+          "Evening Warm",
+          "Movie Night",
+          "Party Flash",
+          "Aurora Glow",
+          "Relax",
+        ],
       },
       context: { id: "ctx-wled-preset" },
     },
@@ -686,7 +1126,15 @@ export class MockHomeAssistant {
       last_updated: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
       attributes: {
         friendly_name: "Accent Strip Palette",
-        options: ["Default", "Party", "Cloud", "Sunset", "Forest", "Ocean", "Retro Clown"],
+        options: [
+          "Default",
+          "Party",
+          "Cloud",
+          "Sunset",
+          "Forest",
+          "Ocean",
+          "Retro Clown",
+        ],
       },
       context: { id: "ctx-wled-palette" },
     },
@@ -729,9 +1177,24 @@ export class MockHomeAssistant {
         humidity: 55,
         wind_speed: 12,
         forecast: [
-          { datetime: "2026-08-29T12:00:00Z", condition: "sunny", temperature: 24, templow: 14 },
-          { datetime: "2026-08-30T12:00:00Z", condition: "partlycloudy", temperature: 22, templow: 13 },
-          { datetime: "2026-08-31T12:00:00Z", condition: "rainy", temperature: 19, templow: 12 },
+          {
+            datetime: "2026-08-29T12:00:00Z",
+            condition: "sunny",
+            temperature: 24,
+            templow: 14,
+          },
+          {
+            datetime: "2026-08-30T12:00:00Z",
+            condition: "partlycloudy",
+            temperature: 22,
+            templow: 13,
+          },
+          {
+            datetime: "2026-08-31T12:00:00Z",
+            condition: "rainy",
+            temperature: 19,
+            templow: 12,
+          },
         ],
       },
       context: { id: "ctx-weather" },
@@ -897,11 +1360,17 @@ export class MockHomeAssistant {
       return [
         {
           handler: "wled",
-          context: { source: "zeroconf", title_placeholders: { name: "Balcony LED Strip" } },
+          context: {
+            source: "zeroconf",
+            title_placeholders: { name: "Balcony LED Strip" },
+          },
         },
         {
           handler: "esphome",
-          context: { source: "discovery", title_placeholders: { name: "Garden Moisture Sensor" } },
+          context: {
+            source: "discovery",
+            title_placeholders: { name: "Garden Moisture Sensor" },
+          },
         },
       ];
     }
@@ -913,7 +1382,9 @@ export class MockHomeAssistant {
         const isDay = h >= 6 && h <= 18;
         const solarFactor = isDay ? Math.sin(((h - 6) / 12) * Math.PI) : 0;
         const solar = Math.round(solarFactor * 3850);
-        const house = Math.round(550 + Math.sin(h / 2.5) * 250 + (h === 8 || h === 19 ? 850 : 0));
+        const house = Math.round(
+          550 + Math.sin(h / 2.5) * 250 + (h === 8 || h === 19 ? 850 : 0),
+        );
         const grid = house - solar;
         series.push({
           start: `${day}T${hourStr}:00Z`,
@@ -954,9 +1425,17 @@ export class MockHomeAssistant {
         return {
           found: true,
           profile: {
-            cameras: ["camera.front_doorbell", "camera.front_porch", "camera.driveway"],
+            cameras: [
+              "camera.front_doorbell",
+              "camera.front_porch",
+              "camera.driveway",
+            ],
             alarm_panel: "alarm_control_panel.home",
-            entry_sensors: ["binary_sensor.front_door", "binary_sensor.back_door", "lock.front_door"],
+            entry_sensors: [
+              "binary_sensor.front_door",
+              "binary_sensor.back_door",
+              "lock.front_door",
+            ],
           },
         };
       }
@@ -984,7 +1463,9 @@ export class MockHomeAssistant {
     this.updateState("sensor.solar_generation", { state: solarVal });
     this.updateState("sensor.total_solar_power", { state: solarVal });
     this.updateState("sensor.ha_component_grid_power", { state: gridVal });
-    this.updateState("sensor.refoss_smart_energy_monitor_em_channel_3_power", { state: gridVal });
+    this.updateState("sensor.refoss_smart_energy_monitor_em_channel_3_power", {
+      state: gridVal,
+    });
   }
 
   public toggleAlarmState(): void {
@@ -1004,7 +1485,14 @@ export class MockHomeAssistant {
       attributes: {
         ...this._states["climate.living_room_ac"].attributes,
         hvac_mode: nextMode,
-        hvac_action: nextMode === "cool" ? "cooling" : nextMode === "heat" ? "heating" : nextMode === "fan_only" ? "fan" : "off",
+        hvac_action:
+          nextMode === "cool"
+            ? "cooling"
+            : nextMode === "heat"
+              ? "heating"
+              : nextMode === "fan_only"
+                ? "fan"
+                : "off",
       },
     });
   }
@@ -1030,7 +1518,10 @@ export class MockHomeAssistant {
       entityIds = Array.isArray(dataEntity) ? dataEntity : [dataEntity];
     }
 
-    if (entityIds.length === 0 && (domain === "scene" || domain === "script" || domain === "automation")) {
+    if (
+      entityIds.length === 0 &&
+      (domain === "scene" || domain === "script" || domain === "automation")
+    ) {
       // Scene, script or automation triggered without explicit entity ID array
       this._notify();
       return { success: true };
@@ -1042,7 +1533,13 @@ export class MockHomeAssistant {
 
       let newState = current.state;
       if (service === "toggle") {
-        newState = current.state === "on" || current.state === "playing" || current.state === "cool" || current.state === "heat" ? "off" : "on";
+        newState =
+          current.state === "on" ||
+          current.state === "playing" ||
+          current.state === "cool" ||
+          current.state === "heat"
+            ? "off"
+            : "on";
       } else if (service === "turn_on") {
         newState = "on";
         if (serviceData?.brightness !== undefined) {
@@ -1057,9 +1554,15 @@ export class MockHomeAssistant {
         newState = "locked";
       } else if (domain === "lock" && service === "unlock") {
         newState = "unlocked";
-      } else if (domain === "cover" && (service === "open_cover" || service === "open")) {
+      } else if (
+        domain === "cover" &&
+        (service === "open_cover" || service === "open")
+      ) {
         newState = "open";
-      } else if (domain === "cover" && (service === "close_cover" || service === "close")) {
+      } else if (
+        domain === "cover" &&
+        (service === "close_cover" || service === "close")
+      ) {
         newState = "closed";
       } else if (domain === "cover" && service === "toggle") {
         newState = current.state === "closed" ? "open" : "closed";
@@ -1072,7 +1575,14 @@ export class MockHomeAssistant {
         if (serviceData?.hvac_mode) {
           newState = String(serviceData.hvac_mode);
           current.attributes.hvac_mode = newState;
-          current.attributes.hvac_action = newState === "cool" ? "cooling" : newState === "heat" ? "heating" : newState === "fan_only" ? "fan" : "off";
+          current.attributes.hvac_action =
+            newState === "cool"
+              ? "cooling"
+              : newState === "heat"
+                ? "heating"
+                : newState === "fan_only"
+                  ? "fan"
+                  : "off";
         }
       } else if (domain === "climate" && service === "set_fan_mode") {
         if (serviceData?.fan_mode) {
@@ -1086,9 +1596,15 @@ export class MockHomeAssistant {
         if (serviceData?.preset_mode) {
           current.attributes.preset_mode = String(serviceData.preset_mode);
         }
-      } else if (domain === "alarm_control_panel" && service.startsWith("alarm_arm")) {
+      } else if (
+        domain === "alarm_control_panel" &&
+        service.startsWith("alarm_arm")
+      ) {
         newState = service === "alarm_arm_away" ? "armed_away" : "armed_home";
-      } else if (domain === "alarm_control_panel" && service === "alarm_disarm") {
+      } else if (
+        domain === "alarm_control_panel" &&
+        service === "alarm_disarm"
+      ) {
         newState = "disarmed";
       } else if (domain === "select" && service === "select_option") {
         if (serviceData?.option) {

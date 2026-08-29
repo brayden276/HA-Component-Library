@@ -34,8 +34,7 @@ interface ProfileContext {
 
 type ProfileEventUnsubscribe = () => void;
 type ProfileEventSubscription =
-  | ProfileEventUnsubscribe
-  | Promise<ProfileEventUnsubscribe>;
+  ProfileEventUnsubscribe | Promise<ProfileEventUnsubscribe>;
 
 const profileSubscriptions = new WeakMap<
   HassConnection,
@@ -113,9 +112,11 @@ export const dashboardProfiles = Object.freeze({
   ): Promise<ProfileResponse<T>> {
     attachProfileEvents(hass);
     const key = profileKey(hass, kind, profileId);
-    return profileBroker.read(key, { hass, kind, profileId }, options) as Promise<
-      ProfileResponse<T>
-    >;
+    return profileBroker.read(
+      key,
+      { hass, kind, profileId },
+      options,
+    ) as Promise<ProfileResponse<T>>;
   },
   invalidate(hass: HomeAssistant, kind: string, profileId: string): void {
     profileBroker.invalidate(profileKey(hass, kind, profileId));

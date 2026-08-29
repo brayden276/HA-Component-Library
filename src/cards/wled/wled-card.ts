@@ -347,7 +347,8 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
     try {
       await action();
     } catch {
-      this._actionError = "Action failed. Check that the WLED device is available.";
+      this._actionError =
+        "Action failed. Check that the WLED device is available.";
     }
   }
 
@@ -426,92 +427,92 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
       <ha-card>
         <div class="wled-card">
           <div class="wled-toolbar">
-          <div class="icon-well control-radius">
-            <ha-icon icon="mdi:led-strip-variant"></ha-icon>
-          </div>
-          <button
-            class="identity"
-            type="button"
-            aria-label="Open ${this.esc(bundle.deviceName)} settings"
-            @click=${(event: Event) => this._openAdvanced(false, event)}
-          >
-            <div class="copy-block">
-              <div class="label-title">${this.esc(bundle.deviceName)}</div>
-              <div class="label-sub" role="status">${this.esc(status)}</div>
+            <div class="icon-well control-radius">
+              <ha-icon icon="mdi:led-strip-variant"></ha-icon>
             </div>
-          </button>
-          <button
-            class="btn-icon-44 power ${on ? "on" : ""}"
-            type="button"
-            aria-label="Toggle WLED"
-            ?disabled=${!controllable}
-            aria-pressed="${String(on)}"
-            @click=${() => void this._runAction(() => this._togglePower())}
-          >
-            <ha-icon icon="mdi:power"></ha-icon>
-          </button>
+            <button
+              class="identity"
+              type="button"
+              aria-label="Open ${this.esc(bundle.deviceName)} settings"
+              @click=${(event: Event) => this._openAdvanced(false, event)}
+            >
+              <div class="copy-block">
+                <div class="label-title">${this.esc(bundle.deviceName)}</div>
+                <div class="label-sub" role="status">${this.esc(status)}</div>
+              </div>
+            </button>
+            <button
+              class="btn-icon-44 power ${on ? "on" : ""}"
+              type="button"
+              aria-label="Toggle WLED"
+              ?disabled=${!controllable}
+              aria-pressed="${String(on)}"
+              @click=${() => void this._runAction(() => this._togglePower())}
+            >
+              <ha-icon icon="mdi:power"></ha-icon>
+            </button>
           </div>
-        ${
+          ${
           on
             ? html`
                 <div class="card-divider-line"></div>
                 <div class="brightness-control">
-                    <span class="label-title">Brightness</span>
-                    <input
-                      class="brightness"
-                      type="range"
-                      min="0"
-                      max="255"
-                      step="1"
-                      role="slider"
-                      aria-label="Brightness"
-                      aria-valuemin="0"
-                      aria-valuemax="255"
-                      aria-valuenow="${String(Math.max(0, Math.min(255, Number.isFinite(brightness) ? brightness : 0)))}"
-                      .value=${String(Math.max(0, Math.min(255, Number.isFinite(brightness) ? brightness : 0)))}
-                      @input=${(e: Event) => {
+                  <span class="label-title">Brightness</span>
+                  <input
+                    class="brightness"
+                    type="range"
+                    min="0"
+                    max="255"
+                    step="1"
+                    role="slider"
+                    aria-label="Brightness"
+                    aria-valuemin="0"
+                    aria-valuemax="255"
+                    aria-valuenow="${String(Math.max(0, Math.min(255, Number.isFinite(brightness) ? brightness : 0)))}"
+                    .value=${String(Math.max(0, Math.min(255, Number.isFinite(brightness) ? brightness : 0)))}
+                    @input=${(e: Event) => {
                         const v = Number((e.target as HTMLInputElement).value);
                         this._brightnessIntent = v;
                         this._getBrightnessCoalescer().request(v);
                       }}
-                    />
-                    <output class="brightness-value"
-                      >${this._pct(brightness)}</output
-                    >
+                  />
+                  <output class="brightness-value"
+                    >${this._pct(brightness)}</output
+                  >
                 </div>
-                  <div class="actions">
-                    <button
-                      class="btn-action-pill action presets"
-                      type="button"
-                      ?disabled=${!presetOk}
-                      aria-label="WLED presets"
-                      @click=${(event: Event) => this._openAdvanced(true, event)}
-                    >
-                      <ha-icon icon="mdi:bookmark-multiple-outline"></ha-icon>
-                      <span>Presets</span>
-                    </button>
-                    <button
-                      class="btn-action-pill action colour"
-                      type="button"
-                      ?disabled=${!effectOk}
-                      aria-label="WLED colour"
-                      @click=${() => this.moreInfo(bundle.effectLights[0] || bundle.main)}
-                    >
-                      <ha-icon icon="mdi:palette-outline"></ha-icon>
-                      <span>Colour</span>
-                    </button>
-                    <button
-                      class="btn-action-pill action advanced"
-                      type="button"
-                      ?disabled=${!(presetOk || effectOk || paletteOk || speedOk || intensityOk)}
-                      aria-label="WLED advanced settings"
-                      @click=${(event: Event) => this._openAdvanced(false, event)}
-                    >
-                      <ha-icon icon="mdi:tune-variant"></ha-icon>
-                      <span>Advanced</span>
-                    </button>
-                  </div>
-                  ${this._actionError ? html`<div class="feedback-line err" role="alert">${this._actionError}</div>` : ""}
+                <div class="actions">
+                  <button
+                    class="btn-action-pill action presets"
+                    type="button"
+                    ?disabled=${!presetOk}
+                    aria-label="WLED presets"
+                    @click=${(event: Event) => this._openAdvanced(true, event)}
+                  >
+                    <ha-icon icon="mdi:bookmark-multiple-outline"></ha-icon>
+                    <span>Presets</span>
+                  </button>
+                  <button
+                    class="btn-action-pill action colour"
+                    type="button"
+                    ?disabled=${!effectOk}
+                    aria-label="WLED colour"
+                    @click=${() => this.moreInfo(bundle.effectLights[0] || bundle.main)}
+                  >
+                    <ha-icon icon="mdi:palette-outline"></ha-icon>
+                    <span>Colour</span>
+                  </button>
+                  <button
+                    class="btn-action-pill action advanced"
+                    type="button"
+                    ?disabled=${!(presetOk || effectOk || paletteOk || speedOk || intensityOk)}
+                    aria-label="WLED advanced settings"
+                    @click=${(event: Event) => this._openAdvanced(false, event)}
+                  >
+                    <ha-icon icon="mdi:tune-variant"></ha-icon>
+                    <span>Advanced</span>
+                  </button>
+                </div>
+                ${this._actionError ? html`<div class="feedback-line err" role="alert">${this._actionError}</div>` : ""}
               `
             : ""
         }
@@ -536,7 +537,11 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
           }
         }}
       >
-        <div class="sheet" @click=${(e: MouseEvent) => e.stopPropagation()} @mousedown=${(e: MouseEvent) => e.stopPropagation()}>
+        <div
+          class="sheet"
+          @click=${(e: MouseEvent) => e.stopPropagation()}
+          @mousedown=${(e: MouseEvent) => e.stopPropagation()}
+        >
           <div class="sheet-head">
             <div class="icon-well control-radius">
               <ha-icon icon="mdi:led-strip-variant"></ha-icon>
@@ -686,7 +691,9 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                     .value=${String((this._speedIntent ?? Number(speed)) || 0)}
                     ?disabled=${!speedOk}
                     @input=${(e: Event) => {
-                      this._speedIntent = Number((e.target as HTMLInputElement).value);
+                      this._speedIntent = Number(
+                        (e.target as HTMLInputElement).value,
+                      );
                     }}
                     @change=${(e: Event) => {
                       const val = Number((e.target as HTMLInputElement).value);
@@ -719,7 +726,9 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                     .value=${String((this._intensityIntent ?? Number(intensity)) || 0)}
                     ?disabled=${!intensityOk}
                     @input=${(e: Event) => {
-                      this._intensityIntent = Number((e.target as HTMLInputElement).value);
+                      this._intensityIntent = Number(
+                        (e.target as HTMLInputElement).value,
+                      );
                     }}
                     @change=${(e: Event) => {
                       const val = Number((e.target as HTMLInputElement).value);
@@ -730,7 +739,6 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                     }}
                   />
                 </label>
-
               </div>
             </section>
 
@@ -754,7 +762,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                       class="btn-action-pill preset-btn"
                       type="button"
                       aria-label="${swatch.name}"
-                      style="--action-glow-color: rgb(${swatch.rgb.join(',')});"
+                      style="--action-glow-color: rgb(${swatch.rgb.join(",")});"
                       @click=${(e: Event) => {
                         e.stopPropagation();
                         this._call("light", "turn_on", bundle.effectLights, {
@@ -763,7 +771,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                       }}
                     >
                       <span
-                        style="display:inline-block;width:12px;height:12px;border-radius:50%;background:rgb(${swatch.rgb.join(',')});margin-right:6px;border:1px solid var(--divider-color);flex-shrink:0;"
+                        style="display:inline-block;width:12px;height:12px;border-radius:50%;background:rgb(${swatch.rgb.join(",")});margin-right:6px;border:1px solid var(--divider-color);flex-shrink:0;"
                       ></span>
                       <span>${swatch.name}</span>
                     </button>

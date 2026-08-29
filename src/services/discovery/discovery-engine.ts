@@ -10,10 +10,7 @@ import {
   isControlActive,
 } from "./entity-classifier";
 import { resolveDeviceCard } from "./control-resolver";
-import {
-  applyPrefs,
-  UserPreferences,
-} from "../registry/dashboard-registry";
+import { applyPrefs, UserPreferences } from "../registry/dashboard-registry";
 
 export interface DiscoveryOptions {
   mode?: "all" | "area" | "active" | "media" | "sound";

@@ -281,7 +281,8 @@ export const isPeripheralEntity = (
   ) {
     return true;
   }
-  const idAndName = `${entry.entity_id} ${entry.name || ""} ${entry.original_name || ""} ${state?.attributes?.friendly_name || ""}`.toLowerCase();
+  const idAndName =
+    `${entry.entity_id} ${entry.name || ""} ${entry.original_name || ""} ${state?.attributes?.friendly_name || ""}`.toLowerCase();
   return /\b(battery|battery_level|battery_low|battery_state|link_?quality|rssi|signal_strength|lqi|voltage|temp(erature)?_offset|humidity_offset|calibration_offset|firmware|ip_address|mac_address|device_temp(erature)?|cpu_temp(erature)?|ping|keep_alive|reporting_interval|uptime|free_heap|wifi_signal|compressor_speed|compressor_frequency)\b/i.test(
     idAndName,
   );
@@ -293,13 +294,12 @@ export const uiEntry = (
 ): boolean =>
   Boolean(
     entry?.entity_id &&
-      !entry.disabled_by &&
-      !entry.hidden_by &&
-      !["diagnostic", "config"].includes(entry.entity_category || "") &&
-      !isPeripheralEntity(entry, state) &&
-      entryFilters.every((filter) => filter(entry)),
+    !entry.disabled_by &&
+    !entry.hidden_by &&
+    !["diagnostic", "config"].includes(entry.entity_category || "") &&
+    !isPeripheralEntity(entry, state) &&
+    entryFilters.every((filter) => filter(entry)),
   );
-
 
 export const stateNameOf = (
   _hass?: HomeAssistant | null,
