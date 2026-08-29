@@ -7,6 +7,7 @@ import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type { HassEntity } from "../../types/home-assistant";
 import { interaction, InteractionHandle } from "../../utils/interaction";
+import { runServiceAction } from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
 const DEFAULTS: UpdateSummaryCardConfig = {
@@ -115,11 +116,19 @@ export class ComponentUpdateSummaryV3 extends LitBaseCard<UpdateSummaryCardConfi
 
     try {
       if (normal.length) {
-        await this.hass.callService("update", "install", { entity_id: normal });
+        await runServiceAction(this.hass, {
+          domain: "update",
+          service: "install",
+          target: { entity_id: normal },
+        });
       }
       for (const id of priority) {
         if (pending.some((st) => st.entity_id === id)) {
-          await this.hass.callService("update", "install", { entity_id: id });
+          await runServiceAction(this.hass, {
+            domain: "update",
+            service: "install",
+            target: { entity_id: id },
+          });
         }
       }
     } catch {

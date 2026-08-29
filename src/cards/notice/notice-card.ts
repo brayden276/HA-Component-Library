@@ -46,7 +46,7 @@ export class ComponentNoticeV2 extends LitBaseCard<NoticeCardConfig> {
 
   protected override updated(): void {
     const action = this._getAction();
-    const wrap = this.renderRoot.querySelector(".wrap") as HTMLElement | null;
+    const wrap = this.renderRoot.querySelector(".notice-box") as HTMLElement | null;
     if (action && wrap) {
       this._interactionHandle?.destroy();
       this._interactionHandle = interaction(wrap, {
@@ -69,11 +69,7 @@ export class ComponentNoticeV2 extends LitBaseCard<NoticeCardConfig> {
     if (!this._config) return html``;
     const action = this._getAction();
     const entity = this._config.entity ? this.hass?.states[this._config.entity] : null;
-    const tone = ["warning", "error", "success"].includes(
-      this._config.tone || "",
-    )
-      ? this._config.tone
-      : "";
+    const tone = this._config.tone === "error" ? "critical" : this._config.tone || "info";
 
     const title = entity && this._config.title === "Notice title"
       ? computeEntityDisplayName({ state: entity })
@@ -87,17 +83,17 @@ export class ComponentNoticeV2 extends LitBaseCard<NoticeCardConfig> {
     return html`
       <ha-card>
         <div
-          class="wrap ${tone} ${action ? "actionable" : ""}"
+          class="notice-box ${tone} ${action ? "actionable" : ""}"
           role="${action ? "button" : "region"}"
           tabindex="${action ? "0" : "-1"}"
           aria-label="${this.esc(ariaLabel)}"
         >
-          <span class="icon">
+          <span>
             <ha-icon icon="${this.esc(this._config.icon)}"></ha-icon>
           </span>
           <div>
-            <div class="title">${this.esc(title)}</div>
-            ${message ? html`<div class="message">${this.esc(message)}</div>` : ""}
+            <div class="label-title">${this.esc(title)}</div>
+            ${message ? html`<div class="label-sub message">${this.esc(message)}</div>` : ""}
           </div>
         </div>
       </ha-card>

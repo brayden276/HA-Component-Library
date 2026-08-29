@@ -5,7 +5,7 @@ import { smartCollectionCardStyles } from "./smart-collection-card.styles";
 import { html, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
-import type { LovelaceGridOptions } from "../../types/home-assistant";
+import type { HomeAssistant, LovelaceGridOptions } from "../../types/home-assistant";
 import type { DashboardRegistries } from "../../types/registry";
 import {
   centralRegistry,
@@ -58,6 +58,7 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
   private _structureSig = "";
   private _gen = 0;
   private _unsubRegistry: (() => void) | null = null;
+  private _registryHass: HomeAssistant | null = null;
 
   public static override styles: CSSResultGroup = smartCollectionCardStyles;
 
@@ -76,10 +77,7 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
       if (this._config?.pref_key) {
         this._loadPrefs();
       }
-      centralRegistry.load(this.hass).then((data) => {
-        this._registry = data;
-        void this._syncCards();
-      });
+      void this._loadRegistry();
       void this._syncCards();
     }
   }
@@ -90,13 +88,8 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
 
   public override connectedCallback(): void {
     super.connectedCallback();
-    if (!this._unsubRegistry && this.hass) {
-      this._unsubRegistry = centralRegistry.subscribe(this.hass, (data) => {
-        this._registry = data;
-        this._structureSig = "";
-        void this._syncCards();
-      });
-    }
+    this._bindRegistry();
+    void this._loadRegistry();
     if (this._config?.pref_key) {
       this._loadPrefs();
     }
@@ -104,25 +97,58 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
   }
 
   public override disconnectedCallback(): void {
-    this._unsubRegistry?.();
-    this._unsubRegistry = null;
+    this._unbindRegistry();
     this._gen += 1;
     super.disconnectedCallback();
   }
 
   protected override willUpdate(changedProps: PropertyValues): void {
     super.willUpdate(changedProps);
+    if (changedProps.has("hass") && changedProps.get("hass") !== this.hass) {
+      this._registry = null;
+      this._unbindRegistry();
+    }
     if (changedProps.has("hass") && this.hass) {
+      this._bindRegistry();
       for (const record of this._cardElements.values()) {
         (record.el as any).hass = this.hass;
       }
-      if (!this._registry) {
-        centralRegistry.load(this.hass).then((data) => {
-          this._registry = data;
-          void this._syncCards();
-        });
-      }
+      void this._loadRegistry();
       void this._syncCards();
+    }
+  }
+
+  private _bindRegistry(): void {
+    if (!this.isConnected || !this.hass) return;
+    if (this._registryHass === this.hass && this._unsubRegistry) return;
+
+    this._unbindRegistry();
+    const hass = this.hass;
+    this._registryHass = hass;
+    this._unsubRegistry = centralRegistry.subscribe(hass, (data) => {
+      if (this.hass !== hass) return;
+      this._registry = data;
+      this._structureSig = "";
+      void this._syncCards();
+    });
+  }
+
+  private _unbindRegistry(): void {
+    this._unsubRegistry?.();
+    this._unsubRegistry = null;
+    this._registryHass = null;
+  }
+
+  private async _loadRegistry(): Promise<void> {
+    if (!this.hass) return;
+    const hass = this.hass;
+    try {
+      const data = await centralRegistry.load(hass);
+      if (this.hass !== hass) return;
+      this._registry = data;
+      void this._syncCards();
+    } catch {
+      // Keep the previous registry while Home Assistant reconnects.
     }
   }
 
@@ -131,21 +157,6 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
     this._prefs = await loadPrefs(this.hass, this._config.pref_key);
     this._structureSig = "";
     void this._syncCards();
-  }
-
-  private _tune(card: HTMLElement): void {
-    if (
-      card?.localName !== "component-split-controller-v4" ||
-      !card.shadowRoot ||
-      card.shadowRoot.querySelector("style[data-home-minimal]")
-    ) {
-      return;
-    }
-    const style = document.createElement("style");
-    style.dataset.homeMinimal = "";
-    style.textContent =
-      ".nm{font-weight:500!important}.iw{color:var(--secondary-text-color)!important}.rv{font-size:22px!important;font-weight:500!important}.tv{font-size:16px!important;font-weight:500!important}.al,.pt,.gt,.o,.tpr button,.tcu button,.tac button{font-weight:500!important}.pt{font-size:16px!important}.a ha-icon{--mdc-icon-size:17px!important}";
-    card.shadowRoot.append(style);
   }
 
   private async _syncCards(): Promise<void> {
@@ -185,7 +196,6 @@ export class ComponentSmartCollectionV3 extends LitBaseCard<SmartCollectionConfi
       try {
         const element = await createCardElement(item.cardConfig, this.hass);
         if (gen !== this._gen) return;
-        this._tune(element);
         staged.set(item.entityId, { el: element, sig: item.signature });
       } catch {
         // Continue with other controls

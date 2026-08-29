@@ -3,7 +3,8 @@ import "../../src/cards/security-summary/security-summary-card";
 import "../../src/cards/security-camera-wall/security-camera-wall-card";
 import "../../src/cards/security-entry-points/security-entry-points-card";
 import "../../src/cards/security-dashboard/security-dashboard-card";
-import { createMockHass } from '../fixtures/mock-hass';
+import "../../src/cards/camera/camera-card";
+import { createMockHass, MockHassBuilder } from '../fixtures/mock-hass';
 
 describe('Stage 5 Security Family Contract Tests', () => {
   const hass = createMockHass({
@@ -69,6 +70,71 @@ describe('Stage 5 Security Family Contract Tests', () => {
     expect(el.shadowRoot.textContent).toContain('Security Dashboard');
     expect(el.shadowRoot.querySelector('.hero')).not.toBeNull();
     expect(el.shadowRoot.querySelector('.camera-section')).not.toBeNull();
+    el.remove();
+  });
+
+  it('disables quick actions whose live HA entity state is unavailable', async () => {
+    const el = document.createElement('component-security-dashboard-v1') as any;
+    el.setConfig({ profile: 'household-security' });
+    el.hass = createMockHass({
+      states: {
+        'scene.night_mode': { state: 'unavailable', attributes: {} } as any,
+      },
+    });
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el._model = {
+      error: null, profileError: null, profileMissing: false, profile: {}, cameras: [], entries: [], attention: [], allClear: true, onlineCameras: 0,
+      quickActions: [{ id: 'night', entityId: 'scene.night_mode', domain: 'scene', service: 'turn_on', name: 'Night mode', icon: 'mdi:weather-night', available: true }],
+    };
+    await el.updateComplete;
+
+    expect(el.shadowRoot.querySelector<HTMLButtonElement>('.quick-action')?.disabled).toBe(true);
+    el.remove();
+  });
+
+  it('uses a Home Assistant target for available quick actions', async () => {
+    const builder = new MockHassBuilder({
+      states: {
+        'scene.night_mode': { state: 'scening', attributes: {} } as any,
+      },
+    });
+    const el = document.createElement('component-security-dashboard-v1') as any;
+    el.setConfig({ profile: 'household-security' });
+    el.hass = builder.build();
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el._model = {
+      error: null, profileError: null, profileMissing: false, profile: {}, cameras: [], entries: [], attention: [], allClear: true, onlineCameras: 0,
+      quickActions: [{ id: 'night', entityId: 'scene.night_mode', domain: 'scene', service: 'turn_on', name: 'Night mode', icon: 'mdi:weather-night', available: true }],
+    };
+    await el.updateComplete;
+
+    el.shadowRoot.querySelector<HTMLButtonElement>('.quick-action')?.click();
+    await Promise.resolve();
+    expect(builder.getServiceCalls()).toContainEqual({
+      domain: 'scene', service: 'turn_on', data: undefined, target: { entity_id: 'scene.night_mode' },
+    });
+    el.remove();
+  });
+
+  it('disables camera controls when their entity state is unavailable', async () => {
+    const el = document.createElement('component-camera-controller-v2') as any;
+    el.setConfig({ profile: 'household-security', expanded: true });
+    el.hass = createMockHass({
+      states: {
+        'switch.camera_recording': { state: 'unavailable', attributes: {} } as any,
+      },
+    });
+    document.body.appendChild(el);
+    await el.updateComplete;
+    el._camera = {
+      id: 'camera', deviceId: null, entityId: 'camera.driveway', entities: [], name: 'Driveway', areaId: null, areaName: '', online: true, active: false, streamEntityId: 'camera.driveway', detections: [], classifications: [], actions: [], ptz: [],
+      switches: [{ entity: { entity_id: 'switch.camera_recording', name: 'Recording' }, role: 'Recording' }],
+    };
+    await el.updateComplete;
+
+    expect(el.shadowRoot.querySelector<HTMLButtonElement>('.control button')?.disabled).toBe(true);
     el.remove();
   });
 });

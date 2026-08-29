@@ -8,6 +8,7 @@ import { LitBaseCard } from "../../components/base/lit-base-card";
 import type {
   LovelaceGridOptions,
   HassEntity,
+  HomeAssistant,
 } from "../../types/home-assistant";
 import type {
   DashboardRegistries,
@@ -20,13 +21,12 @@ import {
   WLED_NAME,
 } from "../../services/devices/wled-runtime";
 import {
-  interaction,
-  InteractionHandle,
   createRequestCoalescer,
   RequestCoalescer,
   waitForEntityState,
 } from "../../utils/interaction";
 import { registerCard } from "../../utils/registration";
+import { runServiceAction } from "../../utils/entity";
 
 interface WledBundle {
   deviceId?: string;
@@ -57,9 +57,13 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
   private _intensityIntent: number | null = null;
 
   private _unsubRegistry: (() => void) | null = null;
+  private _registryHass: HomeAssistant | null = null;
 
   private _brightnessCoalescer: RequestCoalescer<number> | null = null;
-  private _interactionHandles: InteractionHandle[] = [];
+  private _dialogOpener: HTMLElement | null = null;
+
+  @state()
+  private _actionError: string | null = null;
 
   public static override getGridOptions(): LovelaceGridOptions {
     return { columns: 12, rows: "auto" };
@@ -80,7 +84,25 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
 
   private _loadRegistries(): void {
     if (!this.hass) return;
-    centralRegistry.load(this.hass).then((data) => {
+    const hass = this.hass;
+    centralRegistry.load(hass).then((data) => {
+      if (this.hass !== hass) return;
+      this._registries = data;
+      this._bundle = this._resolveBundle();
+    });
+  }
+
+  private _bindRegistry(): void {
+    if (!this.hass) return;
+    if (this._registryHass === this.hass && this._unsubRegistry) return;
+    this._unsubRegistry?.();
+    this._unsubRegistry = null;
+    this._registryHass = this.hass;
+    this._registries = null;
+    this._bundle = null;
+    const hass = this.hass;
+    this._unsubRegistry = centralRegistry.subscribe(hass, (data) => {
+      if (this.hass !== hass) return;
       this._registries = data;
       this._bundle = this._resolveBundle();
     });
@@ -88,32 +110,21 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
 
   public override connectedCallback(): void {
     super.connectedCallback();
-    if (!this._unsubRegistry && this.hass) {
-      this._unsubRegistry = centralRegistry.subscribe(this.hass, (data) => {
-        this._registries = data;
-        this._bundle = this._resolveBundle();
-      });
-    }
+    this._bindRegistry();
   }
 
   public override disconnectedCallback(): void {
     this._unsubRegistry?.();
     this._unsubRegistry = null;
+    this._registryHass = null;
     this._brightnessCoalescer?.destroy();
     this._brightnessCoalescer = null;
     this._brightnessIntent = null;
-    for (const h of this._interactionHandles) h.destroy();
-    this._interactionHandles = [];
     super.disconnectedCallback();
   }
 
   protected override willUpdate(): void {
-    if (!this._unsubRegistry && this.isConnected && this.hass) {
-      this._unsubRegistry = centralRegistry.subscribe(this.hass, (data) => {
-        this._registries = data;
-        this._bundle = this._resolveBundle();
-      });
-    }
+    if (this.isConnected) this._bindRegistry();
     if (!this._bundle && this.hass && this._registries) {
       this._bundle = this._resolveBundle();
     }
@@ -189,9 +200,13 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
     const state = id ? this.hass?.states?.[id] : null;
     if (!id || !this.hass) return;
     const wasOn = state?.state === "on";
-    await this.hass.callService("light", "toggle", { entity_id: id });
+    await runServiceAction(this.hass, {
+      domain: "light",
+      service: "toggle",
+      target: { entity_id: id },
+    });
     await waitForEntityState(
-      this.hass,
+      () => this.hass,
       id,
       (value) => value === (wasOn ? "off" : "on"),
       { timeout: 5000 },
@@ -205,15 +220,21 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
         const id = this._bundle?.main;
         if (!id || !this.hass) return;
         if (value <= 0) {
-          await this.hass.callService("light", "turn_off", { entity_id: id });
+          await runServiceAction(this.hass, {
+            domain: "light",
+            service: "turn_off",
+            target: { entity_id: id },
+          });
         } else {
-          await this.hass.callService("light", "turn_on", {
-            entity_id: id,
-            brightness: value,
+          await runServiceAction(this.hass, {
+            domain: "light",
+            service: "turn_on",
+            data: { brightness: value },
+            target: { entity_id: id },
           });
         }
         await waitForEntityState(
-          this.hass,
+          () => this.hass,
           id,
           (st, obj) =>
             value <= 0
@@ -259,26 +280,43 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
     domain: string,
     service: string,
     ids: string[],
-    data: Record<string, any> = {},
+    data: Record<string, unknown> = {},
   ): Promise<void> {
     const targets = [...new Set((ids || []).filter(Boolean))];
     if (!this.hass || !targets.length) return;
     await Promise.all(
       targets.map((entity_id) =>
-        this.hass!.callService(domain, service, { entity_id, ...data }),
+        runServiceAction(this.hass!, {
+          domain,
+          service,
+          data,
+          target: { entity_id },
+        }),
       ),
     );
   }
 
-  private _openAdvanced(presets = false): void {
+  private _openAdvanced(presets = false, event?: Event): void {
     const dialog = this.renderRoot.querySelector(
       "dialog",
     ) as HTMLDialogElement | null;
-    if (!dialog || !this._bundle) return;
-    const mainSt = this.hass?.states?.[this._bundle.main];
+    // The card can render from its configured entity before registry discovery
+    // completes. Keep the visible controls usable during that short window.
+    const bundle = this._bundle || this._resolveBundle();
+    if (!dialog || !bundle) return;
+    const mainSt = this.hass?.states?.[bundle.main];
     if (String(mainSt?.state || "unavailable").toLowerCase() !== "on") return;
+    this._dialogOpener =
+      event?.currentTarget instanceof HTMLElement
+        ? event.currentTarget
+        : this._dialogOpener;
     if (!dialog.open) {
-      dialog.showModal();
+      try {
+        dialog.showModal();
+      } catch {
+        this._dialogOpener = null;
+        return;
+      }
     }
     queueMicrotask(() => {
       if (presets) {
@@ -298,94 +336,18 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
     if (dialog?.open) dialog.close();
   }
 
-  protected override updated(): void {
-    for (const h of this._interactionHandles) h.destroy();
-    this._interactionHandles = [];
+  private _handleDialogClosed = (): void => {
+    const opener = this._dialogOpener;
+    this._dialogOpener = null;
+    opener?.focus();
+  };
 
-    const powerBtn = this.renderRoot.querySelector(
-      ".power",
-    ) as HTMLElement | null;
-    const identityBtn = this.renderRoot.querySelector(
-      ".identity",
-    ) as HTMLElement | null;
-    const presetsBtn = this.renderRoot.querySelector(
-      ".presets",
-    ) as HTMLElement | null;
-    const colourBtn = this.renderRoot.querySelector(
-      ".colour",
-    ) as HTMLElement | null;
-    const advancedBtn = this.renderRoot.querySelector(
-      ".advanced",
-    ) as HTMLElement | null;
-    const nativeColourBtn = this.renderRoot.querySelector(
-      ".native-colour",
-    ) as HTMLElement | null;
-    const closeBtn = this.renderRoot.querySelector(
-      ".close",
-    ) as HTMLElement | null;
-
-    if (powerBtn) {
-      this._interactionHandles.push(
-        interaction(powerBtn, {
-          primary: () => this._togglePower(),
-          feedback: true,
-        }),
-      );
-    }
-    if (identityBtn) {
-      this._interactionHandles.push(
-        interaction(identityBtn, {
-          primary: () => this._openAdvanced(false),
-          hold: () => this.moreInfo(this._bundle?.main),
-          feedback: true,
-        }),
-      );
-    }
-    if (presetsBtn) {
-      this._interactionHandles.push(
-        interaction(presetsBtn, {
-          primary: () => this._openAdvanced(true),
-          feedback: true,
-        }),
-      );
-    }
-    if (colourBtn) {
-      this._interactionHandles.push(
-        interaction(colourBtn, {
-          primary: () =>
-            this.moreInfo(
-              this._bundle?.effectLights?.[0] || this._bundle?.main,
-            ),
-          feedback: true,
-        }),
-      );
-    }
-    if (advancedBtn) {
-      this._interactionHandles.push(
-        interaction(advancedBtn, {
-          primary: () => this._openAdvanced(false),
-          feedback: true,
-        }),
-      );
-    }
-    if (nativeColourBtn) {
-      this._interactionHandles.push(
-        interaction(nativeColourBtn, {
-          primary: () =>
-            this.moreInfo(
-              this._bundle?.effectLights?.[0] || this._bundle?.main,
-            ),
-          feedback: true,
-        }),
-      );
-    }
-    if (closeBtn) {
-      this._interactionHandles.push(
-        interaction(closeBtn, {
-          primary: () => this._closeDialog(),
-          feedback: true,
-        }),
-      );
+  private async _runAction(action: () => Promise<void> | void): Promise<void> {
+    this._actionError = null;
+    try {
+      await action();
+    } catch {
+      this._actionError = "Action failed. Check that the WLED device is available.";
     }
   }
 
@@ -393,13 +355,21 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
     if (!this._config || !this.hass) return html``;
     const bundle = this._bundle || this._resolveBundle();
     if (!bundle)
-      return html`<ha-card
-        ><div class="head">
-          <span class="ico"
-            ><ha-icon icon="mdi:led-strip-variant"></ha-icon></span
-          ><span class="status">Loading…</span>
-        </div></ha-card
-      >`;
+      return html`
+        <ha-card>
+          <div class="wled-card">
+            <div class="wled-toolbar" aria-busy="true">
+              <div class="icon-well control-radius">
+                <ha-icon icon="mdi:led-strip-variant"></ha-icon>
+              </div>
+              <div class="copy-block">
+                <div class="label-title">Loading WLED</div>
+                <div class="label-sub" role="status">Loading…</div>
+              </div>
+            </div>
+          </div>
+        </ha-card>
+      `;
 
     const main = this.hass.states[bundle.main];
     const state = String(main?.state || "unavailable").toLowerCase();
@@ -454,31 +424,39 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
 
     return html`
       <ha-card>
-        <div class="head ${on ? "on" : ""}">
-          <span class="ico"
-            ><ha-icon icon="mdi:led-strip-variant"></ha-icon
-          ></span>
-          <button class="identity" type="button" @click=${() => this._openAdvanced(false)}>
-            <span class="name">${this.esc(bundle.deviceName)}</span>
-            <span class="status">${this.esc(status)}</span>
+        <div class="wled-card">
+          <div class="wled-toolbar">
+          <div class="icon-well control-radius">
+            <ha-icon icon="mdi:led-strip-variant"></ha-icon>
+          </div>
+          <button
+            class="identity"
+            type="button"
+            aria-label="Open ${this.esc(bundle.deviceName)} settings"
+            @click=${(event: Event) => this._openAdvanced(false, event)}
+          >
+            <div class="copy-block">
+              <div class="label-title">${this.esc(bundle.deviceName)}</div>
+              <div class="label-sub" role="status">${this.esc(status)}</div>
+            </div>
           </button>
           <button
-            class="power"
+            class="btn-icon-44 power ${on ? "on" : ""}"
             type="button"
             aria-label="Toggle WLED"
             ?disabled=${!controllable}
             aria-pressed="${String(on)}"
-            @click=${() => this._togglePower()}
+            @click=${() => void this._runAction(() => this._togglePower())}
           >
             <ha-icon icon="mdi:power"></ha-icon>
           </button>
-        </div>
+          </div>
         ${
           on
             ? html`
-                <div class="body">
-                  <div class="slider-row">
-                    <span class="label">Brightness</span>
+                <div class="card-divider-line"></div>
+                <div class="brightness-control">
+                    <span class="label-title">Brightness</span>
                     <input
                       class="brightness"
                       type="range"
@@ -497,72 +475,81 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                         this._getBrightnessCoalescer().request(v);
                       }}
                     />
-                    <output class="brightness-value value"
+                    <output class="brightness-value"
                       >${this._pct(brightness)}</output
                     >
-                  </div>
+                </div>
                   <div class="actions">
                     <button
-                      class="action presets"
+                      class="btn-action-pill action presets"
                       type="button"
                       ?disabled=${!presetOk}
                       aria-label="WLED presets"
-                      @click=${() => this._openAdvanced(true)}
+                      @click=${(event: Event) => this._openAdvanced(true, event)}
                     >
                       <ha-icon icon="mdi:bookmark-multiple-outline"></ha-icon>
                       <span>Presets</span>
                     </button>
                     <button
-                      class="action colour"
+                      class="btn-action-pill action colour"
                       type="button"
                       ?disabled=${!effectOk}
                       aria-label="WLED colour"
-                      @click=${() =>
-                        this.moreInfo(
-                          bundle.effectLights?.[0] || bundle.main,
-                        )}
+                      @click=${() => this.moreInfo(bundle.effectLights[0] || bundle.main)}
                     >
                       <ha-icon icon="mdi:palette-outline"></ha-icon>
                       <span>Colour</span>
                     </button>
                     <button
-                      class="action advanced"
+                      class="btn-action-pill action advanced"
                       type="button"
                       ?disabled=${!(presetOk || effectOk || paletteOk || speedOk || intensityOk)}
                       aria-label="WLED advanced settings"
-                      @click=${() => this._openAdvanced(false)}
+                      @click=${(event: Event) => this._openAdvanced(false, event)}
                     >
                       <ha-icon icon="mdi:tune-variant"></ha-icon>
                       <span>Advanced</span>
                     </button>
                   </div>
-                </div>
+                  ${this._actionError ? html`<div class="feedback-line err" role="alert">${this._actionError}</div>` : ""}
               `
             : ""
         }
+        </div>
       </ha-card>
 
       <dialog
         role="dialog"
         aria-modal="true"
         aria-label="${this.esc(bundle.deviceName)} settings"
-        @click=${(e: MouseEvent) => {
+        @close=${this._handleDialogClosed}
+        @mousedown=${(e: MouseEvent) => {
           const dialog = this.renderRoot.querySelector("dialog");
-          if (e.target === dialog) dialog?.close();
+          if (dialog && e.target === dialog) {
+            const rect = dialog.getBoundingClientRect();
+            const isInDialog =
+              rect.top <= e.clientY &&
+              e.clientY <= rect.top + rect.height &&
+              rect.left <= e.clientX &&
+              e.clientX <= rect.left + rect.width;
+            if (!isInDialog) dialog.close();
+          }
         }}
       >
-        <div class="sheet">
+        <div class="sheet" @click=${(e: MouseEvent) => e.stopPropagation()} @mousedown=${(e: MouseEvent) => e.stopPropagation()}>
           <div class="sheet-head">
-            <ha-icon icon="mdi:led-strip-variant"></ha-icon>
-            <span class="sheet-title">
+            <div class="icon-well control-radius">
+              <ha-icon icon="mdi:led-strip-variant"></ha-icon>
+            </div>
+            <div class="sheet-title">
               <div class="sheet-name">${this.esc(bundle.deviceName)}</div>
               <div class="sheet-state">${this.esc(status)}</div>
-            </span>
+            </div>
             <button
               class="close"
               type="button"
               aria-label="Close"
-              @click=${this._closeDialog}
+              @click=${() => this._closeDialog()}
             >
               <ha-icon icon="mdi:close"></ha-icon>
             </button>
@@ -578,19 +565,19 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                           String(presetState?.state) === String(opt);
                         return html`
                           <button
-                            class="preset-btn ${isActive ? "active" : ""}"
+                            class="btn-action-pill preset-btn ${isActive ? "active" : ""}"
                             type="button"
                             role="button"
                             aria-pressed="${String(isActive)}"
                             title="${this.esc(opt)}"
-                            @click=${async () => {
+                            @click=${async (e: Event) => {
+                              e.stopPropagation();
                               await this._call(
                                 "select",
                                 "select_option",
                                 bundle.preset ? [bundle.preset] : [],
                                 { option: opt },
                               );
-                              this._closeDialog();
                             }}
                           >
                             ${this.esc(opt)}
@@ -608,7 +595,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                 <label class="field">
                   <span>Effect</span>
                   <select
-                    class="effect"
+                    class="select-dropdown-control effect"
                     aria-label="Effect selection"
                     ?disabled=${!effectOk || !fxOptions.length}
                     @change=${(e: Event) => {
@@ -642,7 +629,7 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
                 <label class="field">
                   <span>Palette</span>
                   <select
-                    class="palette"
+                    class="select-dropdown-control palette"
                     aria-label="Palette selection"
                     ?disabled=${!paletteOk || !paletteOptions.length}
                     @change=${(e: Event) => {
@@ -747,12 +734,50 @@ export class ComponentWledControllerV1 extends LitBaseCard<WledControllerConfig>
               </div>
             </section>
 
+            <section class="section">
+              <div class="section-title">Colour Presets</div>
+              <div class="preset-grid">
+                ${[
+                  { name: "Warm White", rgb: [255, 180, 100] },
+                  { name: "Neutral White", rgb: [255, 255, 255] },
+                  { name: "Cool White", rgb: [200, 220, 255] },
+                  { name: "Red", rgb: [255, 0, 0] },
+                  { name: "Amber", rgb: [255, 140, 0] },
+                  { name: "Green", rgb: [0, 255, 60] },
+                  { name: "Cyan", rgb: [0, 220, 255] },
+                  { name: "Blue", rgb: [0, 80, 255] },
+                  { name: "Purple", rgb: [180, 0, 255] },
+                  { name: "Pink", rgb: [255, 40, 150] },
+                ].map(
+                  (swatch) => html`
+                    <button
+                      class="btn-action-pill preset-btn"
+                      type="button"
+                      aria-label="${swatch.name}"
+                      style="--action-glow-color: rgb(${swatch.rgb.join(',')});"
+                      @click=${(e: Event) => {
+                        e.stopPropagation();
+                        this._call("light", "turn_on", bundle.effectLights, {
+                          rgb_color: swatch.rgb,
+                        });
+                      }}
+                    >
+                      <span
+                        style="display:inline-block;width:12px;height:12px;border-radius:50%;background:rgb(${swatch.rgb.join(',')});margin-right:6px;border:1px solid var(--divider-color);flex-shrink:0;"
+                      ></span>
+                      <span>${swatch.name}</span>
+                    </button>
+                  `,
+                )}
+              </div>
+            </section>
 
             <div class="native">
               <button
-                class="action native-colour"
+                class="btn-action-pill action native-colour"
                 type="button"
                 ?disabled=${!effectOk}
+                @click=${() => this.moreInfo(bundle.effectLights[0] || bundle.main)}
               >
                 <ha-icon icon="mdi:palette-outline"></ha-icon>
                 <span>Colour & white controls</span>

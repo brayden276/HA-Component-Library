@@ -47,10 +47,10 @@ export class ComponentProgressV2 extends LitBaseCard<ProgressCardConfig> {
 
   protected override updated(): void {
     const action = this._getAction();
-    const wrap = this.renderRoot.querySelector(".wrap") as HTMLElement | null;
-    if (action && wrap) {
+    const progressCard = this.renderRoot.querySelector(".progress-card") as HTMLElement | null;
+    if (action && progressCard) {
       this._interactionHandle?.destroy();
-      this._interactionHandle = interaction(wrap, {
+      this._interactionHandle = interaction(progressCard, {
         primary: action,
         feedback: true,
       });
@@ -86,32 +86,32 @@ export class ComponentProgressV2 extends LitBaseCard<ProgressCardConfig> {
     const ariaLabel = `${label}: ${value}. ${this._config.target_label || "Target"}: ${this._config.target_value || "100%"}`;
 
     return html`
-      <ha-card>
+      <ha-card class="assembled-card">
         <div
-          class="wrap ${action ? "actionable" : ""}"
+          class="progress-card ${action ? "actionable" : ""}"
           role="${action ? "button" : "region"}"
           tabindex="${action ? "0" : "-1"}"
           aria-label="${this.esc(ariaLabel)}"
         >
-          <div class="head">
+          <div class="progress-head">
             <div>
-              <div class="value">${this.esc(value)}</div>
-              <div class="label">${this.esc(label)}</div>
+              <div class="kpi-metric-lg">${this.esc(value)}</div>
+              <div class="label-sub">${this.esc(label)}</div>
             </div>
-            <div class="target">
+            <div class="label-sub target">
               <b>${this.esc(this._config.target_value)}</b>
               ${this.esc(this._config.target_label)}
             </div>
           </div>
           <div
-            class="track"
+            class="determinate-progress"
             role="progressbar"
             aria-valuenow="${p}"
             aria-valuemin="0"
             aria-valuemax="100"
             aria-label="${this.esc(label)}"
           >
-            <div class="fill" style="width:${p}%"></div>
+            <div class="determinate-fill" style="width:${p}%"></div>
           </div>
         </div>
       </ha-card>

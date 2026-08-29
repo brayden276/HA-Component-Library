@@ -7,6 +7,7 @@ import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type { HassEntity } from "../../types/home-assistant";
 import { interaction, InteractionHandle } from "../../utils/interaction";
+import { runServiceAction } from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
 const DEFAULTS: UpdateRowCardConfig = {
@@ -209,8 +210,10 @@ export class ComponentUpdateRowV3 extends LitBaseCard<UpdateRowCardConfig> {
     this._requested = true;
 
     try {
-      await this.hass.callService("update", "install", {
-        entity_id: this._config.entity,
+      await runServiceAction(this.hass, {
+        domain: "update",
+        service: "install",
+        target: { entity_id: this._config.entity },
       });
       this._watchForStart();
     } catch {

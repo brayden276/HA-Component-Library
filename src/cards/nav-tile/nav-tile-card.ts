@@ -58,21 +58,21 @@ export class ComponentNavigationTileV2 extends LitBaseCard<NavigationTileCardCon
     const path = this._config.navigation_path;
 
     const inner = html`
-      <div class="wrap">
-        <span class="icon">
+      <div class="header-row nav-row">
+        <div class="icon-well control-radius icon">
           <ha-icon icon="${this.esc(this._config.icon)}"></ha-icon>
-        </span>
-        <span>
-          <div class="title">${this.esc(this._config.title)}</div>
-          <div class="desc">${this.esc(this._config.context)}</div>
-        </span>
+        </div>
+        <div class="copy-block">
+          <div class="label-title title">${this.esc(this._config.title)}</div>
+          <div class="label-sub desc">${this.esc(this._config.context)}</div>
+        </div>
       </div>
     `;
 
     const ariaLabel = `${this._config.title || "Destination"}${this._config.context ? `: ${this._config.context}` : ""}. Navigate.`;
 
     return html`
-      <ha-card>
+      <ha-card class="surface-card">
         ${
           path
             ? html`<button class="i nav" type="button" aria-label="${this.esc(ariaLabel)}">${inner}</button>`

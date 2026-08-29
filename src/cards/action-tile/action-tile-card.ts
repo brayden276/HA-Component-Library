@@ -65,6 +65,7 @@ export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
 
   private _handleTileTap(): void {
     if (!this.hass || !this.config) return;
+    if (isEntityUnavailable(this.hass.states[this.config.entity])) return;
     const tapAction = this.config.tap_action || { action: "toggle" };
     handleAction(this, this.hass, tapAction, this.config.entity);
   }
@@ -78,7 +79,7 @@ export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
     ) {
       const badgeState = this.hass.states[this.config.badge_entity];
       return html`
-        <div class="badge-pill">
+        <div class="capsule-badge">
           ${formatEntityState(badgeState, this.hass)}
         </div>
       `;
@@ -90,11 +91,11 @@ export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
       isEntityActive(entity)
     ) {
       const pct = Math.round((entity.attributes.brightness / 255) * 100);
-      return html`<div class="badge-pill">${pct}%</div>`;
+      return html`<div class="capsule-badge">${pct}%</div>`;
     }
 
     if (entity?.attributes?.temperature !== undefined) {
-      return html`<div class="badge-pill">
+      return html`<div class="capsule-badge">
         ${entity.attributes.temperature}&deg;
       </div>`;
     }
@@ -103,6 +104,7 @@ export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
   }
 
   private _handleKeyDown(e: KeyboardEvent): void {
+    if (!this.hass || !this.config || isEntityUnavailable(this.hass.states[this.config.entity])) return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       this._handleTileTap();
@@ -134,7 +136,7 @@ export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
 
     return html`
       <ha-card
-        class="interactive tile-card ${isActive ? "active" : ""} ${isUnavailable ? "unavailable" : ""}"
+        class="interactive surface-card tile-card ${isActive ? "active" : ""} ${isUnavailable ? "unavailable" : ""}"
         style=${isActive ? `--tile-active-color: ${activeColor};` : ""}
         role="button"
         tabindex="${isUnavailable ? "-1" : "0"}"
@@ -144,18 +146,15 @@ export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
         @click=${this._handleTileTap}
         @keydown=${this._handleKeyDown}
       >
-        <div class="tile-body">
-          <div class="tile-header">
-            <div class="tile-icon-box ${isActive ? "active" : ""}">
+        <div class="header-row tile-row">
+          <div class="icon-well control-radius ${isActive ? "active" : ""}">
               <ha-icon .icon=${iconName}></ha-icon>
-            </div>
-            ${this._renderBadge()}
           </div>
-
-          <div class="tile-content">
-            <div class="primary-title" title=${entityName}>${entityName}</div>
-            <div class="secondary-text">${stateDisplay}</div>
+          <div class="copy-block">
+            <div class="label-title" title=${entityName}>${entityName}</div>
+            <div class="label-sub">${stateDisplay}</div>
           </div>
+          ${this._renderBadge()}
         </div>
       </ha-card>
     `;
@@ -163,4 +162,3 @@ export class HaActionTile extends HaBaseCard<HaActionTileConfig> {
 
   public static override styles: CSSResultGroup = actionTileCardStyles;
 }
-

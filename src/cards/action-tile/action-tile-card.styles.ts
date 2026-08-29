@@ -1,85 +1,52 @@
 import { css, CSSResultGroup } from "lit";
-import { cardBaseStyles, typographyStyles, badgeProgressStyles, iconWellStyles } from "../../styles";
-
-export const actionTileCardStyles: CSSResultGroup = [
+import {
   cardBaseStyles,
+  surfaceStyles,
   typographyStyles,
   badgeProgressStyles,
   iconWellStyles,
+  rowListStyles,
+} from "../../styles";
+
+export const actionTileCardStyles: CSSResultGroup = [
+  cardBaseStyles,
+  surfaceStyles,
+  typographyStyles,
+  badgeProgressStyles,
+  iconWellStyles,
+  rowListStyles,
   css`
     :host {
       --tile-active-color: var(--primary-color, #03a9f4);
     }
 
     .tile-card {
-      height: 100%;
-      border: var(--dashboard-card-border);
-      border-radius: var(--dashboard-radius-card);
-      background: var(--dashboard-card-surface);
-      color: var(--primary-text-color);
+      --action-glow-color: var(--tile-active-color, var(--primary-color, #03a9f4));
       transition:
-        transform 0.12s ease,
-        background-color 0.15s ease;
+        background-color 0.25s ease,
+        border-color 0.4s ease,
+        box-shadow 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.15s ease;
       cursor: pointer;
     }
 
+    .tile-card.interactive:active:not(.unavailable) {
+      border-color: var(--action-glow-color) !important;
+      box-shadow: 0 0 0 1px var(--action-glow-color),
+                  0 0 16px 3px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+      transform: scale(0.985);
+    }
+
     .tile-card.active {
-      background: var(--dashboard-active-surface);
-      border-color: var(--primary-color);
+      border-color: var(--tile-active-color);
     }
 
-    .tile-body {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 12px 14px;
-      min-height: 72px;
-      box-sizing: border-box;
-      gap: 8px;
+    .tile-row {
+      grid-template-columns: 40px minmax(0, 1fr) auto;
     }
 
-    .tile-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .tile-icon-box {
-      display: grid;
-      place-items: center;
-      width: 36px;
-      height: 36px;
-      border-radius: var(--dashboard-radius-control);
-      background-color: var(--secondary-background-color);
-      color: var(--secondary-text-color);
-      transition: all 0.15s ease;
-      flex-shrink: 0;
-    }
-
-    .tile-icon-box ha-icon {
-      --mdc-icon-size: 18px;
-    }
-
-    .tile-icon-box.active {
-      background-color: var(--primary-color);
-      color: var(--text-primary-color);
-    }
-
-    .badge-pill {
-      padding: 3px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 650;
-      background-color: var(--dashboard-card-muted-surface);
-      color: var(--secondary-text-color);
-      border: var(--dashboard-card-border);
-    }
-
-    .tile-content {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+    .icon-well.active {
+      color: var(--tile-active-color);
     }
 
     .tile-card.unavailable {

@@ -101,10 +101,10 @@ export class ComponentSingleKpiV2 extends LitBaseCard<SingleKpiCardConfig> {
     const ariaLabel = `${label}: ${value}${supportValue || supportLabel ? `. ${supportValue} ${supportLabel}` : ""}`;
 
     const inner = html`
-      <div class="wrap">
+      <div class="kpi-row">
         <div>
-          <div class="value">${this.esc(value)}</div>
-          <div class="label">${this.esc(label)}</div>
+          <div class="kpi-metric-lg value">${this.esc(value)}</div>
+          <div class="label-sub label">${this.esc(label)}</div>
         </div>
         ${
           supportValue || supportLabel
@@ -120,7 +120,7 @@ export class ComponentSingleKpiV2 extends LitBaseCard<SingleKpiCardConfig> {
     `;
 
     return html`
-      <ha-card>
+      <ha-card class="assembled-card">
         ${
           action
             ? html`<button class="demo" type="button" aria-label="${this.esc(ariaLabel)}">${inner}</button>`

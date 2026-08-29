@@ -114,8 +114,8 @@ export class ComponentListV2 extends LitBaseCard<ListCardConfig> {
       : [];
 
     return html`
-      <ha-card>
-        <div class="wrap">
+      <ha-card class="assembled-card">
+        <div class="list-wrap">
           ${rows.map((row, index) => {
             const actions = this._getRowActions(row);
             const entity = row.entity ? this.hass?.states[row.entity] : null;
@@ -131,13 +131,13 @@ export class ComponentListV2 extends LitBaseCard<ListCardConfig> {
             const ariaLabel = `${title}: ${value} ${row.label || ""}${row.description ? `. ${row.description}` : ""}`;
 
             const content = html`
-              <span>
-                <div class="title">${this.esc(title)}</div>
-                <div class="desc">${this.esc(row.description)}</div>
-              </span>
-              <span class="metric">
+              <div>
+                <div class="label-title title">${this.esc(title)}</div>
+                <div class="label-sub desc">${this.esc(row.description)}</div>
+              </div>
+              <div class="metric">
                 <b>${this.esc(value)}</b>${this.esc(row.label)}
-              </span>
+              </div>
             `;
 
             return actions.primary

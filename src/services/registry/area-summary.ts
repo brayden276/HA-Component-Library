@@ -1,11 +1,16 @@
 import type { HomeAssistant, HassEntity } from "../../types/home-assistant";
 import type { AreaRegistryEntry, DashboardRegistries } from "../../types/registry";
-import { isEntityAvailable, formatEntityState } from "../../utils/entity";
+import {
+  isEntityActive,
+  isEntityAvailable,
+  formatEntityState,
+} from "../../utils/entity";
 
 export interface AreaStatusSummary {
   summary: string;
   severity: "critical" | "warning" | "active" | "";
   lightsOn: number;
+  activeDeviceCount: number;
   temperatureText: string;
   humidityText: string;
   hasCritical: boolean;
@@ -29,6 +34,7 @@ export function computeAreaStatusSummary(
       summary: "",
       severity: "",
       lightsOn: 0,
+      activeDeviceCount: 0,
       temperatureText: "",
       humidityText: "",
       hasCritical: false,
@@ -53,6 +59,7 @@ export function computeAreaStatusSummary(
   }
 
   let lightsOn = 0;
+  let activeDeviceCount = 0;
   let temperatureText = "";
   let humidityText = "";
   let hasCritical = false;
@@ -108,6 +115,7 @@ export function computeAreaStatusSummary(
   }
 
   for (const st of states) {
+    if (isEntityActive(st)) activeDeviceCount++;
     if (st.entity_id.startsWith("light.") && st.state === "on") {
       lightsOn++;
     }
@@ -131,16 +139,7 @@ export function computeAreaStatusSummary(
     }
   }
 
-  const active =
-    lightsOn > 0 ||
-    states.some(
-      (st) =>
-        (st.entity_id.startsWith("climate.") &&
-          ["heating", "cooling", "drying", "fan"].includes(
-            st.attributes?.hvac_action || "",
-          )) ||
-        (st.entity_id.startsWith("media_player.") && st.state === "playing"),
-    );
+  const active = activeDeviceCount > 0;
 
   const parts: string[] = [];
   if (hasCritical) parts.push("Attention required");
@@ -149,6 +148,10 @@ export function computeAreaStatusSummary(
   if (humidityText && !temperatureText) parts.push(humidityText);
   if (lightsOn > 0)
     parts.push(`${lightsOn} light${lightsOn === 1 ? "" : "s"} on`);
+  else if (activeDeviceCount > 0)
+    parts.push(
+      `${activeDeviceCount} active device${activeDeviceCount === 1 ? "" : "s"}`,
+    );
 
   return {
     summary: parts.slice(0, 3).join(" · "),
@@ -160,6 +163,7 @@ export function computeAreaStatusSummary(
           ? "active"
           : "",
     lightsOn,
+    activeDeviceCount,
     temperatureText,
     humidityText,
     hasCritical,

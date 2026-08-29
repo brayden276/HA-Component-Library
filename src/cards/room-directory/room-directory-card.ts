@@ -2,7 +2,7 @@ export * from "./room-directory-card.types";
 import type { RoomDirectoryConfig } from "./room-directory-card.types";
 export * from "./room-directory-card.styles";
 import { roomDirectoryCardStyles } from "./room-directory-card.styles";
-import { html, TemplateResult, CSSResultGroup } from "lit";
+import { html, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type {
@@ -38,16 +38,14 @@ export class ComponentRoomDirectoryV4 extends LitBaseCard<RoomDirectoryConfig> {
   private _activeArea: AreaRegistryEntry | null = null;
 
   private _unsubRegistry: (() => void) | null = null;
+  private _registryHass: typeof this.hass | null = null;
+  private _dialogOpener: HTMLElement | null = null;
 
   public static override styles: CSSResultGroup = roomDirectoryCardStyles;
 
   public override setConfig(config: RoomDirectoryConfig): void {
     super.setConfig({ ...DEFAULTS, ...config });
-    if (this.hass) {
-      centralRegistry.load(this.hass).then((data) => {
-        this._registries = data;
-      });
-    }
+    this._bindRegistry();
   }
 
   public override getCardSize(): number {
@@ -56,25 +54,38 @@ export class ComponentRoomDirectoryV4 extends LitBaseCard<RoomDirectoryConfig> {
 
   public override connectedCallback(): void {
     super.connectedCallback();
-    if (!this._unsubRegistry && this.hass) {
-      this._unsubRegistry = centralRegistry.subscribe(this.hass, (data) => {
-        this._registries = data;
-      });
-    }
+    this._bindRegistry();
   }
 
   public override disconnectedCallback(): void {
     this._unsubRegistry?.();
     this._unsubRegistry = null;
+    this._registryHass = null;
     super.disconnectedCallback();
   }
 
-  protected override willUpdate(): void {
-    if (!this._registries && this.hass) {
-      centralRegistry.load(this.hass).then((data) => {
-        this._registries = data;
-      });
+  protected override willUpdate(changedProperties: PropertyValues): void {
+    super.willUpdate(changedProperties);
+    if (changedProperties.has("hass")) this._bindRegistry();
+  }
+
+  private _bindRegistry(): void {
+    if (!this.isConnected || !this.hass) return;
+    if (this._registryHass === this.hass && this._unsubRegistry) return;
+    this._unsubRegistry?.();
+    this._registryHass = this.hass;
+    const hass = this.hass;
+    this._unsubRegistry = centralRegistry.subscribe(hass, (data) => {
+      if (this._registryHass === hass) this._registries = data;
+    });
+  }
+
+  private _activeHue(areaId: string): number {
+    let value = 0;
+    for (const character of areaId) {
+      value = (value * 31 + character.charCodeAt(0)) >>> 0;
     }
+    return 12 + (value % 336);
   }
 
   private _areas(): AreaRegistryEntry[] {
@@ -88,12 +99,24 @@ export class ComponentRoomDirectoryV4 extends LitBaseCard<RoomDirectoryConfig> {
     return computeAreaStatusSummary(area, this._registries, this.hass);
   }
 
-  private _openRoom(area: AreaRegistryEntry): void {
+  private _openRoom(area: AreaRegistryEntry, opener?: HTMLElement): void {
+    this._dialogOpener = opener || null;
     this._activeArea = area;
-    const dialog = this.renderRoot.querySelector(
-      "dialog",
-    ) as HTMLDialogElement | null;
-    if (dialog && !dialog.open) dialog.showModal();
+    void this.updateComplete.then(() => {
+      const dialog = this.renderRoot.querySelector(
+        "dialog",
+      ) as HTMLDialogElement | null;
+      if (!dialog || dialog.open) return;
+      try {
+        dialog.showModal();
+        (dialog.querySelector("button.close") as HTMLElement | null)?.focus();
+      } catch {
+        // A disconnected/replaced dialog must not leave the room trigger in a
+        // stale state or surface an unhandled promise rejection.
+        this._activeArea = null;
+        this._dialogOpener = null;
+      }
+    });
   }
 
   private _closeRoom(): void {
@@ -101,7 +124,14 @@ export class ComponentRoomDirectoryV4 extends LitBaseCard<RoomDirectoryConfig> {
       "dialog",
     ) as HTMLDialogElement | null;
     if (dialog?.open) dialog.close();
+    else this._handleDialogClose();
+  }
+
+  private _handleDialogClose = (): void => {
     this._activeArea = null;
+    const opener = this._dialogOpener;
+    this._dialogOpener = null;
+    opener?.focus?.();
   }
 
   protected override render(): TemplateResult {
@@ -125,12 +155,18 @@ export class ComponentRoomDirectoryV4 extends LitBaseCard<RoomDirectoryConfig> {
         <div class="grid">
           ${areas.map((area) => {
             const st = this._areaStatus(area);
+            const isActive = st.severity === "active";
+            const activeText = isActive
+              ? `. ${st.activeDeviceCount} active device${st.activeDeviceCount === 1 ? "" : "s"}`
+              : "";
             return html`
               <button
                 class="room ${st.severity}"
                 type="button"
-                aria-label="Open ${area.name}${st.summary ? ". " + st.summary : ""}"
-                @click=${() => this._openRoom(area)}
+                style="--room-active-hue: ${this._activeHue(area.area_id)}"
+                aria-label="Open ${area.name}${st.summary ? ". " + st.summary : ""}${activeText}"
+                @click=${(event: MouseEvent) =>
+                  this._openRoom(area, event.currentTarget as HTMLElement)}
               >
                 <span class="ico">
                   <ha-icon icon="${area.icon || "mdi:home-outline"}"></ha-icon>
@@ -146,9 +182,7 @@ export class ComponentRoomDirectoryV4 extends LitBaseCard<RoomDirectoryConfig> {
       </ha-card>
 
       <dialog
-        @cancel=${() => {
-          this._activeArea = null;
-        }}
+        @close=${this._handleDialogClose}
         @click=${(e: MouseEvent) => {
           const dialog = this.renderRoot.querySelector("dialog");
           if (e.target === dialog) this._closeRoom();

@@ -12,15 +12,15 @@ export interface HomeAssistant {
   language: string;
   locale: HassLocale;
   user: HassUser;
-  connection?: any;
+  connection?: HassConnection;
   hassUrl?: (path: string) => string;
-  localize: (key: string, ...args: any[]) => string;
+  localize: (key: string, ...args: unknown[]) => string;
   callService: (
     domain: string,
     service: string,
     serviceData?: Record<string, unknown>,
     target?: HassServiceTarget,
-  ) => Promise<any>;
+  ) => Promise<HassServiceResponse>;
   callApi: <T>(
     method: "GET" | "POST" | "PUT" | "DELETE",
     path: string,
@@ -33,13 +33,38 @@ export interface HomeAssistant {
   formatEntityAttributeValue?: (
     stateObj: HassEntity,
     attribute: string,
-    value?: any,
+    value?: unknown,
   ) => string;
   formatEntityAttributeName?: (
     stateObj: HassEntity,
     attribute: string,
   ) => string;
 }
+
+export interface HassConnection {
+  sendMessagePromise?<T = unknown>(message: HassWebSocketMessage): Promise<T>;
+  subscribeEvents?(
+    callback: (event: HassEvent) => void,
+    eventType?: string,
+  ): Promise<() => void> | (() => void);
+}
+
+export interface HassEvent {
+  data?: Record<string, unknown>;
+  event_type?: string;
+  time_fired?: string;
+}
+
+export interface HassServiceResponse {
+  context?: {
+    id: string;
+    parent_id?: string | null;
+    user_id?: string | null;
+  };
+  [key: string]: unknown;
+}
+
+export type HassWebSocketMessage = Record<string, unknown> & { type: string };
 
 export type {
   AreaRegistryEntry,
@@ -80,23 +105,41 @@ export interface HassEntityAttributes {
   max_temp?: number;
   hvac_modes?: string[];
   hvac_action?: string;
+  fan_mode?: string;
+  fan_modes?: string[];
   preset_mode?: string;
   preset_modes?: string[];
+  effect?: string;
+  effect_list?: string[];
+  options?: string[];
   volume_level?: number;
   is_volume_muted?: boolean;
   media_title?: string;
   media_artist?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface HassServices {
   [domain: string]: {
     [service: string]: {
       description?: string;
-      fields?: Record<string, any>;
-      target?: any;
+      fields?: Record<string, HassServiceField>;
+      target?: HassServiceTargetDescription;
     };
   };
+}
+
+export interface HassServiceField {
+  description?: string;
+  example?: unknown;
+  required?: boolean;
+  selector?: Record<string, unknown>;
+}
+
+export interface HassServiceTargetDescription {
+  entity?: Record<string, unknown>;
+  device?: Record<string, unknown>;
+  area?: Record<string, unknown>;
 }
 
 export interface HassConfig {
@@ -202,6 +245,7 @@ export interface ActionConfig {
     | "more-info"
     | "toggle"
     | "call-service"
+    | "perform-action"
     | "navigate"
     | "url"
     | "assist"
@@ -209,6 +253,10 @@ export interface ActionConfig {
   navigation_path?: string;
   url_path?: string;
   service?: string;
+  /** Canonical Home Assistant action field used with `action: perform-action`. */
+  perform_action?: string;
+  /** Canonical Home Assistant service payload used with `action: perform-action`. */
+  data?: Record<string, unknown>;
   service_data?: Record<string, unknown>;
   target?: HassServiceTarget;
   confirmation?: {
@@ -251,10 +299,10 @@ export interface HaFormSchema {
     | "multi_select"
     | "grid"
     | "expandable";
-  default?: any;
+  default?: unknown;
   required?: boolean;
-  options?: Array<[string, string] | { value: any; label: string }>;
-  selector?: any;
+  options?: Array<[string, string] | { value: unknown; label: string }>;
+  selector?: Record<string, unknown>;
   schema?: HaFormSchema[];
 }
 

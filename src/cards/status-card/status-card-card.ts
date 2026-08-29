@@ -5,7 +5,10 @@ import { statusCardCardStyles } from "./status-card-card.styles";
 import { CSSResultGroup, html, TemplateResult, nothing } from "lit";
 import { customElement } from "lit/decorators.js";
 import { HaBaseCard } from "../../components/base/lit-base-card";
-import { LovelaceCardEditor } from "../../types/home-assistant";
+import {
+  HassEntity,
+  LovelaceCardEditor,
+} from "../../types/home-assistant";
 import {
   computeDomain,
   computeEntityName,
@@ -14,6 +17,7 @@ import {
   isEntityActive,
   isEntityUnavailable,
   handleAction,
+  runServiceAction,
 } from "../../utils/entity";
 import "./status-card-editor";
 
@@ -53,11 +57,13 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
 
   private _handleTap(): void {
     if (!this.hass || !this.config) return;
+    if (isEntityUnavailable(this.hass.states[this.config.entity])) return;
     const tapAction = this.config.tap_action || { action: "more-info" };
     handleAction(this, this.hass, tapAction, this.config.entity);
   }
 
   private _handleKeyDown(e: KeyboardEvent): void {
+    if (!this.hass || !this.config || isEntityUnavailable(this.hass.states[this.config.entity])) return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       this._handleTap();
@@ -66,14 +72,22 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
 
   private async _handleToggle(e: Event): Promise<void> {
     e.stopPropagation();
+    e.preventDefault();
     if (!this.hass || !this.config?.entity) return;
     const entity = this.hass.states[this.config.entity];
     if (isEntityUnavailable(entity)) return;
 
     const domain = computeDomain(this.config.entity);
-    const service = domain === "lock" ? "lock" : "toggle";
-    await this.hass.callService(domain, service, undefined, {
-      entity_id: this.config.entity,
+    const service =
+      domain === "lock"
+        ? entity.state === "locked" || entity.state === "locking"
+          ? "unlock"
+          : "lock"
+        : "toggle";
+    await runServiceAction(this.hass, {
+      domain,
+      service,
+      target: { entity_id: this.config.entity },
     });
   }
 
@@ -84,7 +98,7 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
     return html`<span>${icon}</span>`;
   }
 
-  private _getSecondaryText(entity: any, isUnavailable: boolean): string {
+  private _getSecondaryText(entity: HassEntity, isUnavailable: boolean): string {
     if (isUnavailable) return "Offline";
     const mode = this.config?.secondary_info || "last-changed";
     if (mode === "none") return "";
@@ -136,21 +150,22 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
 
     return html`
       <ha-card
-        class="interactive"
+        class="interactive status-card assembled-card ${isUnavailable ? "unavailable" : ""}"
         role="button"
-        tabindex="0"
+        tabindex="${isUnavailable ? "-1" : "0"}"
+        aria-disabled="${String(isUnavailable)}"
         aria-label="${entityName}: ${stateDisplay}"
         @click=${this._handleTap}
         @keydown=${this._handleKeyDown}
       >
-        <div class="card-body ${stateClass}">
-          <div class="icon-container ${isActive ? "active" : ""}">
+        <div class="header-row ${stateClass}">
+          <div class="icon-well control-radius ${isActive ? "active" : ""}">
             ${this._renderIcon(iconName)}
           </div>
 
-          <div class="info-container">
-            <div class="primary-title" title=${entityName}>${entityName}</div>
-            <div class="secondary-text">
+          <div class="copy-block">
+            <div class="label-title" title=${entityName}>${entityName}</div>
+            <div class="label-sub">
               ${secondaryText ? html`${secondaryText} &bull; ` : nothing}
               <span class="state-label">${stateDisplay}</span>
             </div>
@@ -160,25 +175,16 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
             canToggle
               ? html`
                   <button
-                    class="toggle-btn ${isActive ? "active" : ""}"
+                    class="toggle-btn"
                     role="switch"
                     aria-checked="${String(isActive)}"
                     ?disabled=${isUnavailable}
                     aria-disabled="${String(isUnavailable)}"
                     @click=${this._handleToggle}
-                    @keydown=${(e: KeyboardEvent) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        this._handleToggle(e);
-                      }
-                    }}
                     aria-label="Toggle ${entityName}"
                     title="Toggle state"
                   >
-                    <div class="toggle-track">
-                      <div class="toggle-thumb"></div>
-                    </div>
+                    <span class="switch-pill ${isActive ? "on" : ""}"><span></span></span>
                   </button>
                 `
               : nothing
@@ -190,4 +196,3 @@ export class HaStatusCard extends HaBaseCard<HaStatusCardConfig> {
 
   public static override styles: CSSResultGroup = statusCardCardStyles;
 }
-

@@ -11,6 +11,7 @@ import {
   InteractionHandle,
   waitForEntityState,
 } from "../../utils/interaction";
+import { runServiceAction } from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
 const MEDIA_ROW_FEATURES = { pause: 1, previous: 16, next: 32, play: 512 };
@@ -81,11 +82,13 @@ export class ComponentMediaRowV2 extends LitBaseCard<MediaRowCardConfig> {
     this._busy = true;
     try {
       const service = wasPlaying ? "media_pause" : "media_play";
-      await this.hass.callService("media_player", service, {
-        entity_id: this._config.entity,
+      await runServiceAction(this.hass, {
+        domain: "media_player",
+        service,
+        target: { entity_id: this._config.entity },
       });
       await waitForEntityState(
-        this.hass,
+        () => this.hass,
         this._config.entity,
         (value) =>
           wasPlaying
@@ -102,10 +105,12 @@ export class ComponentMediaRowV2 extends LitBaseCard<MediaRowCardConfig> {
     }
   }
 
-  private _momentary(service: string): Promise<any> | void {
+  private _momentary(service: string): Promise<void> | void {
     if (!this._config?.entity || !this.hass) return;
-    return this.hass.callService("media_player", service, {
-      entity_id: this._config.entity,
+    return runServiceAction(this.hass, {
+      domain: "media_player",
+      service,
+      target: { entity_id: this._config.entity },
     });
   }
 
@@ -234,36 +239,36 @@ export class ComponentMediaRowV2 extends LitBaseCard<MediaRowCardConfig> {
           )));
 
     return html`
-      <ha-card>
-        <div class="wrap">
-          <span class="icon">
+      <ha-card class="surface-card">
+        <div class="header-row media-row">
+          <div class="icon-well control-radius icon">
             <ha-icon icon="${this.esc(this._config.icon)}"></ha-icon>
-          </span>
+          </div>
           ${
             live
               ? html`
-                  <span class="identity" role="button" tabindex="0">
-                    <div class="title">${this.esc(this._config.title)}</div>
-                    <div class="desc">
+                  <button class="identity" type="button">
+                    <div class="label-title title">${this.esc(this._config.title)}</div>
+                    <div class="label-sub desc">
                       ${this.esc(this._description(state))}
                     </div>
-                  </span>
+                  </button>
                 `
               : html`
-                  <span>
-                    <div class="title">${this.esc(this._config.title)}</div>
-                    <div class="desc">
+                  <div class="copy-block">
+                    <div class="label-title title">${this.esc(this._config.title)}</div>
+                    <div class="label-sub desc">
                       ${this.esc(this._description(state))}
                     </div>
-                  </span>
+                  </div>
                 `
           }
-          <span class="buttons">
+          <div class="buttons">
             ${
               live
                 ? html`
                     <button
-                      class="i btn previous"
+                      class="btn-icon-36 btn previous"
                       type="button"
                       aria-label="Previous"
                       ?disabled=${!previousEnabled}
@@ -272,13 +277,13 @@ export class ComponentMediaRowV2 extends LitBaseCard<MediaRowCardConfig> {
                     </button>
                   `
                 : html`
-                    <span class="btn" aria-hidden="true">
+                    <span class="btn-icon-36 btn" aria-hidden="true">
                       <ha-icon icon="mdi:skip-previous"></ha-icon>
                     </span>
                   `
             }
             <button
-              class="i btn main"
+              class="btn-icon-36 btn main"
               type="button"
               aria-label="${playing ? "Pause" : "Play"}"
               ?disabled=${!mainEnabled}
@@ -289,7 +294,7 @@ export class ComponentMediaRowV2 extends LitBaseCard<MediaRowCardConfig> {
               live
                 ? html`
                     <button
-                      class="i btn next"
+                      class="btn-icon-36 btn next"
                       type="button"
                       aria-label="Next"
                       ?disabled=${!nextEnabled}
@@ -298,12 +303,12 @@ export class ComponentMediaRowV2 extends LitBaseCard<MediaRowCardConfig> {
                     </button>
                   `
                 : html`
-                    <span class="btn" aria-hidden="true">
+                    <span class="btn-icon-36 btn" aria-hidden="true">
                       <ha-icon icon="mdi:skip-next"></ha-icon>
                     </span>
                   `
             }
-          </span>
+          </div>
         </div>
       </ha-card>
     `;

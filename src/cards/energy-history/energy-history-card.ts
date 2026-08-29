@@ -5,7 +5,7 @@ import type {
 } from "./energy-history-card.types";
 export * from "./energy-history-card.styles";
 import { energyHistoryCardStyles } from "./energy-history-card.styles";
-import { html, TemplateResult, CSSResultGroup } from "lit";
+import { html, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type { LovelaceGridOptions } from "../../types/home-assistant";
@@ -55,6 +55,10 @@ export class EnergyHistoryCardV3 extends LitBaseCard<EnergyHistoryConfig> {
   private _forceRefresh = false;
   private _fetchSequence = 0;
   private _dayUnsubscribe: (() => void) | null = null;
+  private _energyUnsubscribe: (() => void) | null = null;
+  private _energyHass: typeof this.hass | null = null;
+  private _energyProfile = "";
+  private _energyDay = "";
   private _pinned = false;
   private _pointerState: {
     id: number;
@@ -102,6 +106,7 @@ export class EnergyHistoryCardV3 extends LitBaseCard<EnergyHistoryConfig> {
     }
     if (this.isConnected) {
       this._bindDayChannel();
+      this._bindEnergyData();
     }
     this._fetchData();
   }
@@ -118,6 +123,7 @@ export class EnergyHistoryCardV3 extends LitBaseCard<EnergyHistoryConfig> {
       this._profileListener,
     );
     this._bindDayChannel();
+    this._bindEnergyData();
     this._fetchData();
   }
 
@@ -129,11 +135,24 @@ export class EnergyHistoryCardV3 extends LitBaseCard<EnergyHistoryConfig> {
     );
     this._dayUnsubscribe?.();
     this._dayUnsubscribe = null;
+    this._energyUnsubscribe?.();
+    this._energyUnsubscribe = null;
+    this._energyHass = null;
+    this._fetchSequence++;
     this._resizeObserver?.disconnect();
     this._resizeObserver = null;
     for (const h of this._interactionHandles) h.destroy();
     this._interactionHandles = [];
     super.disconnectedCallback();
+  }
+
+  protected override willUpdate(changedProperties: PropertyValues): void {
+    super.willUpdate(changedProperties);
+    if (changedProperties.has("hass") && this.hass) {
+      this._bindDayChannel();
+      this._bindEnergyData();
+      this._fetchData();
+    }
   }
 
   private _bindDayChannel(): void {
@@ -146,10 +165,77 @@ export class EnergyHistoryCardV3 extends LitBaseCard<EnergyHistoryConfig> {
         if (detail.day !== this._selectedDay) {
           this._selectedDay = detail.day;
           this._lastRangeKey = null;
+          this._bindEnergyData();
           this._fetchData();
         }
       },
       { hass: this.hass },
+    );
+  }
+
+  private _applyProfileData(
+    result: NonNullable<ReturnType<typeof energyDayData.peek>>["value"],
+    range: ReturnType<EnergyHistoryCardV3["_range"]>,
+  ): void {
+    if (!result) return;
+    const rawSeries = Array.isArray(result.series) ? result.series : [];
+    this._series = {
+      house: rawSeries.map((point) => ({
+        t: new Date(point.start).getTime(),
+        v: Number(point.house) || 0,
+      })),
+      solar: rawSeries.map((point) => ({
+        t: new Date(point.start).getTime(),
+        v: Number(point.solar) || 0,
+      })),
+      grid: rawSeries.map((point) => ({
+        t: new Date(point.start).getTime(),
+        v: Number(point.grid) || 0,
+      })),
+    };
+    this._start = Number(result.range?.start) || range.start;
+    this._end = Number(result.range?.end) || range.end;
+  }
+
+  private _bindEnergyData(): void {
+    if (!this.isConnected || !this.hass || !this._config?.profile) {
+      this._energyUnsubscribe?.();
+      this._energyUnsubscribe = null;
+      this._energyHass = null;
+      this._energyProfile = "";
+      this._energyDay = "";
+      return;
+    }
+    const range = this._range();
+    const hass = this.hass;
+    const profile = this._config.profile;
+    if (
+      this._energyUnsubscribe &&
+      this._energyHass === hass &&
+      this._energyProfile === profile &&
+      this._energyDay === range.day
+    ) {
+      return;
+    }
+    this._energyUnsubscribe?.();
+    this._energyHass = hass;
+    this._energyProfile = profile;
+    this._energyDay = range.day;
+    this._energyUnsubscribe = energyDayData.subscribe(
+      hass,
+      profile,
+      range.day,
+      (snapshot) => {
+        if (
+          this._energyHass !== hass ||
+          this._energyProfile !== profile ||
+          this._energyDay !== range.day
+        ) {
+          return;
+        }
+        this._loading = snapshot.loading;
+        this._applyProfileData(snapshot.value, range);
+      },
     );
   }
 
@@ -188,36 +274,22 @@ export class EnergyHistoryCardV3 extends LitBaseCard<EnergyHistoryConfig> {
     if (key === this._lastRangeKey && !this._forceRefresh) return;
 
     const seq = ++this._fetchSequence;
+    const hass = this.hass;
+    const profile = this._config.profile;
     this._loading = true;
     const force = this._forceRefresh;
     this._forceRefresh = false;
 
     try {
-      if (this._config.profile) {
+      if (profile) {
         const result = await energyDayData.get(
-          this.hass,
-          this._config.profile,
+          hass,
+          profile,
           range.day,
           { force },
         );
-        if (seq !== this._fetchSequence) return;
-        const rawSeries = Array.isArray(result?.series) ? result.series : [];
-        this._series = {
-          house: rawSeries.map((p: any) => ({
-            t: new Date(p.start).getTime(),
-            v: Number(p.house) || 0,
-          })),
-          solar: rawSeries.map((p: any) => ({
-            t: new Date(p.start).getTime(),
-            v: Number(p.solar) || 0,
-          })),
-          grid: rawSeries.map((p: any) => ({
-            t: new Date(p.start).getTime(),
-            v: Number(p.grid) || 0,
-          })),
-        };
-        this._start = Number(result?.range?.start) || range.start;
-        this._end = Number(result?.range?.end) || range.end;
+        if (seq !== this._fetchSequence || hass !== this.hass) return;
+        this._applyProfileData(result, range);
       } else {
         this._start = range.start;
         this._end = range.end;
@@ -226,7 +298,7 @@ export class EnergyHistoryCardV3 extends LitBaseCard<EnergyHistoryConfig> {
     } catch {
       // Keep previous data if any
     } finally {
-      if (seq === this._fetchSequence) {
+      if (seq === this._fetchSequence && hass === this.hass) {
         this._loading = false;
       }
     }

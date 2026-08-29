@@ -14,6 +14,7 @@ import {
   computeEntityDisplayName,
   formatEntityState,
   getDefaultIconForDomain,
+  runServiceAction,
 } from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
@@ -62,17 +63,18 @@ export class ComponentRoomSheetV2 extends LitBaseCard<RoomSheetCardConfig> {
     return 5;
   }
 
-  private _getAction(row: RoomSheetRow): (() => void) | null {
+  private _getAction(row: RoomSheetRow): (() => Promise<void> | void) | null {
     if (row.navigation_path) return () => this.navigate(row.navigation_path);
     if (row.service && this.hass) {
       const [domain, service] = String(row.service).split(".");
       if (domain && service) {
-        return () => {
-          this.hass!.callService(domain, service, {
-            ...(row.service_data || {}),
-            ...(row.entity ? { entity_id: row.entity } : {}),
+        return () =>
+          runServiceAction(this.hass!, {
+            domain,
+            service,
+            data: row.service_data,
+            target: row.entity ? { entity_id: row.entity } : undefined,
           });
-        };
       }
     }
     if (row.entity) return () => this.moreInfo(row.entity);
@@ -173,7 +175,6 @@ export class ComponentRoomSheetV2 extends LitBaseCard<RoomSheetCardConfig> {
                           data-row="${index}"
                           type="button"
                           aria-label="${this.esc(ariaLabel)}"
-                          @click=${action}
                         >
                           <ha-icon
                             icon="${this.esc(icon)}"

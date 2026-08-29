@@ -80,10 +80,24 @@ export const householdAttentionCardStyles: CSSResultGroup = [
       text-align: left;
       cursor: pointer;
       color: inherit;
+      transition:
+        transform 0.15s ease,
+        border-color 0.4s ease,
+        box-shadow 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 0.25s ease;
+    }
+    .issue:active {
+      box-shadow: 0 0 0 1px var(--warning-color),
+                  0 0 16px 3px color-mix(in srgb, var(--warning-color) 50%, transparent) !important;
+      transform: scale(0.985);
     }
     .issue.critical {
       border-left-color: var(--error-color);
       background: var(--dashboard-critical-surface);
+    }
+    .issue.critical:active {
+      box-shadow: 0 0 0 1px var(--error-color),
+                  0 0 16px 3px color-mix(in srgb, var(--error-color) 50%, transparent) !important;
     }
     .issue:hover,
     .issue:focus-visible {

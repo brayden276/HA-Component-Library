@@ -2,7 +2,7 @@ export * from "./security-entry-points-card.types";
 import type { SecurityEntryPointsConfig } from "./security-entry-points-card.types";
 export * from "./security-entry-points-card.styles";
 import { securityEntryPointsCardStyles } from "./security-entry-points-card.styles";
-import { html, TemplateResult, CSSResultGroup } from "lit";
+import { html, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type { LovelaceGridOptions } from "../../types/home-assistant";
@@ -64,6 +64,7 @@ export class ComponentSecurityEntryPointsV1 extends LitBaseCard<SecurityEntryPoi
   }
 
   public override disconnectedCallback(): void {
+    this._sequence++;
     window.removeEventListener(
       "ha-component-profile-change",
       this._profileListener,
@@ -73,20 +74,26 @@ export class ComponentSecurityEntryPointsV1 extends LitBaseCard<SecurityEntryPoi
     super.disconnectedCallback();
   }
 
+  protected override willUpdate(changedProperties: PropertyValues): void {
+    super.willUpdate(changedProperties);
+    if (changedProperties.has("hass") && this.hass) this._refresh();
+  }
+
   private async _refresh(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
     const sequence = ++this._sequence;
+    const hass = this.hass;
     try {
       const model = await loadSecurityModel(
-        this.hass,
+        hass,
         this._config.profile || "household-security",
         { force },
       );
-      if (sequence === this._sequence) {
+      if (sequence === this._sequence && hass === this.hass) {
         this._model = model;
       }
     } catch (err: any) {
-      if (sequence === this._sequence) {
+      if (sequence === this._sequence && hass === this.hass) {
         this._model = { error: err, entries: [] } as any;
       }
     }
@@ -134,10 +141,17 @@ export class ComponentSecurityEntryPointsV1 extends LitBaseCard<SecurityEntryPoi
     if (entries.length === 0) return html``;
 
     return html`
-      <div class="head">
-        <h2>${this.esc(this._config.title || "Entry points")}</h2>
-      </div>
-      <div class="list">
+      <ha-card class="assembled-card">
+        <div class="header-row">
+          <div class="icon-well control-radius">
+            <ha-icon icon="mdi:shield-home-outline"></ha-icon>
+          </div>
+          <div class="copy-block">
+            <div class="label-title">${this.esc(this._config.title || "Entry points")}</div>
+            <div class="label-sub">${entries.length} monitored</div>
+          </div>
+        </div>
+        <div class="list">
         ${entries.map((entry) => {
           if (entry.deviceClass === "garage_door" && entry.controlEntityId) {
             return html`
@@ -164,17 +178,18 @@ export class ComponentSecurityEntryPointsV1 extends LitBaseCard<SecurityEntryPoi
               ?disabled=${!entry.available}
               aria-label="${this.esc(entry.name)}, ${this.esc(stateText)}. Open details."
             >
-              <span class="icon">
+              <span class="icon-well control-radius icon">
                 <ha-icon icon="${icon}"></ha-icon>
               </span>
               <span class="copy">
-                <span class="name">${this.esc(entry.name)}</span>
-                <span class="state">${this.esc(stateText)}</span>
+                <span class="label-title name">${this.esc(entry.name)}</span>
+                <span class="label-sub state">${this.esc(stateText)}</span>
               </span>
             </button>
           `;
         })}
-      </div>
+        </div>
+      </ha-card>
     `;
   }
 }

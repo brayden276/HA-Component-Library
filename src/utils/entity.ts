@@ -2,10 +2,36 @@ import {
   HomeAssistant,
   HassEntity,
   ActionConfig,
+  HassServiceTarget,
   EntityRegistryEntry,
   DeviceRegistryEntry,
 } from "../types/home-assistant";
 import { fireEvent } from "./navigation";
+
+export type HomeAssistantActionErrorCode =
+  | "INVALID_ACTION"
+  | "INVALID_SERVICE"
+  | "INVALID_TARGET"
+  | "MISSING_TARGET_ENTITY"
+  | "UNAVAILABLE_TARGET_ENTITY";
+
+/** An actionable configuration or state error raised before a HA service call. */
+export class HomeAssistantActionError extends Error {
+  public readonly code: HomeAssistantActionErrorCode;
+
+  public constructor(code: HomeAssistantActionErrorCode, message: string) {
+    super(message);
+    this.name = "HomeAssistantActionError";
+    this.code = code;
+  }
+}
+
+export interface ServiceAction {
+  domain: string;
+  service: string;
+  data?: Record<string, unknown>;
+  target?: HassServiceTarget;
+}
 
 /**
  * Extracts the domain name from an entity ID (e.g., 'light.living_room' -> 'light')
@@ -19,6 +45,130 @@ export function computeDomain(entityId?: string | null): string {
  * Alias for computeDomain for semantic consistency
  */
 export const domainOf = computeDomain;
+
+const entityIdPattern = /^[a-z_][a-z0-9_]*\.[a-zA-Z0-9_]+$/;
+
+const entityIdsFromTarget = (target?: HassServiceTarget): string[] => {
+  if (!target?.entity_id) return [];
+  return Array.isArray(target.entity_id) ? target.entity_id : [target.entity_id];
+};
+
+const hasTarget = (target?: HassServiceTarget): boolean =>
+  Boolean(
+    target &&
+      (entityIdsFromTarget(target).length > 0 ||
+        (Array.isArray(target.device_id)
+          ? target.device_id.length > 0
+          : target.device_id) ||
+        (Array.isArray(target.area_id) ? target.area_id.length > 0 : target.area_id)),
+  );
+
+const validateTargetIds = (value: unknown, field: string): void => {
+  if (value === undefined) return;
+  const values = Array.isArray(value) ? value : [value];
+  if (values.length === 0 || values.some((id) => typeof id !== "string" || !id.trim())) {
+    throw new HomeAssistantActionError(
+      "INVALID_TARGET",
+      `Service target ${field} must be a non-empty string or array of strings.`,
+    );
+  }
+};
+
+const validateTarget = (
+  hass: HomeAssistant,
+  target?: HassServiceTarget,
+): HassServiceTarget | undefined => {
+  if (!target) return undefined;
+  if (!hasTarget(target)) {
+    throw new HomeAssistantActionError(
+      "INVALID_TARGET",
+      "Service target must contain an entity_id, device_id, or area_id.",
+    );
+  }
+
+  validateTargetIds(target.entity_id, "entity_id");
+  validateTargetIds(target.device_id, "device_id");
+  validateTargetIds(target.area_id, "area_id");
+
+  const entityIds = entityIdsFromTarget(target);
+  for (const entityId of entityIds) {
+    if (!entityIdPattern.test(entityId)) {
+      throw new HomeAssistantActionError(
+        "INVALID_TARGET",
+        `Invalid Home Assistant entity target: ${entityId}.`,
+      );
+    }
+    const entity = hass.states[entityId];
+    if (!entity) {
+      throw new HomeAssistantActionError(
+        "MISSING_TARGET_ENTITY",
+        `Home Assistant entity target does not exist: ${entityId}.`,
+      );
+    }
+    if (!isEntityAvailable(entity)) {
+      throw new HomeAssistantActionError(
+        "UNAVAILABLE_TARGET_ENTITY",
+        `Home Assistant entity target is unavailable: ${entityId}.`,
+      );
+    }
+  }
+
+  return target;
+};
+
+const parseService = (value?: string): { domain: string; service: string } => {
+  const [domain, service, extra] = value?.split(".") ?? [];
+  if (
+    !domain ||
+    !service ||
+    extra !== undefined ||
+    !/^[a-z_][a-z0-9_]*$/.test(domain) ||
+    !/^[a-z_][a-z0-9_]*$/.test(service)
+  ) {
+    throw new HomeAssistantActionError(
+      "INVALID_SERVICE",
+      `Invalid Home Assistant service: ${value || "(missing)"}.`,
+    );
+  }
+  return { domain, service };
+};
+
+const dataAndLegacyTarget = (
+  data?: Record<string, unknown>,
+): { data?: Record<string, unknown>; target?: HassServiceTarget } => {
+  if (!data) return {};
+  const { entity_id: legacyEntityId, ...serviceData } = data;
+  return {
+    data: Object.keys(serviceData).length > 0 ? serviceData : undefined,
+    target:
+      typeof legacyEntityId === "string" ||
+      (Array.isArray(legacyEntityId) &&
+        legacyEntityId.every((id) => typeof id === "string"))
+        ? { entity_id: legacyEntityId as string | string[] }
+        : legacyEntityId === undefined
+          ? undefined
+          : (() => {
+              throw new HomeAssistantActionError(
+                "INVALID_TARGET",
+                "service data entity_id must be a string or array of strings.",
+              );
+            })(),
+  };
+};
+
+/**
+ * Runs an HA service through its typed boundary. Entity targets are validated
+ * against the current state map and always passed as `callService` argument 4.
+ */
+export const runServiceAction = async (
+  hass: HomeAssistant,
+  action: ServiceAction,
+): Promise<void> => {
+  const { domain, service } = parseService(`${action.domain}.${action.service}`);
+  const normalized = dataAndLegacyTarget(action.data);
+  const target = validateTarget(hass, action.target ?? normalized.target);
+  await hass.callService(domain, service, normalized.data, target);
+};
 
 /**
  * Options for computing a human-friendly display name for an entity
@@ -199,7 +349,12 @@ export async function handleAction(
   actionConfig?: ActionConfig,
   defaultEntityId?: string,
 ): Promise<void> {
-  if (!hass) return;
+  if (!hass) {
+    throw new HomeAssistantActionError(
+      "INVALID_ACTION",
+      "Home Assistant is required to run an action.",
+    );
+  }
 
   const action = actionConfig?.action || "toggle";
 
@@ -219,36 +374,66 @@ export async function handleAction(
     }
   }
 
-  const targetEntity =
-    (actionConfig?.target?.entity_id as string) || defaultEntityId;
+  const targetEntityIds = entityIdsFromTarget(actionConfig?.target);
+  const targetEntity = targetEntityIds[0] || defaultEntityId;
+  const target = actionConfig?.target ||
+    (targetEntity ? { entity_id: targetEntity } : undefined);
 
   switch (action) {
     case "toggle": {
-      if (!targetEntity) return;
+      if (!targetEntity) {
+        throw new HomeAssistantActionError(
+          "MISSING_TARGET_ENTITY",
+          "Toggle actions require an entity target.",
+        );
+      }
       const domain = computeDomain(targetEntity);
-      const service = domain === "lock" ? "lock" : "toggle";
-      await hass.callService(domain, service, undefined, {
-        entity_id: targetEntity,
+      const entity = hass.states[targetEntity];
+      if (!entity) {
+        throw new HomeAssistantActionError(
+          "MISSING_TARGET_ENTITY",
+          `Home Assistant entity target does not exist: ${targetEntity}.`,
+        );
+      }
+      const service =
+        domain === "lock"
+          ? entity.state === "locked" || entity.state === "locking"
+            ? "unlock"
+            : "lock"
+          : "toggle";
+      await runServiceAction(hass, {
+        domain,
+        service,
+        target,
       });
       break;
     }
     case "more-info": {
-      if (!targetEntity) return;
+      if (!targetEntity) {
+        throw new HomeAssistantActionError(
+          "MISSING_TARGET_ENTITY",
+          "More-info actions require an entity target.",
+        );
+      }
+      validateTarget(hass, { entity_id: targetEntity });
       fireEvent(node, "hass-more-info", { entityId: targetEntity });
       break;
     }
-    case "call-service": {
-      if (!actionConfig?.service) return;
-      const [domain, service] = actionConfig.service.split(".");
-      if (domain && service) {
-        await hass.callService(
-          domain,
-          service,
-          actionConfig.service_data,
-          actionConfig.target ||
-            (targetEntity ? { entity_id: targetEntity } : undefined),
-        );
-      }
+    case "call-service":
+    case "perform-action": {
+      const serviceName =
+        action === "perform-action"
+          ? actionConfig?.perform_action
+          : actionConfig?.service;
+      const service = parseService(serviceName);
+      await runServiceAction(hass, {
+        ...service,
+        data:
+          action === "perform-action"
+            ? actionConfig?.data
+            : actionConfig?.service_data,
+        target,
+      });
       break;
     }
     case "navigate": {
@@ -268,5 +453,10 @@ export async function handleAction(
       fireEvent(node, "start-voice-assist");
       break;
     }
+    default:
+      throw new HomeAssistantActionError(
+        "INVALID_ACTION",
+        `Unsupported Home Assistant action: ${String(action)}.`,
+      );
   }
 }

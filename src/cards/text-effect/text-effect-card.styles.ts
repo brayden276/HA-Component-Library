@@ -130,81 +130,6 @@ export const textEffectCardStyles: CSSResultGroup = [
       border-radius: 50%;
       background: var(--primary-color);
     }
-    .rainbow_stamp .title {
-      padding-bottom: 4px;
-      background: linear-gradient(
-        90deg,
-        #ff375f,
-        #ff9f0a,
-        #ffd60a,
-        #30d158,
-        #64d2ff,
-        #0a84ff,
-        #bf5af2,
-        #ff375f
-      );
-      background-size: 200% auto;
-      color: transparent;
-      -webkit-background-clip: text;
-      background-clip: text;
-      animation: rainbowSweep var(--effect-speed, 2.6s) linear infinite;
-    }
-    .rainbow_stamp .title:after {
-      content: "";
-      position: absolute;
-      z-index: 1;
-      left: 0;
-      bottom: 0;
-      width: 100%;
-      height: 2px;
-      border-radius: 999px;
-      background: linear-gradient(
-        90deg,
-        transparent 0%,
-        #0a84ff 35%,
-        #bf5af2 65%,
-        transparent 100%
-      );
-      background-size: 220% 100%;
-      opacity: 0.85;
-      animation: stampSweep var(--effect-speed, 2.6s) cubic-bezier(0.4, 0, 0.2, 1)
-        infinite;
-    }
-    .gold_stamp .title {
-      padding-bottom: 4px;
-      background: linear-gradient(
-        90deg,
-        #f6d365 0%,
-        #fda085 50%,
-        #f6d365 100%
-      );
-      background-size: 200% auto;
-      color: transparent;
-      -webkit-background-clip: text;
-      background-clip: text;
-      animation: goldShift var(--effect-speed, 2.6s) ease infinite;
-    }
-    .gold_stamp .title:after {
-      content: "";
-      position: absolute;
-      z-index: 1;
-      left: 0;
-      bottom: 0;
-      width: 100%;
-      height: 2px;
-      border-radius: 999px;
-      background: linear-gradient(
-        90deg,
-        transparent 0%,
-        #f6d365 42%,
-        #fda085 58%,
-        transparent 100%
-      );
-      background-size: 220% 100%;
-      opacity: 0.8;
-      animation: stampSweep var(--effect-speed, 2.6s) cubic-bezier(0.4, 0, 0.2, 1)
-        infinite;
-    }
 
     @keyframes stampSweep {
       0% {
@@ -256,20 +181,6 @@ export const textEffectCardStyles: CSSResultGroup = [
       50% {
         opacity: 0.85;
         transform: rotate(45deg) scale(1.1);
-      }
-    }
-    @keyframes rainbowSweep {
-      to {
-        background-position: 200% center;
-      }
-    }
-    @keyframes goldShift {
-      0%,
-      100% {
-        background-position: 0% 50%;
-      }
-      50% {
-        background-position: 100% 50%;
       }
     }
   `,

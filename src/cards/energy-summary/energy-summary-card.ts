@@ -2,7 +2,7 @@ export * from "./energy-summary-card.types";
 import type { EnergySummaryConfig } from "./energy-summary-card.types";
 export * from "./energy-summary-card.styles";
 import { energySummaryCardStyles } from "./energy-summary-card.styles";
-import { html, TemplateResult, CSSResultGroup } from "lit";
+import { html, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type { LovelaceGridOptions } from "../../types/home-assistant";
@@ -40,6 +40,10 @@ export class ComponentEnergySummaryV1 extends LitBaseCard<EnergySummaryConfig> {
 
   private _sequence = 0;
   private _dayUnsub: (() => void) | null = null;
+  private _dataUnsub: (() => void) | null = null;
+  private _dataHass: typeof this.hass | null = null;
+  private _dataProfile = "";
+  private _dataDay = "";
   private _interactionHandles: InteractionHandle[] = [];
 
   private _profileListener = (event: any) => {
@@ -74,18 +78,9 @@ export class ComponentEnergySummaryV1 extends LitBaseCard<EnergySummaryConfig> {
     const newChannel = this._config?.day_channel || "energy-day";
     this._day = energyDayState.get(newChannel, this.hass);
     if (this.isConnected && prevChannel !== newChannel) {
-      this._dayUnsub?.();
-      this._dayUnsub = energyDayState.subscribe(
-        newChannel,
-        (detail) => {
-          if (detail.day !== this._day) {
-            this._day = detail.day;
-            this._load();
-          }
-        },
-        { hass: this.hass },
-      );
+      this._bindDayChannel();
     }
+    this._bindDataSubscription();
     this._load();
   }
 
@@ -99,18 +94,8 @@ export class ComponentEnergySummaryV1 extends LitBaseCard<EnergySummaryConfig> {
       "ha-component-profile-change",
       this._profileListener,
     );
-    if (!this._dayUnsub) {
-      this._dayUnsub = energyDayState.subscribe(
-        this._config?.day_channel || "energy-day",
-        (detail) => {
-          if (detail.day !== this._day) {
-            this._day = detail.day;
-            this._load();
-          }
-        },
-        { hass: this.hass },
-      );
-    }
+    this._bindDayChannel();
+    this._bindDataSubscription();
     this._load();
   }
 
@@ -121,32 +106,103 @@ export class ComponentEnergySummaryV1 extends LitBaseCard<EnergySummaryConfig> {
     );
     this._dayUnsub?.();
     this._dayUnsub = null;
+    this._dataUnsub?.();
+    this._dataUnsub = null;
+    this._dataHass = null;
+    this._sequence++;
     for (const h of this._interactionHandles) h.destroy();
     this._interactionHandles = [];
     super.disconnectedCallback();
   }
 
+  protected override willUpdate(changedProperties: PropertyValues): void {
+    super.willUpdate(changedProperties);
+    if (!changedProperties.has("hass") || !this.hass) return;
+    this._day = energyDayState.get(
+      this._config?.day_channel || "energy-day",
+      this.hass,
+    );
+    this._bindDayChannel();
+    this._bindDataSubscription();
+    this._load();
+  }
+
+  private _bindDayChannel(): void {
+    this._dayUnsub?.();
+    this._dayUnsub = null;
+    if (!this.isConnected) return;
+    this._dayUnsub = energyDayState.subscribe(
+      this._config?.day_channel || "energy-day",
+      (detail) => {
+        if (detail.day !== this._day) {
+          this._day = detail.day;
+          this._bindDataSubscription();
+          this._load();
+        }
+      },
+      { hass: this.hass },
+    );
+  }
+
+  private _bindDataSubscription(): void {
+    if (!this.isConnected || !this.hass || !this._config || !this._day) return;
+    const hass = this.hass;
+    const profile = this._config.profile || "household-energy";
+    if (
+      this._dataUnsub &&
+      this._dataHass === hass &&
+      this._dataProfile === profile &&
+      this._dataDay === this._day
+    ) {
+      return;
+    }
+    this._dataUnsub?.();
+    this._dataHass = hass;
+    this._dataProfile = profile;
+    this._dataDay = this._day;
+    this._dataUnsub = energyDayData.subscribe(
+      hass,
+      profile,
+      this._day,
+      (snapshot) => {
+        if (
+          this._dataHass !== hass ||
+          this._dataProfile !== profile ||
+          this._dataDay !== this._day
+        ) {
+          return;
+        }
+        if (snapshot.value) this._data = snapshot.value;
+        this._error = snapshot.error;
+        this._loading = snapshot.loading;
+      },
+    );
+  }
+
   private async _load(force = false): Promise<void> {
     if (!this.hass || !this._config || !this._day) return;
     const sequence = ++this._sequence;
+    const hass = this.hass;
+    const profile = this._config.profile || "household-energy";
+    const day = this._day;
     this._loading = true;
     this._error = null;
     try {
       const data = await energyDayData.get(
-        this.hass,
-        this._config.profile || "household-energy",
-        this._day,
+        hass,
+        profile,
+        day,
         { force },
       );
-      if (sequence === this._sequence) {
+      if (sequence === this._sequence && hass === this.hass && day === this._day) {
         this._data = data;
       }
     } catch (err: any) {
-      if (sequence === this._sequence) {
+      if (sequence === this._sequence && hass === this.hass && day === this._day) {
         this._error = err;
       }
     } finally {
-      if (sequence === this._sequence) {
+      if (sequence === this._sequence && hass === this.hass && day === this._day) {
         this._loading = false;
       }
     }

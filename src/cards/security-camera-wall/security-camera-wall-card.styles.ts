@@ -64,7 +64,7 @@ export const securityCameraWallCardStyles: CSSResultGroup = [
       aspect-ratio: 16/9;
       overflow: hidden;
       padding: 0;
-      background: #111;
+      background: var(--dashboard-card-muted-surface);
       cursor: pointer;
     }
     .snapshot {
@@ -84,9 +84,12 @@ export const securityCameraWallCardStyles: CSSResultGroup = [
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(4px);
-      color: #ffffff;
+      background: color-mix(
+        in srgb,
+        var(--dashboard-card-surface) 78%,
+        transparent
+      );
+      color: var(--primary-text-color);
       font-size: 11px;
       font-weight: 650;
     }

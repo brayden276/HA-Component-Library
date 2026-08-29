@@ -1,47 +1,30 @@
 import { css, CSSResultGroup } from "lit";
-import { cardBaseStyles, typographyStyles, iconWellStyles, rowListStyles } from "../../styles";
+import {
+  cardBaseStyles,
+  iconWellStyles,
+  rowListStyles,
+  surfaceStyles,
+  typographyStyles,
+} from "../../styles";
 
 export const statusRowCardStyles: CSSResultGroup = [
   cardBaseStyles,
   typographyStyles,
   iconWellStyles,
   rowListStyles,
+  surfaceStyles,
   css`
-    .wrap {
-      padding: 10px 14px;
-      display: grid;
-      grid-template-columns: 40px minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 12px;
-      min-height: 44px;
-    }
-    .icon {
-      width: 40px;
-      height: 40px;
-      display: grid;
-      place-items: center;
-      border-radius: var(--dashboard-radius-control);
-      background: var(--secondary-background-color);
-      color: var(--primary-color);
-      flex-shrink: 0;
-    }
-    ha-icon {
-      --mdc-icon-size: 20px;
+    .demo {
+      width: 100%;
+      text-align: left;
     }
     .title {
-      font-size: 13px;
-      font-weight: 600;
-      line-height: 1.25;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       color: var(--primary-text-color);
     }
     .desc {
-      margin-top: 3px;
-      font-size: 12px;
-      line-height: 1.25;
-      color: var(--secondary-text-color);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -52,10 +35,6 @@ export const statusRowCardStyles: CSSResultGroup = [
     }
     .status b {
       display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--primary-text-color);
-      font-variant-numeric: tabular-nums;
     }
     .status span {
       display: block;

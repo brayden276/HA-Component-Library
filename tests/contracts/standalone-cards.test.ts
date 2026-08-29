@@ -84,6 +84,47 @@ describe('Standalone Cards & Editors Contract Tests', () => {
     el.remove();
   });
 
+  it('disables unavailable standalone-card interactions without service calls', async () => {
+    const { hass, builder } = createTestHass();
+    builder.setEntity('light.unavailable_light', 'unavailable', { friendly_name: 'Unavailable Light' });
+    const cards = [
+      ['ha-action-tile', { entity: 'light.unavailable_light', tap_action: { action: 'toggle' } }],
+      ['ha-metric-badge', { entity: 'light.unavailable_light', tap_action: { action: 'toggle' } }],
+      ['ha-quick-bar', { entities: [{ entity: 'light.unavailable_light', tap_action: { action: 'toggle' } }] }],
+      ['ha-status-card', { entity: 'light.unavailable_light', tap_action: { action: 'toggle' }, show_toggle: true }],
+    ] as const;
+
+    for (const [tag, config] of cards) {
+      const el = document.createElement(tag) as any;
+      el.setConfig(config);
+      el.hass = hass;
+      document.body.appendChild(el);
+      await el.updateComplete;
+      const control = el.shadowRoot.querySelector('[role="button"]') as HTMLElement;
+      expect(control.getAttribute('aria-disabled')).toBe('true');
+      expect(control.getAttribute('tabindex')).toBe('-1');
+      control.click();
+      control.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      el.shadowRoot.querySelector<HTMLButtonElement>('button.toggle-btn')?.click();
+      el.remove();
+    }
+
+    expect(builder.getServiceCalls()).toEqual([]);
+  });
+
+  it('keeps the status toggle from activating its parent card', async () => {
+    const { hass, builder } = createTestHass();
+    const el = document.createElement('ha-status-card') as any;
+    el.setConfig({ entity: 'light.living_room_light', tap_action: { action: 'toggle' }, show_toggle: true });
+    el.hass = hass;
+    document.body.appendChild(el);
+    await el.updateComplete;
+
+    (el.shadowRoot.querySelector('button.toggle-btn') as HTMLButtonElement).click();
+    expect(builder.getServiceCalls()).toHaveLength(1);
+    el.remove();
+  });
+
   it('ha-metric-badge validates config and renders thresholds and units', async () => {
     const { hass } = createTestHass();
     const el = document.createElement('ha-metric-badge') as any;
@@ -247,5 +288,51 @@ describe('Standalone Cards & Editors Contract Tests', () => {
     expect(changedConfig).toBeTruthy();
     expect(changedConfig.title).toBe('Modified');
     editor.remove();
+  });
+
+  it('standalone cards maintain block display and full width layout across on and off state transitions', async () => {
+    const { hass, builder } = createTestHass();
+    const actionTile = document.createElement('ha-action-tile') as any;
+    actionTile.setConfig({
+      entity: 'light.living_room_light',
+      name: 'Living Room Light',
+    });
+    actionTile.hass = hass;
+    document.body.appendChild(actionTile);
+    await actionTile.updateComplete;
+
+    expect(actionTile.shadowRoot.querySelector('ha-card')).toBeTruthy();
+
+    // Turn off
+    builder.setEntity('light.living_room_light', 'off', { friendly_name: 'Living Room Light' });
+    actionTile.hass = builder.build();
+    await actionTile.updateComplete;
+
+    const card = actionTile.shadowRoot.querySelector('ha-card');
+    expect(card).toBeTruthy();
+    expect(card.classList.contains('tile-card')).toBe(true);
+
+    actionTile.remove();
+
+    const statusCard = document.createElement('ha-status-card') as any;
+    statusCard.setConfig({
+      entity: 'light.living_room_light',
+      show_toggle: true,
+    });
+    statusCard.hass = hass;
+    document.body.appendChild(statusCard);
+    await statusCard.updateComplete;
+
+    expect(statusCard.shadowRoot.querySelector('ha-card')).toBeTruthy();
+
+    // Turn off
+    statusCard.hass = builder.build();
+    await statusCard.updateComplete;
+
+    const statusHaCard = statusCard.shadowRoot.querySelector('ha-card');
+    expect(statusHaCard).toBeTruthy();
+    expect(statusHaCard.classList.contains('status-card')).toBe(true);
+
+    statusCard.remove();
   });
 });

@@ -2,12 +2,13 @@ export * from "./household-attention-card.types";
 import type { HouseholdAttentionConfig } from "./household-attention-card.types";
 export * from "./household-attention-card.styles";
 import { householdAttentionCardStyles } from "./household-attention-card.styles";
-import { html, TemplateResult, CSSResultGroup } from "lit";
+import { html, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type {
   LovelaceGridOptions,
   EntityRegistryEntry,
+  HomeAssistant,
 } from "../../types/home-assistant";
 import { centralRegistry } from "../../services/registry/dashboard-registry";
 import { computeEntityDisplayName } from "../../utils/entity";
@@ -42,6 +43,7 @@ export class ComponentHouseholdAttentionV2 extends LitBaseCard<HouseholdAttentio
   private _registry: EntityRegistryEntry[] | null = null;
 
   private _unsubRegistry: (() => void) | null = null;
+  private _registryHass: HomeAssistant | null = null;
   private _interactionHandles: InteractionHandle[] = [];
 
   public static override styles: CSSResultGroup = householdAttentionCardStyles;
@@ -49,9 +51,7 @@ export class ComponentHouseholdAttentionV2 extends LitBaseCard<HouseholdAttentio
   public override setConfig(config: HouseholdAttentionConfig): void {
     super.setConfig({ ...DEFAULTS, ...config });
     if (this.hass && !this._config?.demo) {
-      centralRegistry.load(this.hass).then((data) => {
-        this._registry = data.entities || [];
-      });
+      void this._loadRegistry();
     }
   }
 
@@ -61,26 +61,54 @@ export class ComponentHouseholdAttentionV2 extends LitBaseCard<HouseholdAttentio
 
   public override connectedCallback(): void {
     super.connectedCallback();
-    if (!this._unsubRegistry && this.hass && !this._config?.demo) {
-      this._unsubRegistry = centralRegistry.subscribe(this.hass, (data) => {
-        this._registry = data.entities || [];
-      });
-    }
+    this._bindRegistry();
+    void this._loadRegistry();
   }
 
   public override disconnectedCallback(): void {
-    this._unsubRegistry?.();
-    this._unsubRegistry = null;
+    this._unbindRegistry();
     for (const h of this._interactionHandles) h.destroy();
     this._interactionHandles = [];
     super.disconnectedCallback();
   }
 
-  protected override willUpdate(): void {
-    if (!this._registry && this.hass && !this._config?.demo) {
-      centralRegistry.load(this.hass).then((data) => {
-        this._registry = data.entities || [];
-      });
+  protected override willUpdate(changedProps: PropertyValues): void {
+    if (changedProps.has("hass") && changedProps.get("hass") !== this.hass) {
+      this._registry = null;
+      this._unbindRegistry();
+    }
+    if (this.hass && !this._config?.demo) {
+      this._bindRegistry();
+      if (!this._registry || changedProps.has("hass")) void this._loadRegistry();
+    }
+  }
+
+  private _bindRegistry(): void {
+    if (!this.isConnected || !this.hass || this._config?.demo) return;
+    if (this._registryHass === this.hass && this._unsubRegistry) return;
+
+    this._unbindRegistry();
+    const hass = this.hass;
+    this._registryHass = hass;
+    this._unsubRegistry = centralRegistry.subscribe(hass, (data) => {
+      if (this.hass === hass) this._registry = data.entities || [];
+    });
+  }
+
+  private _unbindRegistry(): void {
+    this._unsubRegistry?.();
+    this._unsubRegistry = null;
+    this._registryHass = null;
+  }
+
+  private async _loadRegistry(): Promise<void> {
+    if (!this.hass || this._config?.demo) return;
+    const hass = this.hass;
+    try {
+      const data = await centralRegistry.load(hass);
+      if (this.hass === hass) this._registry = data.entities || [];
+    } catch {
+      // The live subscription will populate the card after Home Assistant reconnects.
     }
   }
 

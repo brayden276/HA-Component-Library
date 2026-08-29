@@ -33,7 +33,8 @@ export const cameraCardStyles: CSSResultGroup = [
       align-items: center;
       gap: 12px;
     }
-    .ico {
+    .ico,
+    .icon {
       width: 40px;
       height: 40px;
       border-radius: var(--dashboard-radius-control);
@@ -43,7 +44,8 @@ export const cameraCardStyles: CSSResultGroup = [
       color: var(--secondary-text-color);
       flex-shrink: 0;
     }
-    .ico ha-icon {
+    .ico ha-icon,
+    .icon ha-icon {
       --mdc-icon-size: 20px;
     }
     .activity .ico {

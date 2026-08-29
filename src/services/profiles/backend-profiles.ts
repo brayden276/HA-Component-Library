@@ -1,4 +1,8 @@
-import type { HomeAssistant } from "../../types/home-assistant";
+import type {
+  HassConnection,
+  HassEvent,
+  HomeAssistant,
+} from "../../types/home-assistant";
 import { createAsyncBroker } from "../../utils/async-broker";
 
 /**
@@ -28,19 +32,45 @@ interface ProfileContext {
   profileId: string;
 }
 
-const profileSubscriptions = new WeakMap<object, unknown>();
+type ProfileEventUnsubscribe = () => void;
+type ProfileEventSubscription =
+  | ProfileEventUnsubscribe
+  | Promise<ProfileEventUnsubscribe>;
+
+const profileSubscriptions = new WeakMap<
+  HassConnection,
+  ProfileEventSubscription
+>();
+let activeProfileConnection: HassConnection | null = null;
+
+const detachProfileEvents = (connection: HassConnection): void => {
+  const subscription = profileSubscriptions.get(connection);
+  profileSubscriptions.delete(connection);
+  if (activeProfileConnection === connection) {
+    activeProfileConnection = null;
+  }
+  if (!subscription) return;
+  Promise.resolve(subscription)
+    .then((unsubscribe) => unsubscribe())
+    .catch(() => {});
+};
 
 const attachProfileEvents = (hass: HomeAssistant): void => {
   const connection = hass?.connection;
-  if (!connection?.subscribeEvents || profileSubscriptions.has(connection))
-    return;
-  const subscription = connection.subscribeEvents((event: any) => {
+  if (!connection?.subscribeEvents) return;
+  if (activeProfileConnection && activeProfileConnection !== connection) {
+    detachProfileEvents(activeProfileConnection);
+  }
+  activeProfileConnection = connection;
+  if (profileSubscriptions.has(connection)) return;
+
+  const subscription = connection.subscribeEvents((event: HassEvent) => {
     const match = /^dashboard-profile\.(energy|security)\.([a-z0-9-]+)$/.exec(
       String(event?.data?.key || ""),
     );
     if (match) {
       profileBroker.invalidate(profileKey(hass, match[1], match[2]));
-      window.dispatchEvent(
+      globalThis.dispatchEvent(
         new CustomEvent("ha-component-profile-change", {
           detail: { kind: match[1], profileId: match[2] },
         }),
@@ -49,7 +79,9 @@ const attachProfileEvents = (hass: HomeAssistant): void => {
   }, "ha_component_backend_preferences_updated");
   profileSubscriptions.set(connection, subscription);
   Promise.resolve(subscription).catch(() =>
-    profileSubscriptions.delete(connection),
+    profileSubscriptions.get(connection) === subscription
+      ? profileSubscriptions.delete(connection)
+      : undefined,
   );
 };
 

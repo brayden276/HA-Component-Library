@@ -1,8 +1,26 @@
 import { css, CSSResultGroup } from "lit";
-import { dashboardBaseCardStyles } from "../../utils/styles";
+import {
+  badgeProgressStyles,
+  buttonStyles,
+  cardBaseStyles,
+  dialogStyles,
+  iconButtonStyles,
+  iconWellStyles,
+  separatorStyles,
+  surfaceStyles,
+  typographyStyles,
+} from "../../styles";
 
 export const securityDashboardCardStyles: CSSResultGroup = [
-  dashboardBaseCardStyles,
+  cardBaseStyles,
+  typographyStyles,
+  buttonStyles,
+  iconButtonStyles,
+  iconWellStyles,
+  badgeProgressStyles,
+  separatorStyles,
+  surfaceStyles,
+  dialogStyles,
   css`
     :host {
       display: block;
@@ -21,9 +39,9 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       gap: var(--security-gap);
     }
     .panel {
-      border: 1px solid var(--divider-color);
-      border-radius: var(--ha-card-border-radius, 16px);
-      background: var(--card-background-color);
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-card);
+      background: var(--dashboard-card-surface);
       color: var(--primary-text-color);
       overflow: hidden;
     }
@@ -45,7 +63,7 @@ export const securityDashboardCardStyles: CSSResultGroup = [
     .hero-icon {
       width: 44px;
       height: 44px;
-      border-radius: 13px;
+      border-radius: var(--dashboard-radius-control);
       display: grid;
       place-items: center;
       background: color-mix(in srgb, var(--primary-color) 10%, transparent);
@@ -86,7 +104,7 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       min-height: 34px;
       padding: 0 10px;
       border-radius: 999px;
-      background: var(--secondary-background-color);
+      background: var(--dashboard-card-muted-surface);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -136,8 +154,8 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       min-width: 0;
       min-height: 58px;
       padding: 8px 10px;
-      border: 1px solid var(--divider-color);
-      border-radius: 12px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
       background: transparent;
       text-align: left;
       display: grid;
@@ -147,12 +165,12 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       cursor: pointer;
     }
     .quick-action:hover {
-      background: var(--secondary-background-color);
+      background: var(--dashboard-card-muted-surface);
     }
     .quick-icon {
       width: 36px;
       height: 36px;
-      border-radius: 10px;
+      border-radius: var(--dashboard-radius-control);
       display: grid;
       place-items: center;
       background: color-mix(in srgb, var(--primary-color) 9%, transparent);
@@ -184,10 +202,10 @@ export const securityDashboardCardStyles: CSSResultGroup = [
     }
     .camera {
       min-width: 0;
-      border: 1px solid var(--divider-color);
-      border-radius: 14px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-card);
       overflow: hidden;
-      background: var(--card-background-color);
+      background: var(--dashboard-card-surface);
     }
     .camera-media {
       position: relative;
@@ -196,7 +214,7 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       aspect-ratio: 16/9;
       padding: 0;
       border: 0;
-      background: var(--dashboard-media-surface, #111);
+      background: var(--dashboard-card-muted-surface);
       cursor: pointer;
       overflow: hidden;
     }
@@ -216,10 +234,10 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       padding: 12px;
       background: color-mix(
         in srgb,
-        var(--dashboard-media-surface, #111) 72%,
+        var(--dashboard-card-muted-surface) 72%,
         transparent
       );
-      color: var(--dashboard-media-on-surface, #fff);
+      color: var(--primary-text-color);
       font-size: 13px;
       font-weight: 650;
     }
@@ -235,10 +253,10 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       gap: 5px;
       background: color-mix(
         in srgb,
-        var(--dashboard-media-surface, #111) 78%,
+        var(--dashboard-card-muted-surface) 78%,
         transparent
       );
-      color: var(--dashboard-media-on-surface, #fff);
+      color: var(--primary-text-color);
       font-size: 11px;
       font-weight: 700;
     }
@@ -292,8 +310,8 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       min-width: 0;
       min-height: 44px;
       padding: 0 7px;
-      border: 1px solid var(--divider-color);
-      border-radius: 10px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
       background: transparent;
       display: flex;
       align-items: center;
@@ -313,7 +331,7 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       color: var(--primary-color);
     }
     .camera-action:hover {
-      background: var(--secondary-background-color);
+      background: var(--dashboard-card-muted-surface);
     }
     .camera-action ha-icon {
       --mdc-icon-size: 17px;
@@ -325,8 +343,8 @@ export const securityDashboardCardStyles: CSSResultGroup = [
     .entry {
       min-height: 64px;
       padding: 7px 7px 7px 11px;
-      border: 1px solid var(--divider-color);
-      border-radius: 12px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
       display: grid;
       grid-template-columns: 34px minmax(0, 1fr) auto;
       align-items: center;
@@ -369,8 +387,8 @@ export const securityDashboardCardStyles: CSSResultGroup = [
     .entry-operate {
       appearance: none;
       min-height: 44px;
-      border: 1px solid var(--divider-color);
-      border-radius: 10px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
       background: transparent;
       cursor: pointer;
     }
@@ -406,28 +424,24 @@ export const securityDashboardCardStyles: CSSResultGroup = [
     }
     dialog {
       padding: 0;
-      border: 1px solid var(--divider-color);
-      border-radius: 16px;
-      background: var(--card-background-color);
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-dialog);
+      background: var(--dashboard-card-surface);
       color: var(--primary-text-color);
-      box-shadow: var(
-        --dashboard-dialog-shadow,
-        0 18px 56px rgba(0, 0, 0, 0.28)
-      );
+      box-shadow: var(--dashboard-dialog-shadow);
       overflow: hidden;
     }
     dialog::backdrop {
-      background: var(--dashboard-modal-scrim, rgba(0, 0, 0, 0.46));
-      backdrop-filter: blur(2px);
+      background: var(--dashboard-modal-scrim);
     }
     .dialog-shell {
       display: flex;
       flex-direction: column;
-      max-height: calc(100dvh - 24px);
+      max-height: calc(100dvh - 32px);
     }
     .dialog-head {
-      min-height: 58px;
-      padding: 6px 7px 6px 14px;
+      min-height: 56px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--divider-color);
       display: flex;
       align-items: center;
@@ -436,8 +450,8 @@ export const securityDashboardCardStyles: CSSResultGroup = [
     .dialog-title {
       min-width: 0;
       flex: 1;
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 15px;
+      font-weight: 650;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -448,7 +462,7 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       height: 44px;
       padding: 0 10px;
       border: 0;
-      border-radius: 10px;
+      border-radius: var(--dashboard-radius-control);
       background: transparent;
       color: var(--secondary-text-color);
       display: flex;
@@ -458,7 +472,7 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       cursor: pointer;
     }
     .dialog-button:hover {
-      background: var(--secondary-background-color);
+      background: var(--dashboard-card-muted-surface);
       color: var(--primary-text-color);
     }
     .dialog-button ha-icon {
@@ -472,11 +486,11 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       min-height: 0;
       overflow: auto;
       overscroll-behavior: contain;
-      padding: 12px 14px max(14px, env(safe-area-inset-bottom));
+      padding: 16px 16px max(16px, env(safe-area-inset-bottom));
     }
     .viewer-dialog {
-      width: min(1120px, calc(100vw - 24px));
-      height: min(760px, calc(100dvh - 24px));
+      width: min(1120px, calc(100vw - 32px));
+      height: min(760px, calc(100dvh - 32px));
     }
     .viewer-shell {
       height: 100%;
@@ -487,12 +501,12 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       flex: 1;
       display: grid;
       place-items: center;
-      background: var(--dashboard-media-surface, #111);
+      background: var(--dashboard-card-muted-surface);
       overflow: hidden;
     }
     .settings-dialog {
-      width: min(680px, calc(100vw - 24px));
-      max-height: calc(100dvh - 24px);
+      width: min(680px, calc(100vw - 32px));
+      max-height: calc(100dvh - 32px);
     }
     .settings-groups {
       display: grid;
@@ -527,9 +541,9 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       appearance: none;
       min-width: 0;
       padding: 0;
-      border: 1px solid var(--divider-color);
-      border-radius: 12px;
-      background: var(--secondary-background-color);
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
+      background: var(--dashboard-card-muted-surface);
       overflow: hidden;
       text-align: left;
       cursor: pointer;
@@ -539,7 +553,7 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       width: 100%;
       aspect-ratio: 16/9;
       object-fit: cover;
-      background: var(--dashboard-media-surface, #111);
+      background: var(--dashboard-card-muted-surface);
     }
     .detection-copy {
       display: block;
@@ -570,8 +584,8 @@ export const securityDashboardCardStyles: CSSResultGroup = [
     .control-row {
       min-height: 54px;
       padding: 5px 5px 5px 10px;
-      border: 1px solid var(--divider-color);
-      border-radius: 11px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
@@ -607,8 +621,8 @@ export const securityDashboardCardStyles: CSSResultGroup = [
       min-width: 88px;
       min-height: 44px;
       padding: 0 9px;
-      border: 1px solid var(--divider-color);
-      border-radius: 9px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
       background: transparent;
       cursor: pointer;
       font-size: 12px;
@@ -631,8 +645,8 @@ export const securityDashboardCardStyles: CSSResultGroup = [
     .footer-action {
       appearance: none;
       min-height: 46px;
-      border: 1px solid var(--divider-color);
-      border-radius: 10px;
+      border: var(--dashboard-card-border);
+      border-radius: var(--dashboard-radius-control);
       background: transparent;
       cursor: pointer;
       display: flex;
@@ -694,7 +708,7 @@ export const securityDashboardCardStyles: CSSResultGroup = [
         max-height: 92dvh;
         margin: auto 0 0;
         border-width: 1px 0 0;
-        border-radius: 16px 16px 0 0;
+        border-radius: var(--dashboard-radius-dialog) var(--dashboard-radius-dialog) 0 0;
       }
       .detections {
         grid-template-columns: 1fr;

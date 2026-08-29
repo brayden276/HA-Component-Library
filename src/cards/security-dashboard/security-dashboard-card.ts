@@ -14,6 +14,7 @@ import type {
   SecurityQuickActionItem,
 } from "../../services/security/security-runtime";
 import { loadSecurityModel } from "../../services/security/security-runtime";
+import { isEntityAvailable, runServiceAction } from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
 @customElement("component-security-dashboard-v1")
@@ -35,10 +36,18 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
   @state()
   private _entryConfirmId: string | null = null;
 
+  @state()
+  private _busyActionId: string | null = null;
+
+  @state()
+  private _actionError: string | null = null;
+
   private _sequence = 0;
   private _snapshotTimer: ReturnType<typeof setInterval> | null = null;
   private _entryConfirmTimer: ReturnType<typeof setTimeout> | null = null;
   private _snapshotStamp = Math.floor(Date.now() / 10000);
+  private _viewerOpener: HTMLElement | null = null;
+  private _settingsOpener: HTMLElement | null = null;
 
   private _profileListener = (event: any) => {
     if (
@@ -110,6 +119,7 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
   }
 
   public override disconnectedCallback(): void {
+    this._sequence++;
     document.removeEventListener("visibilitychange", this._visibilityListener);
     window.removeEventListener(
       "ha-component-profile-change",
@@ -132,17 +142,18 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
   private async _refresh(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
     const sequence = ++this._sequence;
+    const hass = this.hass;
     try {
       const model = await loadSecurityModel(
-        this.hass,
+        hass,
         this._config.profile || "household-security",
         { force },
       );
-      if (sequence === this._sequence) {
+      if (sequence === this._sequence && hass === this.hass) {
         this._model = model;
       }
     } catch (err: any) {
-      if (sequence === this._sequence) {
+      if (sequence === this._sequence && hass === this.hass) {
         this._model = {
           error: err,
           cameras: [],
@@ -159,14 +170,26 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
   private async _runQuickAction(
     action: SecurityQuickActionItem,
   ): Promise<void> {
-    if (!this.hass || !action.available) return;
-    await this.hass.callService(action.domain, action.service, {
-      entity_id: action.entityId,
-    });
-    this._refresh(true);
+    if (!this.hass || !this._isActionable(action.entityId) || this._busyActionId) return;
+    this._busyActionId = action.entityId;
+    this._actionError = null;
+    try {
+      await runServiceAction(this.hass, {
+        domain: action.domain,
+        service: action.service,
+        target: { entity_id: action.entityId },
+      });
+      this._refresh(true);
+    } catch {
+      this._actionError = "Action failed. Try again.";
+    } finally {
+      this._busyActionId = null;
+    }
   }
 
   private async _operateEntry(entry: SecurityEntryItem): Promise<void> {
+    const entityId = entry.controlEntityId || entry.entityId;
+    if (!this.hass || !this._isActionable(entityId) || this._busyActionId) return;
     if (this._entryConfirmId !== entry.entityId) {
       this._entryConfirmId = entry.entityId;
       if (this._entryConfirmTimer) clearTimeout(this._entryConfirmTimer);
@@ -180,52 +203,76 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
     if (this._entryConfirmTimer) clearTimeout(this._entryConfirmTimer);
     this._entryConfirmTimer = null;
 
-    if (!this.hass) return;
-    if (entry.controlEntityId) {
-      const domain = entry.controlEntityId.split(".")[0];
-      if (domain === "button") {
-        await this.hass.callService("button", "press", {
-          entity_id: entry.controlEntityId,
+    this._busyActionId = entityId;
+    this._actionError = null;
+    try {
+      if (entry.controlEntityId) {
+        const domain = entry.controlEntityId.split(".")[0];
+        if (domain === "button") {
+          await runServiceAction(this.hass, {
+            domain: "button",
+            service: "press",
+            target: { entity_id: entry.controlEntityId },
+          });
+        } else if (domain === "cover") {
+          await runServiceAction(this.hass, {
+            domain: "cover",
+            service: entry.open ? "close_cover" : "open_cover",
+            target: { entity_id: entry.controlEntityId },
+          });
+        } else if (domain === "lock") {
+          await runServiceAction(this.hass, {
+            domain: "lock",
+            service: entry.open ? "lock" : "unlock",
+            target: { entity_id: entry.controlEntityId },
+          });
+        } else {
+          await runServiceAction(this.hass, {
+            domain: "homeassistant",
+            service: "toggle",
+            target: { entity_id: entry.controlEntityId },
+          });
+        }
+      } else if (entry.domain === "lock") {
+        await runServiceAction(this.hass, {
+          domain: "lock",
+          service: entry.open ? "lock" : "unlock",
+          target: { entity_id: entry.entityId },
         });
-      } else if (domain === "cover") {
-        await this.hass.callService(
-          "cover",
-          entry.open ? "close_cover" : "open_cover",
-          {
-            entity_id: entry.controlEntityId,
-          },
-        );
-      } else if (domain === "lock") {
-        await this.hass.callService("lock", entry.open ? "lock" : "unlock", {
-          entity_id: entry.controlEntityId,
-        });
-      } else {
-        await this.hass.callService("homeassistant", "toggle", {
-          entity_id: entry.controlEntityId,
+      } else if (entry.domain === "cover") {
+        await runServiceAction(this.hass, {
+          domain: "cover",
+          service: entry.open ? "close_cover" : "open_cover",
+          target: { entity_id: entry.entityId },
         });
       }
-    } else if (entry.domain === "lock") {
-      await this.hass.callService("lock", entry.open ? "lock" : "unlock", {
-        entity_id: entry.entityId,
-      });
-    } else if (entry.domain === "cover") {
-      await this.hass.callService(
-        "cover",
-        entry.open ? "close_cover" : "open_cover",
-        {
-          entity_id: entry.entityId,
-        },
-      );
+      this._refresh(true);
+    } catch {
+      this._actionError = "Action failed. Try again.";
+    } finally {
+      this._busyActionId = null;
     }
-    this._refresh(true);
   }
 
-  private _openViewer(camera: SecurityCameraItem): void {
+  private _isActionable(entityId: string): boolean {
+    return isEntityAvailable(this.hass?.states[entityId]);
+  }
+
+  private _openViewer(camera: SecurityCameraItem, event?: Event): void {
+    if (!camera.online) return;
+    this._viewerOpener = event?.currentTarget as HTMLElement | null;
     this._viewerCamera = camera;
-    const dialog = this.renderRoot.querySelector(
-      ".viewer-dialog",
-    ) as HTMLDialogElement | null;
-    if (dialog && !dialog.open) dialog.showModal();
+    void this.updateComplete.then(() => {
+      const dialog = this.renderRoot.querySelector(".viewer-dialog") as HTMLDialogElement | null;
+      if (!dialog || dialog.open) return;
+      try {
+        dialog.showModal();
+        dialog.querySelector<HTMLElement>(".dialog-button[aria-label='Close']")?.focus();
+      } catch {
+        this._viewerCamera = null;
+        this._viewerOpener = null;
+      }
+    });
   }
 
   private _closeViewer(): void {
@@ -233,15 +280,30 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
       ".viewer-dialog",
     ) as HTMLDialogElement | null;
     if (dialog?.open) dialog.close();
-    this._viewerCamera = null;
+    else this._handleViewerClosed();
   }
 
-  private _openSettings(camera: SecurityCameraItem): void {
+  private _handleViewerClosed(): void {
+    this._viewerCamera = null;
+    const opener = this._viewerOpener;
+    this._viewerOpener = null;
+    opener?.focus();
+  }
+
+  private _openSettings(camera: SecurityCameraItem, event?: Event): void {
+    this._settingsOpener = event?.currentTarget as HTMLElement | null;
     this._settingsCamera = camera;
-    const dialog = this.renderRoot.querySelector(
-      ".settings-dialog",
-    ) as HTMLDialogElement | null;
-    if (dialog && !dialog.open) dialog.showModal();
+    void this.updateComplete.then(() => {
+      const dialog = this.renderRoot.querySelector(".settings-dialog") as HTMLDialogElement | null;
+      if (!dialog || dialog.open) return;
+      try {
+        dialog.showModal();
+        dialog.querySelector<HTMLElement>(".dialog-button[aria-label='Close']")?.focus();
+      } catch {
+        this._settingsCamera = null;
+        this._settingsOpener = null;
+      }
+    });
   }
 
   private _closeSettings(): void {
@@ -249,7 +311,32 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
       ".settings-dialog",
     ) as HTMLDialogElement | null;
     if (dialog?.open) dialog.close();
+    else this._handleSettingsClosed();
+  }
+
+  private _handleSettingsClosed(): void {
     this._settingsCamera = null;
+    const opener = this._settingsOpener;
+    this._settingsOpener = null;
+    opener?.focus();
+  }
+
+  private async _toggleCameraSwitch(entityId: string, wasOn: boolean): Promise<void> {
+    if (!this.hass || !this._isActionable(entityId) || this._busyActionId) return;
+    this._busyActionId = entityId;
+    this._actionError = null;
+    try {
+      await runServiceAction(this.hass, {
+        domain: "switch",
+        service: wasOn ? "turn_off" : "turn_on",
+        target: { entity_id: entityId },
+      });
+      this._refresh(true);
+    } catch {
+      this._actionError = "Action failed. Try again.";
+    } finally {
+      this._busyActionId = null;
+    }
   }
 
   protected override render(): TemplateResult {
@@ -358,12 +445,16 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                   </div>
                   <div class="quick-grid">
                     ${quickActions.map(
-                      (action) => html`
+                      (action) => {
+                        const available = action.available && this._isActionable(action.entityId);
+                        const busy = this._busyActionId === action.entityId;
+                        return html`
                         <button
                           class="quick-action"
                           type="button"
-                          ?disabled=${!action.available}
-                          aria-label="${this.esc(action.name)}, ${action.available ? "Run" : "Unavailable"}"
+                          ?disabled=${!available || Boolean(this._busyActionId)}
+                          aria-busy=${busy ? "true" : "false"}
+                          aria-label="${this.esc(action.name)}, ${busy ? "Working" : available ? "Run" : "Unavailable"}"
                           @click=${() => this._runQuickAction(action)}
                         >
                           <span class="quick-icon"
@@ -374,11 +465,12 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                               >${this.esc(action.name)}</span
                             >
                             <span class="quick-state"
-                              >${action.available ? "Run" : "Unavailable"}</span
+                              >${busy ? "Working…" : available ? "Run" : "Unavailable"}</span
                             >
                           </span>
                         </button>
-                      `,
+                      `;
+                      },
                     )}
                   </div>
                 </section>
@@ -421,7 +513,7 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                             type="button"
                             ?disabled=${!camera.online}
                             aria-label="Open live view for ${this.esc(camera.name)}"
-                            @click=${() => this._openViewer(camera)}
+                            @click=${(event: Event) => this._openViewer(camera, event)}
                           >
                             ${
                             snapshotUrl
@@ -465,7 +557,7 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                               type="button"
                               ?disabled=${!camera.online}
                               aria-label="Live view for ${this.esc(camera.name)}"
-                              @click=${() => this._openViewer(camera)}
+                              @click=${(event: Event) => this._openViewer(camera, event)}
                             >
                               <ha-icon icon="mdi:play-circle-outline"></ha-icon>
                               <span>Live</span>
@@ -475,7 +567,7 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                               type="button"
                               ?disabled=${!(classifications.length || camera.detections?.length)}
                               aria-label="Detections for ${this.esc(camera.name)}"
-                              @click=${() => this._openSettings(camera)}
+                              @click=${(event: Event) => this._openSettings(camera, event)}
                             >
                               <ha-icon icon="mdi:motion-sensor"></ha-icon>
                               <span>Detections</span>
@@ -484,7 +576,7 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                               class="camera-action"
                               type="button"
                               aria-label="Settings for ${this.esc(camera.name)}"
-                              @click=${() => this._openSettings(camera)}
+                              @click=${(event: Event) => this._openSettings(camera, event)}
                             >
                               <ha-icon icon="mdi:tune-variant"></ha-icon>
                               <span>Settings</span>
@@ -509,6 +601,9 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                   <div class="entries">
                     ${entries.map((entry) => {
                       const isConfirm = this._entryConfirmId === entry.entityId;
+                      const actionEntityId = entry.controlEntityId || entry.entityId;
+                      const available = entry.available && this._isActionable(actionEntityId);
+                      const busy = this._busyActionId === actionEntityId;
                       const canOperate = Boolean(
                         entry.controlEntityId ||
                           entry.domain === "lock" ||
@@ -546,7 +641,7 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                             >
                             <span class="entry-state">
                               ${
-                              !entry.available
+                              !available
                                 ? "Unavailable"
                                 : entry.domain === "lock"
                                   ? entry.open
@@ -573,11 +668,12 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                                     <button
                                       class="entry-operate ${isConfirm ? "confirm" : ""}"
                                       type="button"
-                                      ?disabled=${!entry.available}
-                                      aria-label="${isConfirm ? "Confirm " + actionLabel : actionLabel} for ${this.esc(entry.name)}"
+                                      ?disabled=${!available || Boolean(this._busyActionId)}
+                                      aria-busy=${busy ? "true" : "false"}
+                                      aria-label="${busy ? "Working" : isConfirm ? "Confirm " + actionLabel : actionLabel} for ${this.esc(entry.name)}"
                                       @click=${() => this._operateEntry(entry)}
                                     >
-                                      ${isConfirm ? "Confirm" : actionLabel}
+                                      ${busy ? "Working…" : isConfirm ? "Confirm" : actionLabel}
                                     </button>
                                   `
                                 : ""
@@ -592,10 +688,12 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
             : ""
         }
       </div>
+      ${this._actionError ? html`<div class="empty" role="status">${this._actionError}</div>` : ""}
 
       <dialog
         class="viewer-dialog"
         aria-label="Camera live stream"
+        @close=${this._handleViewerClosed}
         @click=${(e: MouseEvent) => {
           const dialog = this.renderRoot.querySelector(".viewer-dialog");
           if (e.target === dialog) this._closeViewer();
@@ -609,6 +707,7 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
             <button
               class="dialog-button"
               type="button"
+              ?disabled=${!this._viewerCamera?.online}
               @click=${() => {
                 const cam = this._viewerCamera;
                 this._closeViewer();
@@ -621,6 +720,7 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
             <button
               class="dialog-button"
               type="button"
+              ?disabled=${!this._isActionable(this._viewerCamera?.entityId || "")}
               @click=${() => {
                 if (this._viewerCamera)
                   this.moreInfo(this._viewerCamera.entityId);
@@ -648,6 +748,7 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
       <dialog
         class="settings-dialog"
         aria-label="Camera settings"
+        @close=${this._handleSettingsClosed}
         @click=${(e: MouseEvent) => {
           const dialog = this.renderRoot.querySelector(".settings-dialog");
           if (e.target === dialog) this._closeSettings();
@@ -662,6 +763,7 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
             <button
               class="dialog-button"
               type="button"
+              ?disabled=${!this._settingsCamera?.online}
               @click=${() => {
                 const cam = this._settingsCamera;
                 this._closeSettings();
@@ -721,8 +823,11 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                         <div class="settings-title">Camera controls</div>
                         <div class="control-list">
                           ${this._settingsCamera.switches.map((cap) => {
-                            const st = this.hass?.states[cap.entity.entity_id];
+                            const entityId = cap.entity.entity_id;
+                            const st = this.hass?.states[entityId];
                             const on = st?.state === "on";
+                            const available = this._isActionable(entityId);
+                            const busy = this._busyActionId === entityId;
                             return html`
                               <div class="control-row">
                                 <span>
@@ -730,22 +835,17 @@ export class ComponentSecurityDashboardV1 extends LitBaseCard<SecurityDashboardC
                                     >${this.esc(cap.role || "Control")}</span
                                   >
                                   <span class="control-state"
-                                    >${on ? "On" : "Off"}</span
+                                    >${!available ? "Unavailable" : busy ? "Working…" : on ? "On" : "Off"}</span
                                   >
                                 </span>
                                 <button
                                   class="control-toggle ${on ? "on" : ""}"
                                   type="button"
-                                  @click=${async () => {
-                                  await this.hass?.callService(
-                                    "switch",
-                                    on ? "turn_off" : "turn_on",
-                                    { entity_id: cap.entity.entity_id },
-                                  );
-                                  this._refresh(true);
-                                }}
+                                  ?disabled=${!available || Boolean(this._busyActionId)}
+                                  aria-busy=${busy ? "true" : "false"}
+                                  @click=${() => this._toggleCameraSwitch(entityId, on)}
                                 >
-                                  ${on ? "Turn off" : "Turn on"}
+                                  ${busy ? "Working…" : on ? "Turn off" : "Turn on"}
                                 </button>
                               </div>
                             `;

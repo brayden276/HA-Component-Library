@@ -3,16 +3,18 @@ import type { FavouriteRef, FavouritesConfig } from "./favourites-card.types";
 export * from "./favourites-card.styles";
 import { favouritesCardStyles } from "./favourites-card.styles";
 import { html, css, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type {
   LovelaceGridOptions,
   EntityRegistryEntry,
   DeviceRegistryEntry,
+  HomeAssistant,
 } from "../../types/home-assistant";
 import type { DashboardRegistries } from "../../types/registry";
 import { centralRegistry } from "../../services/registry/dashboard-registry";
 import { interaction, InteractionHandle } from "../../utils/interaction";
+import { runServiceAction } from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
 const INVALID_STATES = new Set(["unavailable", "unknown"]);
@@ -20,6 +22,10 @@ const INVALID_STATES = new Set(["unavailable", "unknown"]);
 @customElement("component-favourites-v3")
 export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
   public static stubConfig = { helpers: [], max: 4, title: "Favourites" };
+
+  /** Explicit compatibility mode used by component-favourites-minimal-v1. */
+  @property({ attribute: false })
+  public minimal = false;
 
   @state()
   private _selected: FavouriteRef[] = [];
@@ -82,11 +88,13 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
 
   protected override willUpdate(changedProps: PropertyValues): void {
     super.willUpdate(changedProps);
+    if (changedProps.has("hass") && changedProps.get("hass") !== this.hass) {
+      this._registry = null;
+      this._unsubscribeRegistryEvents();
+    }
     if (changedProps.has("hass") && this.hass) {
-      if (!this._unsubRegistry) {
-        this._subscribeRegistryEvents();
-        this._ensureRegistry();
-      }
+      this._subscribeRegistryEvents();
+      void this._ensureRegistry();
       if (this._config?.helpers?.length && !this._config?.preference_key) {
         this._loadBackendFavourites();
       }
@@ -94,19 +102,26 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
   }
 
   private _unsubRegistry: (() => void) | null = null;
+  private _registryHass: HomeAssistant | null = null;
 
   private _subscribeRegistryEvents(): void {
-    if (!this.isConnected || this._unsubRegistry || !this.hass) {
+    if (!this.isConnected || !this.hass) {
       return;
     }
-    this._unsubRegistry = centralRegistry.subscribe(this.hass, (data) => {
-      this._buildRegistryIndex(data);
+    if (this._registryHass === this.hass && this._unsubRegistry) return;
+
+    this._unsubscribeRegistryEvents();
+    const hass = this.hass;
+    this._registryHass = hass;
+    this._unsubRegistry = centralRegistry.subscribe(hass, (data) => {
+      if (this.hass === hass) this._buildRegistryIndex(data);
     });
   }
 
   private _unsubscribeRegistryEvents(): void {
     this._unsubRegistry?.();
     this._unsubRegistry = null;
+    this._registryHass = null;
   }
 
   private async _loadBackendFavourites(_force = false): Promise<void> {
@@ -184,9 +199,10 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
   private async _ensureRegistry(force = false): Promise<void> {
     if (!this.hass) return;
     if (this._registry && !force) return;
+    const hass = this.hass;
     try {
-      const data = await centralRegistry.load(this.hass, force);
-      this._buildRegistryIndex(data);
+      const data = await centralRegistry.load(hass, force);
+      if (this.hass === hass) this._buildRegistryIndex(data);
     } catch {
       // Keep existing
     }
@@ -315,14 +331,27 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
     const dom = this._domain(entityId);
 
     if (["light", "switch", "fan", "input_boolean"].includes(dom)) {
-      await this.hass?.callService("homeassistant", "toggle", {
-        entity_id: entityId,
+      if (!this.hass) return;
+      await runServiceAction(this.hass, {
+        domain: "homeassistant",
+        service: "toggle",
+        target: { entity_id: entityId },
       });
     } else if (["automation", "script", "scene"].includes(dom)) {
       const srv = dom === "automation" ? "trigger" : "turn_on";
-      await this.hass?.callService(dom, srv, { entity_id: entityId });
+      if (!this.hass) return;
+      await runServiceAction(this.hass, {
+        domain: dom,
+        service: srv,
+        target: { entity_id: entityId },
+      });
     } else if (["button", "input_button"].includes(dom)) {
-      await this.hass?.callService(dom, "press", { entity_id: entityId });
+      if (!this.hass) return;
+      await runServiceAction(this.hass, {
+        domain: dom,
+        service: "press",
+        target: { entity_id: entityId },
+      });
     } else {
       this.moreInfo(entityId);
     }
@@ -354,7 +383,7 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
       demoItems.length > 0 &&
       !(this._config.helpers?.length || this._config.preference_key)
     ) {
-      return html`
+      return html`${this._renderCompatibilityStyles()}
         <ha-card>
           <div class="wrap">
             <div class="grid">
@@ -383,7 +412,7 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
       `;
     }
 
-    return html`
+    return html`${this._renderCompatibilityStyles()}
       <ha-card>
         <div class="wrap">
           ${
@@ -395,7 +424,9 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
                       <h2>${this._config.title || "Favourites"}</h2>
                     </div>
                     <button class="edit" type="button" aria-label="Edit favourites">
-                      <ha-icon icon="mdi:pencil-outline"></ha-icon>
+                      <ha-icon
+                        icon="${this.minimal ? "mdi:dots-horizontal" : "mdi:pencil-outline"}"
+                      ></ha-icon>
                       <span>Edit</span>
                     </button>
                   </div>
@@ -446,6 +477,13 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
       </ha-card>
     `;
   }
+
+  private _renderCompatibilityStyles(): TemplateResult {
+    if (!this.minimal) return html``;
+    return html`<style>
+      .heading h2{font-size:15px!important;font-weight:500!important}.heading ha-icon{color:var(--secondary-text-color)!important;--mdc-icon-size:17px!important}.edit{min-width:44px!important;min-height:44px!important;padding:0!important;color:var(--secondary-text-color)!important;font-weight:400!important}.edit ha-icon{--mdc-icon-size:16px!important}.edit span{display:none!important}.icon{color:var(--secondary-text-color)!important}.name{font-weight:500!important}.state{font-size:12px!important}.dialog-title,.confirm-title{font-size:16px!important;font-weight:500!important}.subheading,.group-title,.choice-name,.dialog-button{font-weight:500!important}.selected-meta,.choice-meta,.editor-copy{font-size:12px!important}
+    </style>`;
+  }
 }
 
 @customElement("component-favourites-minimal-v1")
@@ -472,33 +510,13 @@ export class ComponentFavouritesMinimalV1 extends LitBaseCard<FavouritesConfig> 
     return 2;
   }
 
-  protected override updated(): void {
-    const child = this.renderRoot.querySelector(
-      "component-favourites-v3",
-    ) as HTMLElement | null;
-    if (child && child.shadowRoot) {
-      this._tune(child.shadowRoot);
-    }
-  }
-
-  private _tune(root: ShadowRoot): void {
-    root
-      .querySelector(".edit ha-icon")
-      ?.setAttribute("icon", "mdi:dots-horizontal");
-    if (root.querySelector("style[data-home-minimal]")) return;
-
-    const style = document.createElement("style");
-    style.dataset.homeMinimal = "";
-    style.textContent = `.heading h2{font-size:15px!important;font-weight:500!important}.heading ha-icon{color:var(--secondary-text-color)!important;--mdc-icon-size:17px!important}.edit{min-width:44px!important;min-height:44px!important;padding:0!important;color:var(--secondary-text-color)!important;font-weight:400!important}.edit ha-icon{--mdc-icon-size:16px!important}.edit span{display:none!important}.icon{color:var(--secondary-text-color)!important}.name{font-weight:500!important}.state{font-size:12px!important}.dialog-title,.confirm-title{font-size:16px!important;font-weight:500!important}.subheading,.group-title,.choice-name,.dialog-button{font-weight:500!important}.selected-meta,.choice-meta,.editor-copy{font-size:12px!important}`;
-    root.append(style);
-  }
-
   protected override render(): TemplateResult {
     if (!this._config) return html``;
     return html`
       <component-favourites-v3
         .hass=${this.hass}
         .config=${this._config}
+        .minimal=${true}
       ></component-favourites-v3>
     `;
   }

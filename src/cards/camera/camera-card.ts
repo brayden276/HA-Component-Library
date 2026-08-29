@@ -2,7 +2,7 @@ export * from "./camera-card.types";
 import type { CameraControllerConfig } from "./camera-card.types";
 export * from "./camera-card.styles";
 import { cameraCardStyles } from "./camera-card.styles";
-import { html, TemplateResult, CSSResultGroup } from "lit";
+import { html, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type { LovelaceGridOptions } from "../../types/home-assistant";
@@ -12,6 +12,7 @@ import type {
 } from "../../services/security/security-runtime";
 import { loadSecurityModel } from "../../services/security/security-runtime";
 import { formatDate } from "../../utils/formatting";
+import { isEntityAvailable, runServiceAction } from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
 @customElement("component-camera-controller-v2")
@@ -27,7 +28,15 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
   @state()
   private _confirmId: string | null = null;
 
+  @state()
+  private _busyActionId: string | null = null;
+
+  @state()
+  private _actionError: string | null = null;
+
   private _confirmTimer: ReturnType<typeof setTimeout> | null = null;
+  private _controlsOpener: HTMLElement | null = null;
+  private _sequence = 0;
   private _profileListener = (event: any) => {
     if (
       event.detail?.kind === "security" &&
@@ -68,6 +77,7 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
   }
 
   public override disconnectedCallback(): void {
+    this._sequence++;
     window.removeEventListener(
       "ha-component-profile-change",
       this._profileListener,
@@ -76,20 +86,22 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
     super.disconnectedCallback();
   }
 
-  protected override willUpdate(): void {
-    if (!this._model && this.hass) {
-      this._refresh();
-    }
+  protected override willUpdate(changedProperties: PropertyValues): void {
+    super.willUpdate(changedProperties);
+    if (changedProperties.has("hass") && this.hass) this._refresh();
   }
 
   private async _refresh(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
+    const sequence = ++this._sequence;
+    const hass = this.hass;
     try {
       const model = await loadSecurityModel(
-        this.hass,
+        hass,
         this._config.profile || "household-security",
         { force },
       );
+      if (sequence !== this._sequence || hass !== this.hass) return;
       this._model = model;
       this._camera =
         model.cameras.find(
@@ -100,6 +112,7 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
         model.cameras[0] ||
         null;
     } catch {
+      if (sequence !== this._sequence || hass !== this.hass) return;
       this._model = null;
       this._camera = null;
     }
@@ -119,6 +132,31 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
     );
   }
 
+  private _openControls(event: Event): void {
+    this._controlsOpener = event.currentTarget as HTMLElement;
+    void this.updateComplete.then(() => {
+      const dialog = this.renderRoot.querySelector("dialog") as HTMLDialogElement | null;
+      if (!dialog || dialog.open) return;
+      try {
+        dialog.showModal();
+        dialog.querySelector<HTMLElement>(".close")?.focus();
+      } catch {
+        this._controlsOpener = null;
+      }
+    });
+  }
+
+  private _closeControls(): void {
+    const dialog = this.renderRoot.querySelector("dialog") as HTMLDialogElement | null;
+    if (dialog?.open) dialog.close();
+  }
+
+  private _handleControlsClosed(): void {
+    const opener = this._controlsOpener;
+    this._controlsOpener = null;
+    opener?.focus();
+  }
+
   private _askConfirmation(entityId: string): void {
     this._confirmId = entityId;
     if (this._confirmTimer) clearTimeout(this._confirmTimer);
@@ -132,6 +170,8 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
     wasOn: boolean,
   ): Promise<void> {
     const entityId = capability.entity.entity_id;
+    const state = this.hass?.states[entityId];
+    if (!this.hass || !isEntityAvailable(state) || this._busyActionId) return;
     const destructiveOff =
       wasOn && /^(Recording|Detection|Alerts)$/i.test(capability.role || "");
     if (destructiveOff && this._confirmId !== entityId) {
@@ -140,24 +180,45 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
     }
     this._confirmId = null;
     if (this._confirmTimer) clearTimeout(this._confirmTimer);
+    this._busyActionId = entityId;
+    this._actionError = null;
     try {
-      await this.hass?.callService("switch", wasOn ? "turn_off" : "turn_on", {
-        entity_id: entityId,
+      await runServiceAction(this.hass, {
+        domain: "switch",
+        service: wasOn ? "turn_off" : "turn_on",
+        target: { entity_id: entityId },
       });
       this._refresh(true);
-    } catch {}
+    } catch {
+      this._actionError = "Action failed. Try again.";
+    } finally {
+      this._busyActionId = null;
+    }
   }
 
   private async _pressAction(entityId: string): Promise<void> {
+    const state = this.hass?.states[entityId];
+    if (!this.hass || !isEntityAvailable(state) || this._busyActionId) return;
     if (this._confirmId !== entityId) {
       this._askConfirmation(entityId);
       return;
     }
     this._confirmId = null;
     if (this._confirmTimer) clearTimeout(this._confirmTimer);
+    this._busyActionId = entityId;
+    this._actionError = null;
     try {
-      await this.hass?.callService("button", "press", { entity_id: entityId });
-    } catch {}
+      await runServiceAction(this.hass, {
+        domain: "button",
+        service: "press",
+        target: { entity_id: entityId },
+      });
+      this._refresh(true);
+    } catch {
+      this._actionError = "Action failed. Try again.";
+    } finally {
+      this._busyActionId = null;
+    }
   }
 
   protected override render(): TemplateResult {
@@ -212,10 +273,7 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
               type="button"
               aria-label="${this.esc(name)} controls"
               ?hidden=${this._config.expanded || !hasControls}
-              @click=${() => {
-                const dialog = this.renderRoot.querySelector("dialog");
-                if (dialog && !dialog.open) dialog.showModal();
-              }}
+              @click=${this._openControls}
             >
               <ha-icon icon="mdi:tune-variant"></ha-icon>
               <span>Controls</span>
@@ -234,22 +292,28 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
         role="dialog"
         aria-modal="true"
         aria-label="${this.esc(name)} controls"
-        @click=${(e: MouseEvent) => {
+        @close=${this._handleControlsClosed}
+        @mousedown=${(e: MouseEvent) => {
           const dialog = this.renderRoot.querySelector("dialog");
-          if (e.target === dialog) dialog?.close();
+          if (dialog && e.target === dialog) {
+            const rect = dialog.getBoundingClientRect();
+            const isInDialog =
+              rect.top <= e.clientY &&
+              e.clientY <= rect.top + rect.height &&
+              rect.left <= e.clientX &&
+              e.clientX <= rect.left + rect.width;
+            if (!isInDialog) this._closeControls();
+          }
         }}
       >
-        <div class="sheet">
+        <div class="sheet" @click=${(e: MouseEvent) => e.stopPropagation()} @mousedown=${(e: MouseEvent) => e.stopPropagation()}>
           <div class="head">
             <span class="sheet-title">${this.esc(name)} controls</span>
             <button
               class="close"
               type="button"
               aria-label="Close"
-              @click=${() => {
-                const dialog = this.renderRoot.querySelector("dialog");
-                if (dialog) dialog.close();
-              }}
+              @click=${this._closeControls}
             >
               <ha-icon icon="mdi:close"></ha-icon>
             </button>
@@ -357,6 +421,8 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
                       const st = this.hass?.states[entityId];
                       const on = st?.state === "on";
                       const confirm = this._confirmId === entityId;
+                      const available = isEntityAvailable(st);
+                      const busy = this._busyActionId === entityId;
                       return html`
                         <div class="control">
                           <span class="copy">
@@ -364,15 +430,17 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
                               >${this.esc(cap.role || "Control")}</span
                             >
                             <span class="control-state"
-                              >${on ? "On" : "Off"}</span
+                              >${!available ? "Unavailable" : busy ? "Working…" : on ? "On" : "Off"}</span
                             >
                           </span>
                           <button
                             class="${on ? "on" : ""} ${confirm ? "confirm" : ""}"
                             type="button"
+                            ?disabled=${!available || Boolean(this._busyActionId)}
+                            aria-busy=${busy ? "true" : "false"}
                             @click=${() => this._toggleSwitch(cap, on)}
                           >
-                            ${confirm ? "Confirm off" : on ? "On" : "Off"}
+                            ${busy ? "Working…" : confirm ? "Confirm off" : on ? "On" : "Off"}
                           </button>
                         </div>
                       `;
@@ -391,20 +459,65 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
                     ${camera.actions.map((act) => {
                       const entityId = act.entity.entity_id;
                       const confirm = this._confirmId === entityId;
+                      const available = isEntityAvailable(this.hass?.states[entityId]);
+                      const busy = this._busyActionId === entityId;
                       return html`
                         <div class="control">
                           <span class="copy">
                             <span class="control-name"
                               >${this.esc(act.entity.name || act.entity.original_name || "Action")}</span
                             >
-                            <span class="control-state">Available</span>
+                            <span class="control-state">${!available ? "Unavailable" : busy ? "Working…" : "Available"}</span>
                           </span>
                           <button
                             class="${confirm ? "confirm" : ""}"
                             type="button"
+                            ?disabled=${!available || Boolean(this._busyActionId)}
+                            aria-busy=${busy ? "true" : "false"}
                             @click=${() => this._pressAction(entityId)}
                           >
-                            ${confirm ? "Confirm" : "Run"}
+                            ${busy ? "Working…" : confirm ? "Confirm" : "Run"}
+                          </button>
+                        </div>
+                      `;
+                    })}
+                  </div>
+                </section>
+              `
+            : ""
+        }
+        ${
+          camera.ptz?.length
+            ? html`
+                <section class="group">
+                  <div class="group-title">PTZ Controls</div>
+                  <div class="group-list">
+                    ${camera.ptz.map((ptzEnt) => {
+                      const entityId = ptzEnt.entity_id;
+                      const st = this.hass?.states[entityId];
+                      const available = isEntityAvailable(st);
+                      const busy = this._busyActionId === entityId;
+                      const name = ptzEnt.name || ptzEnt.original_name || "PTZ Control";
+                      const domain = entityId.split(".")[0];
+                      return html`
+                        <div class="control">
+                          <span class="copy">
+                            <span class="control-name">${this.esc(name)}</span>
+                            <span class="control-state">${!available ? "Unavailable" : busy ? "Working…" : st?.state || "Available"}</span>
+                          </span>
+                          <button
+                            type="button"
+                            ?disabled=${!available || Boolean(this._busyActionId)}
+                            aria-busy=${busy ? "true" : "false"}
+                            @click=${() => {
+                              if (domain === "button") {
+                                void this._pressAction(entityId);
+                              } else {
+                                this.moreInfo(entityId);
+                              }
+                            }}
+                          >
+                            <span>${domain === "button" ? "Move" : "Adjust"}</span>
                           </button>
                         </div>
                       `;
@@ -415,6 +528,7 @@ export class ComponentCameraControllerV2 extends LitBaseCard<CameraControllerCon
             : ""
         }
       </div>
+      ${this._actionError ? html`<div role="status">${this._actionError}</div>` : ""}
     `;
   }
 }

@@ -95,26 +95,26 @@ export class ComponentStatusRowV2 extends LitBaseCard<StatusRowCardConfig> {
     const ariaLabel = `${title}: ${statusValue}${statusLabel ? ` (${statusLabel})` : ""}${description ? `. ${description}` : ""}`;
 
     const inner = html`
-      <div class="wrap ${isUnavailable ? "unavailable" : ""}">
-        <span class="icon">
+      <div class="header-row ${isUnavailable ? "unavailable" : ""}">
+        <div class="icon-well control-radius icon">
           <ha-icon icon="${this.esc(icon)}"></ha-icon>
-        </span>
-        <div>
-          <div class="title">${this.esc(title)}</div>
-          ${description ? html`<div class="desc">${this.esc(description)}</div>` : ""}
+        </div>
+        <div class="copy-block">
+          <div class="label-title title">${this.esc(title)}</div>
+          ${description ? html`<div class="label-sub desc">${this.esc(description)}</div>` : ""}
         </div>
         <div class="status">
-          <b>${this.esc(statusValue)}</b>
+          <b class="kpi-metric-sm">${this.esc(statusValue)}</b>
           ${statusLabel ? html`<span>${this.esc(statusLabel)}</span>` : ""}
         </div>
       </div>
     `;
 
     return html`
-      <ha-card>
+      <ha-card class="surface-card">
         ${
           action
-            ? html`<button class="demo" type="button" aria-label="${this.esc(ariaLabel)}" aria-disabled="${String(isUnavailable)}">${inner}</button>`
+            ? html`<button class="demo" type="button" aria-label="${this.esc(ariaLabel)}" aria-disabled="${String(isUnavailable)}" ?disabled=${isUnavailable}>${inner}</button>`
             : html`<div class="demo-static">${inner}</div>`
         }
       </ha-card>

@@ -79,7 +79,7 @@ export const createMinuteScheduler = (
   callback: () => void,
   lifecycle?: ComponentLifecycle,
 ): (() => void) => {
-  let timer: any = null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
   let active = true;
 
   const schedule = (): void => {

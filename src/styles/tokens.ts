@@ -1,9 +1,14 @@
 import { css, unsafeCSS } from "lit";
 
+/** Retained for consumers that imported the old global token identifier. */
 export const GLOBAL_THEME_STYLE_ID = "dashboard-style-tokens";
 
+/**
+ * Component-local catalogue fallbacks. Host-provided Home Assistant variables
+ * always win; literal values are only used outside a Home Assistant theme.
+ */
 export const GLOBAL_THEME_CSS = `
-:root {
+:host {
   /* Canonical Design Tokens from Design Catalogue */
   --dashboard-radius-card: 8px;
   --dashboard-radius-control: 6px;
@@ -11,10 +16,6 @@ export const GLOBAL_THEME_CSS = `
   --dashboard-radius-icon: 0px;
   --dashboard-modal-scrim: rgba(0, 0, 0, 0.16);
   --dashboard-dialog-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
-  --ha-card-border-radius: var(--dashboard-radius-card);
-  --ha-card-box-shadow: none;
-  --ha-card-border-width: 1px;
-
   /* Backward compatibility aliases */
   --c-radius-card: var(--dashboard-radius-card);
   --c-radius-control: var(--dashboard-radius-control);
@@ -65,79 +66,29 @@ export const GLOBAL_THEME_CSS = `
   --c-switch-knob-size: 16px;
   --c-slider-width: 80px;
   --c-slider-height: 6px;
-}
-
-[data-theme="dark"], :root {
-  --primary-color: #03a9f4;
-  --primary-text-color: #e1e1e1;
-  --secondary-text-color: #9e9e9e;
-  --disabled-text-color: #616161;
-  --card-background-color: #1c1c1e;
-  --secondary-background-color: #2c2c2e;
-  --divider-color: rgba(255, 255, 255, 0.12);
-  --ha-card-background: var(--card-background-color);
-  --ha-card-border-color: color-mix(in srgb, var(--primary-text-color) 10%, transparent);
-  --dashboard-card-surface: var(--ha-card-background, var(--card-background-color));
-  --dashboard-card-muted-surface: color-mix(in srgb, var(--primary-text-color) 3%, var(--card-background-color));
-  --dashboard-card-border-color: color-mix(in srgb, var(--primary-text-color) 10%, transparent);
+  --dashboard-card-surface: var(--ha-card-background, var(--card-background-color, #1c1c1e));
+  --dashboard-card-muted-surface: color-mix(in srgb, var(--primary-text-color, #e1e1e1) 3%, var(--card-background-color, #1c1c1e));
+  --dashboard-card-border-color: color-mix(in srgb, var(--primary-text-color, #e1e1e1) 10%, transparent);
   --dashboard-card-border: 1px solid var(--dashboard-card-border-color);
-  --dashboard-active-surface: color-mix(in srgb, var(--primary-color) 7%, var(--card-background-color));
-  --dashboard-warning-surface: color-mix(in srgb, var(--warning-color, #f9a825) 9%, var(--card-background-color));
-  --dashboard-critical-surface: color-mix(in srgb, var(--error-color, #e53935) 8%, var(--card-background-color));
-  --warning-color: #f9a825;
-  --error-color: #e53935;
-  --success-color: #43a047;
-  --text-primary-color: #ffffff;
-  --catalogue-page-bg: #121214;
-  --catalogue-border: #2c2c2e;
-}
-
-[data-theme="light"] {
-  --primary-color: #0288d1;
-  --primary-text-color: #212121;
-  --secondary-text-color: #757575;
-  --disabled-text-color: #9e9e9e;
-  --card-background-color: #ffffff;
-  --secondary-background-color: #f5f5f7;
-  --divider-color: rgba(0, 0, 0, 0.12);
-  --ha-card-background: var(--card-background-color);
-  --ha-card-border-color: color-mix(in srgb, var(--primary-text-color) 10%, transparent);
-  --dashboard-card-surface: var(--ha-card-background, var(--card-background-color));
-  --dashboard-card-muted-surface: color-mix(in srgb, var(--primary-text-color) 3%, var(--card-background-color));
-  --dashboard-card-border-color: color-mix(in srgb, var(--primary-text-color) 10%, transparent);
-  --dashboard-card-border: 1px solid var(--dashboard-card-border-color);
-  --dashboard-active-surface: color-mix(in srgb, var(--primary-color) 7%, var(--card-background-color));
-  --dashboard-warning-surface: color-mix(in srgb, var(--warning-color, #f9a825) 9%, var(--card-background-color));
-  --dashboard-critical-surface: color-mix(in srgb, var(--error-color, #e53935) 8%, var(--card-background-color));
-  --warning-color: #f57f17;
-  --error-color: #d32f2f;
-  --success-color: #388e3c;
-  --text-primary-color: #ffffff;
-  --catalogue-page-bg: #f8fafc;
-  --catalogue-border: #e2e8f0;
+  --dashboard-active-surface: color-mix(in srgb, var(--primary-color, #03a9f4) 7%, var(--card-background-color, #1c1c1e));
+  --dashboard-warning-surface: color-mix(in srgb, var(--warning-color, #f9a825) 9%, var(--card-background-color, #1c1c1e));
+  --dashboard-critical-surface: color-mix(in srgb, var(--error-color, #e53935) 8%, var(--card-background-color, #1c1c1e));
+  --action-glow-blur: 10px;
+  --action-glow-spread: 1.5px;
+  --action-glow-opacity: 0.45;
+  --action-glow-color: var(--primary-color, #03a9f4);
 }
 
 @media (max-width: 700px) {
-  :root {
+  :host {
     --dashboard-radius-dialog: 8px;
     --c-radius-dialog: 8px;
   }
 }
 `;
 
-export const injectGlobalTokens = (): void => {
-  if (typeof document === "undefined") return;
-  let el = document.getElementById(GLOBAL_THEME_STYLE_ID);
-  if (!el) {
-    el = document.createElement("style");
-    el.id = GLOBAL_THEME_STYLE_ID;
-    document.head?.append(el);
-  }
-  el.textContent = GLOBAL_THEME_CSS;
-};
-
-// Auto-inject tokens immediately
-injectGlobalTokens();
+/** @deprecated Kept as a no-op to avoid document-level theme side effects. */
+export const injectGlobalTokens = (): void => {};
 
 export const globalTokens = css`
   ${unsafeCSS(GLOBAL_THEME_CSS)}

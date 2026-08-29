@@ -24,9 +24,16 @@ export class ComponentHistoryGraphV2 extends LitBaseCard<HistoryGraphConfig> {
   private _hiddenSeries = new Set<number>();
 
   @state()
-  private _tooltip: { show: boolean; text: string; x: number; y: number } = {
+  private _tooltip: {
+    show: boolean;
+    percent: string;
+    rows: Array<{ label: string; value: string }>;
+    x: number;
+    y: number;
+  } = {
     show: false,
-    text: "",
+    percent: "",
+    rows: [],
     x: 0,
     y: 0,
   };
@@ -98,7 +105,7 @@ export class ComponentHistoryGraphV2 extends LitBaseCard<HistoryGraphConfig> {
   }
 
   private _hideTip(): void {
-    this._tooltip = { show: false, text: "", x: 0, y: 0 };
+    this._tooltip = { show: false, percent: "", rows: [], x: 0, y: 0 };
   }
 
   private _handlePointer(ev: PointerEvent): void {
@@ -134,16 +141,13 @@ export class ComponentHistoryGraphV2 extends LitBaseCard<HistoryGraphConfig> {
       ],
     ].filter(([index]) => !this._hiddenSeries.has(Number(index)));
 
-    const text = `<div style="font-weight:650;margin-bottom:4px">${pct}% through range</div>${rows
-      .map(
-        ([, label, val]) =>
-          `<div class="tr"><span>${label}</span><b>${val}</b></div>`,
-      )
-      .join("")}`;
-
     this._tooltip = {
       show: true,
-      text,
+      percent: `${pct}% through range`,
+      rows: rows.map(([, label, value]) => ({
+        label: String(label),
+        value: String(value),
+      })),
       x: (x / W) * r.width,
       y: Math.max(70, r.height * 0.42),
     };
@@ -349,10 +353,16 @@ export class ComponentHistoryGraphV2 extends LitBaseCard<HistoryGraphConfig> {
             </svg>
 
             <div
-              class="tip ${this._tooltip.show ? "show" : ""}"
+              class="tooltip ${this._tooltip.show ? "show" : ""}"
               style="left:${this._tooltip.x}px; top:${this._tooltip.y}px;"
-              .innerHTML=${this._tooltip.text}
-            ></div>
+            >
+              <div class="tooltip-time">${this._tooltip.percent}</div>
+              ${this._tooltip.rows.map(
+                (row) => html`<div class="tooltip-row">
+                  <span>${row.label}</span><b class="tooltip-val">${row.value}</b>
+                </div>`,
+              )}
+            </div>
           </div>
         </div>
       </ha-card>

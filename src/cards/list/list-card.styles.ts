@@ -1,14 +1,18 @@
 import { css, CSSResultGroup } from "lit";
-import { cardBaseStyles, typographyStyles, rowListStyles } from "../../styles";
+import {
+  assemblyStyles,
+  cardBaseStyles,
+  rowListStyles,
+  typographyStyles,
+} from "../../styles";
 
 export const listCardStyles: CSSResultGroup = [
   cardBaseStyles,
   typographyStyles,
   rowListStyles,
+  assemblyStyles,
   css`
-    .wrap {
-      padding: 4px 14px;
-    }
+    .list-wrap { margin: -4px 0; }
     .row {
       appearance: none;
       width: 100%;
@@ -38,19 +42,12 @@ export const listCardStyles: CSSResultGroup = [
       border-radius: var(--dashboard-radius-control);
     }
     .title {
-      font-size: 13px;
-      font-weight: 600;
-      line-height: 1.25;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       color: var(--primary-text-color);
     }
     .desc {
-      margin-top: 3px;
-      font-size: 12px;
-      line-height: 1.25;
-      color: var(--secondary-text-color);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -67,11 +64,6 @@ export const listCardStyles: CSSResultGroup = [
       color: var(--primary-text-color);
       font-variant-numeric: tabular-nums;
       margin-right: 4px;
-    }
-    @media (max-width: 700px) {
-      .wrap {
-        padding: 4px 12px;
-      }
     }
     .row:not(button) {
       cursor: default;

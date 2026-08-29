@@ -2,7 +2,7 @@ export * from "./security-summary-card.types";
 import type { SecuritySummaryConfig } from "./security-summary-card.types";
 export * from "./security-summary-card.styles";
 import { securitySummaryCardStyles } from "./security-summary-card.styles";
-import { html, TemplateResult, CSSResultGroup } from "lit";
+import { html, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type { LovelaceGridOptions } from "../../types/home-assistant";
@@ -60,6 +60,7 @@ export class ComponentSecuritySummaryV1 extends LitBaseCard<SecuritySummaryConfi
   }
 
   public override disconnectedCallback(): void {
+    this._sequence++;
     window.removeEventListener(
       "ha-component-profile-change",
       this._profileListener,
@@ -69,20 +70,26 @@ export class ComponentSecuritySummaryV1 extends LitBaseCard<SecuritySummaryConfi
     super.disconnectedCallback();
   }
 
+  protected override willUpdate(changedProperties: PropertyValues): void {
+    super.willUpdate(changedProperties);
+    if (changedProperties.has("hass") && this.hass) this._refresh();
+  }
+
   private async _refresh(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
     const sequence = ++this._sequence;
+    const hass = this.hass;
     try {
       const model = await loadSecurityModel(
-        this.hass,
+        hass,
         this._config.profile || "household-security",
         { force },
       );
-      if (sequence === this._sequence) {
+      if (sequence === this._sequence && hass === this.hass) {
         this._model = model;
       }
     } catch (err: any) {
-      if (sequence === this._sequence) {
+      if (sequence === this._sequence && hass === this.hass) {
         this._model = {
           error: err,
           cameras: [],

@@ -40,6 +40,7 @@
     "lit": "^3.2.1"
   },
   "devDependencies": {
+    "@mdi/js": "^7.4.47",
     "@types/node": "^22.10.2",
     "@typescript-eslint/eslint-plugin": "^8.68.0",
     "@typescript-eslint/parser": "^8.68.0",
@@ -51,5 +52,8 @@
     "vite": "^6.0.7",
     "vite-plugin-dts": "^4.4.0",
     "vitest": "^4.1.11"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
   }
 }

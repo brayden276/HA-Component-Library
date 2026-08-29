@@ -93,6 +93,7 @@ export class ComponentSecurityCameraWallV3 extends LitBaseCard<SecurityCameraWal
   }
 
   public override disconnectedCallback(): void {
+    this._sequence++;
     document.removeEventListener("visibilitychange", this._visibilityListener);
     window.removeEventListener(
       "ha-component-profile-change",
@@ -113,17 +114,18 @@ export class ComponentSecurityCameraWallV3 extends LitBaseCard<SecurityCameraWal
   private async _refresh(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
     const sequence = ++this._sequence;
+    const hass = this.hass;
     try {
       const model = await loadSecurityModel(
-        this.hass,
+        hass,
         this._config.profile || "household-security",
         { force },
       );
-      if (sequence === this._sequence) {
+      if (sequence === this._sequence && hass === this.hass) {
         this._model = model;
       }
     } catch (err: any) {
-      if (sequence === this._sequence) {
+      if (sequence === this._sequence && hass === this.hass) {
         this._model = { error: err, cameras: [] } as any;
       }
     }

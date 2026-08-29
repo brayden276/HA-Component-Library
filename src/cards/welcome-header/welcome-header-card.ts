@@ -107,11 +107,13 @@ export class ComponentWelcomeHeaderV1 extends LitBaseCard<WelcomeHeaderConfig> {
     const ariaLabel = `Outside ${temperatureText}, ${cloudText}. Open weather details.`;
 
     return html`
-      <ha-card>
-        <div class="row">
-          <span class="time">${time}</span>
+      <ha-card class="surface-card">
+        <div class="control-item-row">
+          <span class="copy-block">
+            <span class="kpi-metric-md time">${time}</span>
+          </span>
           <button
-            class="weather"
+            class="btn-compact-pill weather"
             type="button"
             aria-label="${this.esc(ariaLabel)}"
           >

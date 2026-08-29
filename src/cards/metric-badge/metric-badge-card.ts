@@ -40,6 +40,7 @@ export class HaMetricBadge extends HaBaseCard<HaMetricBadgeConfig> {
 
   private _handleTap(): void {
     if (!this.hass || !this.config) return;
+    if (isEntityUnavailable(this.hass.states[this.config.entity])) return;
     const tapAction = this.config.tap_action || { action: "more-info" };
     handleAction(this, this.hass, tapAction, this.config.entity);
   }
@@ -98,12 +99,13 @@ export class HaMetricBadge extends HaBaseCard<HaMetricBadgeConfig> {
 
     return html`
       <ha-card
-        class="interactive metric-badge-card ${isUnavailable ? "unavailable" : ""}"
-        tabindex="0"
+        class="interactive surface-card metric-badge-card ${isUnavailable ? "unavailable" : ""}"
+        tabindex="${isUnavailable ? "-1" : "0"}"
         role="button"
         style="--badge-accent-color: ${badgeColor};"
         @click=${this._handleTap}
         @keydown=${(e: KeyboardEvent) => {
+          if (isUnavailable) return;
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             this._handleTap();
@@ -113,16 +115,16 @@ export class HaMetricBadge extends HaBaseCard<HaMetricBadgeConfig> {
         aria-label="${entityName}: ${displayValue}${unit ? " " + unit : ""}"
         title="${entityName}: ${formatEntityState(entity, this.hass)}"
       >
-        <div class="metric-body">
-          <div class="icon-bubble">
+        <div class="header-row">
+          <div class="icon-well control-radius">
             <ha-icon .icon=${iconName}></ha-icon>
           </div>
-          <div class="metric-data">
+          <div class="copy-block metric-data">
             <div class="metric-value-line">
-              <span class="value-text">${displayValue}</span>
+              <span class="kpi-metric-lg">${displayValue}</span>
               ${unit ? html`<span class="unit-text">${unit}</span>` : ""}
             </div>
-            <div class="metric-label" title=${entityName}>${entityName}</div>
+            <div class="label-sub" title=${entityName}>${entityName}</div>
           </div>
         </div>
       </ha-card>
@@ -131,4 +133,3 @@ export class HaMetricBadge extends HaBaseCard<HaMetricBadgeConfig> {
 
   public static override styles: CSSResultGroup = metricBadgeCardStyles;
 }
-

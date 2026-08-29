@@ -2,10 +2,9 @@ export * from "./empty-state-card.types";
 import type { EmptyStateCardConfig } from "./empty-state-card.types";
 export * from "./empty-state-card.styles";
 import { emptyStateCardStyles } from "./empty-state-card.styles";
-import { html, css, TemplateResult, CSSResultGroup } from "lit";
+import { html, TemplateResult, CSSResultGroup } from "lit";
 import { customElement } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
-import { dashboardBaseCardStyles } from "../../utils/styles";
 import { registerCard } from "../../utils/registration";
 
 const DEFAULTS_V3: EmptyStateCardConfig = {
@@ -31,15 +30,11 @@ export class ComponentEmptyStateV3 extends LitBaseCard<EmptyStateCardConfig> {
     if (!this._config) return html``;
 
     return html`
-      <ha-card>
-        <div class="wrap">
-          <span class="icon">
-            <ha-icon icon="${this.esc(this._config.icon)}"></ha-icon>
-          </span>
-          <span>
-            <div class="title">${this.esc(this._config.title)}</div>
-            <div class="desc">${this.esc(this._config.message)}</div>
-          </span>
+      <ha-card class="assembled-card">
+        <div class="empty-state-dashed">
+          <ha-icon class="lg" icon="${this.esc(this._config.icon)}"></ha-icon>
+          <div class="empty-title">${this.esc(this._config.title)}</div>
+          <div class="empty-desc">${this.esc(this._config.message)}</div>
         </div>
       </ha-card>
     `;
@@ -62,40 +57,7 @@ const DEFAULTS_V2: EmptyStateCardConfig = {
 
 @customElement("component-empty-state-v2")
 export class ComponentEmptyStateV2 extends LitBaseCard<EmptyStateCardConfig> {
-  public static override styles: CSSResultGroup = [
-    dashboardBaseCardStyles,
-    css`
-      ha-card {
-        border: 0;
-        background: transparent;
-        box-shadow: none;
-      }
-      .wrap {
-        min-height: 40px;
-        padding: 0 2px;
-        display: grid;
-        grid-template-columns: 24px minmax(0, 1fr);
-        align-items: center;
-        gap: 8px;
-      }
-      .icon {
-        width: 24px;
-        height: 24px;
-        display: grid;
-        place-items: center;
-        background: transparent;
-        color: var(--primary-color);
-      }
-      .icon ha-icon {
-        --mdc-icon-size: 18px;
-      }
-      .desc {
-        margin-top: 1px;
-        font-size: 12px;
-        line-height: 1.3;
-      }
-    `,
-  ];
+  public static override styles: CSSResultGroup = emptyStateCardStyles;
 
   public override setConfig(config: EmptyStateCardConfig): void {
     super.setConfig({ ...DEFAULTS_V2, ...config });
@@ -109,15 +71,11 @@ export class ComponentEmptyStateV2 extends LitBaseCard<EmptyStateCardConfig> {
     if (!this._config) return html``;
 
     return html`
-      <ha-card>
-        <div class="wrap">
-          <span class="icon">
-            <ha-icon icon="${this.esc(this._config.icon)}"></ha-icon>
-          </span>
-          <span>
-            <div class="title">${this.esc(this._config.title)}</div>
-            <div class="desc">${this.esc(this._config.message)}</div>
-          </span>
+      <ha-card class="assembled-card">
+        <div class="empty-state-dashed">
+          <ha-icon class="lg" icon="${this.esc(this._config.icon)}"></ha-icon>
+          <div class="empty-title">${this.esc(this._config.title)}</div>
+          <div class="empty-desc">${this.esc(this._config.message)}</div>
         </div>
       </ha-card>
     `;

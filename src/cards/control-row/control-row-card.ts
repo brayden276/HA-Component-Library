@@ -13,6 +13,7 @@ import {
   RequestCoalescer,
   waitForEntityState,
 } from "../../utils/interaction";
+import { runServiceAction } from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
 const DEFAULTS: ControlRowCardConfig = {
@@ -80,6 +81,26 @@ export class ComponentControlRowV2 extends LitBaseCard<ControlRowCardConfig> {
         Math.min(100, Number(state.attributes?.percentage) || 0),
       );
     }
+    if (domain === "cover") {
+      return Math.max(
+        0,
+        Math.min(100, Number(state.attributes?.current_position) || 0),
+      );
+    }
+    if (domain === "media_player") {
+      return Math.max(
+        0,
+        Math.min(100, Math.round(Number(state.attributes?.volume_level ?? 0) * 100)),
+      );
+    }
+    if (domain === "climate") {
+      const min = Number(state.attributes?.min_temp ?? 16);
+      const max = Number(state.attributes?.max_temp ?? 30);
+      const temp = Number(state.attributes?.temperature ?? min);
+      if (max > min) {
+        return Math.max(0, Math.min(100, ((temp - min) / (max - min)) * 100));
+      }
+    }
     if (domain === "number" || domain === "input_number") {
       const min = Number(state.attributes?.min ?? 0);
       const max = Number(state.attributes?.max ?? 100);
@@ -133,7 +154,7 @@ export class ComponentControlRowV2 extends LitBaseCard<ControlRowCardConfig> {
     return this._coalescer;
   }
 
-  private async _sendSlider(percent: number): Promise<any> {
+  private async _sendSlider(percent: number): Promise<void> {
     const entity_id = this._config?.entity;
     if (!entity_id || !this.hass) return;
     const custom = this._config?.slider_service;
@@ -144,25 +165,64 @@ export class ComponentControlRowV2 extends LitBaseCard<ControlRowCardConfig> {
       custom.service
     ) {
       const key = custom.data_key || "value";
-      return this.hass.callService(custom.domain, custom.service, {
-        entity_id,
-        ...(custom.data || {}),
-        [key]: percent,
+      return runServiceAction(this.hass, {
+        domain: custom.domain,
+        service: custom.service,
+        data: { ...(custom.data || {}), [key]: percent },
+        target: { entity_id },
       });
     }
     const domain = this._domain();
     if (domain === "light") {
       return percent <= 0
-        ? this.hass.callService("light", "turn_off", { entity_id })
-        : this.hass.callService("light", "turn_on", {
-            entity_id,
-            brightness_pct: Math.round(percent),
+        ? runServiceAction(this.hass, {
+            domain: "light",
+            service: "turn_off",
+            target: { entity_id },
+          })
+        : runServiceAction(this.hass, {
+            domain: "light",
+            service: "turn_on",
+            data: { brightness_pct: Math.round(percent) },
+            target: { entity_id },
           });
     }
     if (domain === "fan") {
-      return this.hass.callService("fan", "set_percentage", {
-        entity_id,
-        percentage: Math.round(percent),
+      return runServiceAction(this.hass, {
+        domain: "fan",
+        service: "set_percentage",
+        data: { percentage: Math.round(percent) },
+        target: { entity_id },
+      });
+    }
+    if (domain === "cover") {
+      return runServiceAction(this.hass, {
+        domain: "cover",
+        service: "set_cover_position",
+        data: { position: Math.round(percent) },
+        target: { entity_id },
+      });
+    }
+    if (domain === "media_player") {
+      return runServiceAction(this.hass, {
+        domain: "media_player",
+        service: "set_volume_level",
+        data: { volume_level: Math.round(percent) / 100 },
+        target: { entity_id },
+      });
+    }
+    if (domain === "climate") {
+      const state = this._getState();
+      const min = Number(state?.attributes?.min_temp ?? 16);
+      const max = Number(state?.attributes?.max_temp ?? 30);
+      const step = Number(state?.attributes?.target_temp_step ?? 0.5);
+      let temp = min + ((max - min) * percent) / 100;
+      temp = Number((Math.round(temp / step) * step).toFixed(1));
+      return runServiceAction(this.hass, {
+        domain: "climate",
+        service: "set_temperature",
+        data: { temperature: temp },
+        target: { entity_id },
       });
     }
     if (domain === "number" || domain === "input_number") {
@@ -170,7 +230,12 @@ export class ComponentControlRowV2 extends LitBaseCard<ControlRowCardConfig> {
       const min = Number(state?.attributes?.min ?? 0);
       const max = Number(state?.attributes?.max ?? 100);
       const value = min + ((max - min) * percent) / 100;
-      return this.hass.callService(domain, "set_value", { entity_id, value });
+      return runServiceAction(this.hass, {
+        domain,
+        service: "set_value",
+        data: { value },
+        target: { entity_id },
+      });
     }
     throw new Error(
       `Slider mode does not support ${domain || "this entity"} without slider_service`,
@@ -186,8 +251,10 @@ export class ComponentControlRowV2 extends LitBaseCard<ControlRowCardConfig> {
 
   private async _toggle(reportedOn: boolean): Promise<void> {
     if (!this._config?.entity || !this.hass) return;
-    await this.hass.callService("homeassistant", "toggle", {
-      entity_id: this._config.entity,
+    await runServiceAction(this.hass, {
+      domain: "homeassistant",
+      service: "toggle",
+      target: { entity_id: this._config.entity },
     });
     await waitForEntityState(
       this.hass,
@@ -197,13 +264,16 @@ export class ComponentControlRowV2 extends LitBaseCard<ControlRowCardConfig> {
     );
   }
 
-  private _serviceAction(): Promise<any> | void {
+  private _serviceAction(): Promise<void> | void {
     const service = String(this._config?.service || "");
     const [domain, name] = service.split(".");
     if (!domain || !name) return this.moreInfo(this._config?.entity);
-    return this.hass?.callService(domain, name, {
-      entity_id: this._config?.entity,
-      ...(this._config?.service_data || {}),
+    if (!this.hass || !this._config?.entity) return;
+    return runServiceAction(this.hass, {
+      domain,
+      service: name,
+      data: this._config.service_data,
+      target: { entity_id: this._config.entity },
     });
   }
 
@@ -393,21 +463,6 @@ export class ComponentControlRowV2 extends LitBaseCard<ControlRowCardConfig> {
                   class="i row"
                   type="button"
                   ?disabled=${live && !available}
-                  @click=${() => {
-                    if (!live) {
-                      if (m === "switch") this._on = !this._on;
-                      else if (m === "slider") {
-                        this._val = (this._val + 20) % 120;
-                        if (this._val > 100) this._val = 0;
-                      }
-                    } else if (m === "switch") {
-                      this._toggle(reportedOn);
-                    } else if (m === "action") {
-                      this._serviceAction();
-                    } else {
-                      this.moreInfo(this._config?.entity);
-                    }
-                  }}
                 >
                   ${inner}
                 </button>

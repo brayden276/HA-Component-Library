@@ -1,6 +1,9 @@
 import { css, CSSResultGroup } from "lit";
+import { globalTokens } from "../../styles/tokens";
 
-export const deviceAwareAutoEntitiesCardStyles: CSSResultGroup = css`
+export const deviceAwareAutoEntitiesCardStyles: CSSResultGroup = [
+  globalTokens,
+  css`
   :host {
     display: block;
     min-width: 0;
@@ -30,4 +33,5 @@ export const deviceAwareAutoEntitiesCardStyles: CSSResultGroup = css`
   .body {
     min-width: 0;
   }
-`;
+`,
+];

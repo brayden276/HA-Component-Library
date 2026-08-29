@@ -96,8 +96,8 @@ export class ComponentThreeStatV2 extends LitBaseCard<ThreeStatCardConfig> {
       const action = this._getAction(idx);
       const ariaLabel = `${label}: ${val}`;
       const content = html`
-        <div class="value">${this.esc(val)}</div>
-        <div class="label">${this.esc(label)}</div>
+        <div class="kpi-metric-md value">${this.esc(val)}</div>
+        <div class="label-sub label">${this.esc(label)}</div>
       `;
 
       return action
@@ -108,7 +108,7 @@ export class ComponentThreeStatV2 extends LitBaseCard<ThreeStatCardConfig> {
     });
 
     return html`
-      <ha-card>
+      <ha-card class="assembled-card">
         <div class="wrap">${metrics}</div>
       </ha-card>
     `;

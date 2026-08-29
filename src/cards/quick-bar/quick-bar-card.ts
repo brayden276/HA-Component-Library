@@ -50,6 +50,7 @@ export class HaQuickBar extends HaBaseCard<HaQuickBarConfig> {
 
   private _handleEntityTap(entConf: QuickBarEntityConfig): void {
     if (!this.hass) return;
+    if (isEntityUnavailable(this.hass.states[entConf.entity])) return;
     const action = entConf.tap_action || { action: "toggle" };
     handleAction(this, this.hass, action, entConf.entity);
   }
@@ -72,17 +73,17 @@ export class HaQuickBar extends HaBaseCard<HaQuickBarConfig> {
     });
 
     return html`
-      <ha-card>
+      <ha-card class="assembled-card">
         ${
           this.config.title || this.config.show_active_count
             ? html`
-                <div class="card-header">
-                  <span>${this.config.title || "Quick Controls"}</span>
+                <div class="quick-header">
+                  <span class="label-title">${this.config.title || "Quick Controls"}</span>
                   ${
                     this.config.show_active_count !== false
                       ? html`
                           <span
-                            class="active-badge ${activeCount > 0 ? "highlight" : ""}"
+                            class="capsule-badge ${activeCount > 0 ? "active" : ""}"
                             aria-label="${activeCount} devices active"
                           >
                             ${activeCount} Active
@@ -95,7 +96,7 @@ export class HaQuickBar extends HaBaseCard<HaQuickBarConfig> {
             : ""
         }
 
-        <div class="bar-items-container" role="group" aria-label="${this.config.title || "Quick Controls"}">
+        <div class="quick-actions" role="group" aria-label="${this.config.title || "Quick Controls"}">
           ${normalizedEntities.map((entConf) => {
             const stateObj = this.hass?.states[entConf.entity];
             const isUnavailable = isEntityUnavailable(stateObj);
@@ -111,27 +112,21 @@ export class HaQuickBar extends HaBaseCard<HaQuickBarConfig> {
               : formatEntityState(stateObj, this.hass);
 
             return html`
-              <div
-                class="quick-item interactive ${isActive ? "active" : ""} ${isUnavailable ? "unavailable" : ""}"
+              <button
+                class="btn-action-pill quick-item ${isActive ? "active" : ""}"
+                type="button"
                 role="button"
                 tabindex="${isUnavailable ? "-1" : "0"}"
                 aria-pressed="${String(isActive)}"
+                ?disabled=${isUnavailable}
                 aria-disabled="${String(isUnavailable)}"
                 aria-label="${name}: ${stateDisplay}"
                 title="${name}: ${stateDisplay}"
                 @click=${() => this._handleEntityTap(entConf)}
-                @keydown=${(e: KeyboardEvent) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    this._handleEntityTap(entConf);
-                  }
-                }}
               >
-                <div class="item-icon-circle ${isActive ? "active" : ""}">
-                  <ha-icon .icon=${icon}></ha-icon>
-                </div>
-                <span class="item-label">${name}</span>
-              </div>
+                <ha-icon class="sm" .icon=${icon}></ha-icon>
+                <span>${name}</span>
+              </button>
             `;
           })}
         </div>
@@ -141,4 +136,3 @@ export class HaQuickBar extends HaBaseCard<HaQuickBarConfig> {
 
   public static override styles: CSSResultGroup = quickBarCardStyles;
 }
-

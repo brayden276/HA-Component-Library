@@ -2,13 +2,14 @@ export * from "./room-navigation-card.types";
 import type { RoomNavigationCardConfig } from "./room-navigation-card.types";
 export * from "./room-navigation-card.styles";
 import { roomNavigationCardStyles } from "./room-navigation-card.styles";
-import { html, TemplateResult, CSSResultGroup } from "lit";
+import { html, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type {
   LovelaceGridOptions,
   HassEntity,
   AreaRegistryEntry,
+  HomeAssistant,
 } from "../../types/home-assistant";
 import type { DashboardRegistries } from "../../types/registry";
 import { centralRegistry } from "../../services/registry/dashboard-registry";
@@ -29,6 +30,7 @@ export class ComponentRoomNavigationV1 extends LitBaseCard<RoomNavigationCardCon
 
   private _interactionHandle: InteractionHandle | null = null;
   private _unsubRegistry: (() => void) | null = null;
+  private _registryHass: HomeAssistant | null = null;
 
   public static override getGridOptions(): LovelaceGridOptions {
     return { columns: 6, rows: 1 };
@@ -42,9 +44,7 @@ export class ComponentRoomNavigationV1 extends LitBaseCard<RoomNavigationCardCon
       throw new Error("navigation_path is required");
     super.setConfig({ ...DEFAULTS, ...config });
     if (this.hass) {
-      centralRegistry.load(this.hass).then((data) => {
-        this._registries = data;
-      });
+      void this._loadRegistry();
     }
   }
 
@@ -54,31 +54,54 @@ export class ComponentRoomNavigationV1 extends LitBaseCard<RoomNavigationCardCon
 
   public override connectedCallback(): void {
     super.connectedCallback();
-    if (!this._unsubRegistry && this.hass) {
-      this._unsubRegistry = centralRegistry.subscribe(this.hass, (data) => {
-        this._registries = data;
-      });
-    }
+    this._bindRegistry();
+    void this._loadRegistry();
   }
 
   public override disconnectedCallback(): void {
-    this._unsubRegistry?.();
-    this._unsubRegistry = null;
+    this._unbindRegistry();
     this._interactionHandle?.destroy();
     this._interactionHandle = null;
     super.disconnectedCallback();
   }
 
-  protected override willUpdate(): void {
-    if (!this._registries && this.hass) {
-      centralRegistry.load(this.hass).then((data) => {
-        this._registries = data;
-      });
+  protected override willUpdate(changedProps: PropertyValues): void {
+    if (changedProps.has("hass") && changedProps.get("hass") !== this.hass) {
+      this._registries = null;
+      this._unbindRegistry();
     }
-    if (this.isConnected && !this._unsubRegistry && this.hass) {
-      this._unsubRegistry = centralRegistry.subscribe(this.hass, (data) => {
-        this._registries = data;
-      });
+    if (this.hass) {
+      this._bindRegistry();
+      if (!this._registries || changedProps.has("hass")) void this._loadRegistry();
+    }
+  }
+
+  private _bindRegistry(): void {
+    if (!this.isConnected || !this.hass) return;
+    if (this._registryHass === this.hass && this._unsubRegistry) return;
+
+    this._unbindRegistry();
+    const hass = this.hass;
+    this._registryHass = hass;
+    this._unsubRegistry = centralRegistry.subscribe(hass, (data) => {
+      if (this.hass === hass) this._registries = data;
+    });
+  }
+
+  private _unbindRegistry(): void {
+    this._unsubRegistry?.();
+    this._unsubRegistry = null;
+    this._registryHass = null;
+  }
+
+  private async _loadRegistry(): Promise<void> {
+    if (!this.hass) return;
+    const hass = this.hass;
+    try {
+      const data = await centralRegistry.load(hass);
+      if (this.hass === hass) this._registries = data;
+    } catch {
+      // The live subscription will populate the card after Home Assistant reconnects.
     }
   }
 

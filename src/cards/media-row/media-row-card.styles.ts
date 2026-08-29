@@ -6,6 +6,7 @@ import {
   iconWellStyles,
   buttonStyles,
   iconButtonStyles,
+  surfaceStyles,
 } from "../../styles";
 
 export const mediaRowCardStyles: CSSResultGroup = [
@@ -15,27 +16,29 @@ export const mediaRowCardStyles: CSSResultGroup = [
   iconWellStyles,
   buttonStyles,
   iconButtonStyles,
+  surfaceStyles,
   css`
+    .media-row {
+      grid-template-columns: 40px minmax(0, 1fr) auto;
+    }
+    .identity {
+      min-width: 0;
+      min-height: 44px;
+      text-align: left;
+    }
+    .identity .label-title,
+    .identity .label-sub {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .buttons {
       display: flex;
       gap: 6px;
       align-items: center;
     }
     .btn {
-      position: relative;
-      width: 36px;
-      height: 36px;
-      border: var(--dashboard-card-border) !important;
-      border-radius: var(--dashboard-radius-control) !important;
-      background: var(--dashboard-card-muted-surface) !important;
-      display: grid;
-      place-items: center;
-      color: var(--secondary-text-color);
-      padding: 0 !important;
-      cursor: pointer;
-    }
-    .btn:hover {
-      background: var(--dashboard-active-surface) !important;
+      flex: 0 0 auto;
     }
     .btn.main {
       color: var(--primary-color);

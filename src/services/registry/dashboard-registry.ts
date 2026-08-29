@@ -1,4 +1,8 @@
-import type { HomeAssistant, HassEntity } from "../../types/home-assistant";
+import type {
+  HassConnection,
+  HassEntity,
+  HomeAssistant,
+} from "../../types/home-assistant";
 import type {
   AreaRegistryEntry,
   DeviceRegistryEntry,
@@ -12,7 +16,7 @@ import { discoverControls } from "../discovery/discovery-engine";
 export type EntryFilter = (entry: EntityRegistryEntry) => boolean;
 
 export class DashboardRegistryCoordinator {
-  private _connection: any = null;
+  private _connection: HassConnection | null = null;
   private _hass: HomeAssistant | null = null;
   private _data: DashboardRegistries | null = null;
   private _promise: Promise<DashboardRegistries> | null = null;

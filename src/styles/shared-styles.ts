@@ -9,6 +9,8 @@ export const cardBaseStyles: CSSResultGroup = [
   css`
     :host {
       display: block;
+      width: 100%;
+      box-sizing: border-box;
       min-width: 0;
     }
     * {
@@ -20,7 +22,7 @@ export const cardBaseStyles: CSSResultGroup = [
       display: none !important;
     }
     button,
-    input,
+    input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
     select {
       font: inherit;
       color: inherit;
@@ -28,9 +30,22 @@ export const cardBaseStyles: CSSResultGroup = [
       border: 0;
       background: transparent;
     }
+    input[type="range"] {
+      font: inherit;
+      color: inherit;
+      border: 0;
+      background: transparent;
+    }
     button {
       cursor: pointer;
       padding: 0;
+      --action-glow-color: var(--primary-color, #03a9f4);
+      transition:
+        transform 0.15s ease,
+        border-color 0.4s ease,
+        box-shadow 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 0.25s ease,
+        color 0.2s ease;
     }
     button:disabled,
     input:disabled,
@@ -38,11 +53,19 @@ export const cardBaseStyles: CSSResultGroup = [
       opacity: 0.45;
       cursor: default;
     }
+    button:active:not(:disabled) {
+      border-color: var(--action-glow-color) !important;
+      box-shadow: 0 0 0 1px var(--action-glow-color),
+                  0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+      transform: scale(0.96);
+    }
     :is(button, input, select):focus-visible {
       outline: 2px solid var(--primary-color);
       outline-offset: 2px;
     }
     ha-card {
+      display: block;
+      width: 100%;
       position: relative;
       overflow: hidden;
       border: var(--dashboard-card-border);
@@ -51,6 +74,47 @@ export const cardBaseStyles: CSSResultGroup = [
       box-shadow: var(--ha-card-box-shadow, none);
       color: var(--primary-text-color);
       box-sizing: border-box;
+      --action-glow-color: var(--primary-color, #03a9f4);
+      transition:
+        transform 0.15s ease,
+        border-color 0.4s ease,
+        box-shadow 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 0.25s ease,
+        color 0.2s ease;
+    }
+    ha-card.interactive {
+      cursor: pointer;
+    }
+    ha-card.interactive:active:not(.unavailable),
+    ha-card:has(> button.demo):active,
+    ha-card:has(> button.wrap):active,
+    ha-card:has(> button.issue):active,
+    ha-card:has(> button:only-child):active,
+    ha-card:has(> .tile-card.interactive):active,
+    ha-card:has(> .status-card.interactive):active {
+      border-color: var(--action-glow-color) !important;
+      box-shadow: 0 0 0 1px var(--action-glow-color),
+                  0 0 16px 3px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+      transform: scale(0.985);
+    }
+    ha-card > button.demo,
+    ha-card > button.wrap,
+    ha-card > button.issue,
+    ha-card > button:only-child,
+    ha-card > .tile-card,
+    ha-card > .status-card {
+      box-shadow: none !important;
+      outline: none !important;
+    }
+    ha-card > button.demo:active,
+    ha-card > button.wrap:active,
+    ha-card > button.issue:active,
+    ha-card > button:only-child:active,
+    ha-card > .tile-card:active,
+    ha-card > .status-card:active {
+      box-shadow: none !important;
+      border-color: transparent !important;
+      transform: none !important;
     }
     .icon-svg,
     ha-icon {
@@ -238,6 +302,20 @@ export const typographyStyles = css`
  * 3. Buttons with Text (Section 3 in Design Catalogue)
  */
 export const buttonStyles = css`
+  .btn-primary-solid,
+  .btn-secondary-outline,
+  .btn-action-pill,
+  .btn-compact-pill,
+  .btn-dashed-add,
+  .option-select-btn {
+    --action-glow-color: var(--feedback-color, var(--primary-color, #03a9f4));
+    transition:
+      transform 0.15s ease,
+      border-color 0.4s ease,
+      box-shadow 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.25s ease,
+      color 0.2s ease;
+  }
   .btn-primary-solid {
     min-height: 44px;
     padding: 0 16px;
@@ -253,7 +331,10 @@ export const buttonStyles = css`
     border: 0;
   }
   .btn-primary-solid:active {
-    transform: scale(0.98);
+    border-color: var(--action-glow-color) !important;
+    box-shadow: 0 0 0 1px var(--action-glow-color),
+                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    transform: scale(0.97);
   }
   .btn-secondary-outline {
     min-height: 44px;
@@ -272,8 +353,15 @@ export const buttonStyles = css`
   .btn-secondary-outline:hover {
     background: var(--dashboard-card-muted-surface);
   }
+  .btn-secondary-outline:active {
+    border-color: var(--action-glow-color) !important;
+    box-shadow: 0 0 0 1px var(--action-glow-color),
+                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    transform: scale(0.97);
+  }
   .btn-secondary-outline.danger {
     color: var(--error-color);
+    --action-glow-color: var(--error-color, #f44336);
   }
   .btn-action-pill {
     min-width: 0;
@@ -296,6 +384,12 @@ export const buttonStyles = css`
     background: var(--dashboard-card-muted-surface);
     color: var(--primary-text-color);
   }
+  .btn-action-pill:active {
+    border-color: var(--action-glow-color) !important;
+    box-shadow: 0 0 0 1px var(--action-glow-color),
+                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    transform: scale(0.97);
+  }
   .btn-action-pill.active {
     color: var(--primary-color);
     background: var(--dashboard-active-surface);
@@ -316,6 +410,12 @@ export const buttonStyles = css`
   .btn-compact-pill:hover {
     background: var(--dashboard-active-surface);
   }
+  .btn-compact-pill:active {
+    border-color: var(--action-glow-color) !important;
+    box-shadow: 0 0 0 1px var(--action-glow-color),
+                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    transform: scale(0.97);
+  }
   .btn-dashed-add {
     width: 100%;
     min-height: 44px;
@@ -332,6 +432,12 @@ export const buttonStyles = css`
   }
   .btn-dashed-add:hover {
     background: var(--dashboard-card-muted-surface);
+  }
+  .btn-dashed-add:active {
+    border-color: var(--action-glow-color) !important;
+    box-shadow: 0 0 0 1px var(--action-glow-color),
+                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    transform: scale(0.97);
   }
   .option-select-btn {
     min-height: 48px;
@@ -352,6 +458,12 @@ export const buttonStyles = css`
   .option-select-btn:hover {
     background: var(--dashboard-card-muted-surface);
   }
+  .option-select-btn:active {
+    border-color: var(--action-glow-color) !important;
+    box-shadow: 0 0 0 1px var(--action-glow-color),
+                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    transform: scale(0.97);
+  }
   .option-select-btn.selected {
     color: var(--primary-color);
     border-color: var(--primary-color);
@@ -363,6 +475,42 @@ export const buttonStyles = css`
  * 4. Icon Buttons & Triggers (Section 4 in Design Catalogue)
  */
 export const iconButtonStyles = css`
+  .btn-icon-44,
+  .btn-icon-36,
+  .btn-icon-30,
+  .btn-icon-circle {
+    --action-glow-color: var(--feedback-color, var(--primary-color, #03a9f4));
+    transition:
+      transform 0.15s ease,
+      border-color 0.4s ease,
+      box-shadow 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.25s ease,
+      color 0.2s ease;
+  }
+  .btn-icon-44:active:not(:disabled),
+  .btn-icon-36:active:not(:disabled),
+  .btn-icon-30:active:not(:disabled),
+  .btn-icon-circle:active:not(:disabled) {
+    border-color: var(--action-glow-color) !important;
+    box-shadow: 0 0 0 1px var(--action-glow-color),
+                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    transform: scale(0.95);
+  }
+  .btn-icon-44.power-btn.on,
+  .btn-icon-36.power-btn.on,
+  .power-btn.on {
+    --action-glow-color: var(--error-color, #f44336);
+  }
+  .btn-icon-44.power-btn:not(.on),
+  .btn-icon-36.power-btn:not(.on),
+  .power-btn:not(.on) {
+    --action-glow-color: var(--success-color, #4caf50);
+  }
+  .btn-icon-44.play-pause,
+  .btn-icon-36.play-pause,
+  .play-pause {
+    --action-glow-color: var(--warning-color, #ff9800);
+  }
   .btn-icon-44 {
     width: 44px;
     height: 44px;
@@ -491,15 +639,39 @@ export const formControlStyles = css`
     color: var(--primary-text-color);
     font-size: 12.5px;
   }
-  .select-dropdown-control {
+  .select-dropdown-control,
+  select.select-dropdown-control {
     width: 100%;
     height: 44px;
     padding: 0 34px 0 12px;
     border: var(--dashboard-card-border);
     border-radius: var(--dashboard-radius-control);
-    background: var(--dashboard-card-surface);
+    background: var(--dashboard-card-surface)
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239e9e9e'%3E%3Cpath d='M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z'/%3E%3C/svg%3E")
+      no-repeat right 10px center;
+    background-size: 18px 18px;
     color: var(--primary-text-color);
     font-size: 13px;
+    cursor: pointer;
+  }
+  .select-dropdown-control option {
+    background: var(--card-background-color, #1c1c1e);
+    color: var(--primary-text-color, #e1e1e1);
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--primary-color);
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+  }
+  input[type="date"] {
+    font-family: inherit;
+    font-size: 12.5px;
+    color: var(--primary-text-color);
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.7);
     cursor: pointer;
   }
 `;
@@ -555,10 +727,34 @@ export const controlStyles = css`
     color: var(--secondary-text-color);
     background: transparent;
     border: 0;
+    border-radius: var(--dashboard-radius-control);
+    --action-glow-color: var(--primary-color, #03a9f4);
+    transition:
+      transform 0.15s ease,
+      border-color 0.4s ease,
+      box-shadow 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.25s ease,
+      color 0.2s ease;
   }
   .stepper-step-btn:hover {
     background: var(--dashboard-card-muted-surface);
     color: var(--primary-text-color);
+  }
+  .stepper-step-btn.increase,
+  .stepper-step-btn[aria-label*="increase" i],
+  .stepper-step-btn[aria-label*="plus" i] {
+    --action-glow-color: var(--warning-color, #ff9800);
+  }
+  .stepper-step-btn.decrease,
+  .stepper-step-btn[aria-label*="decrease" i],
+  .stepper-step-btn[aria-label*="minus" i] {
+    --action-glow-color: var(--info-color, #03a9f4);
+  }
+  .stepper-step-btn:active:not(:disabled) {
+    border-color: var(--action-glow-color) !important;
+    box-shadow: 0 0 0 1px var(--action-glow-color),
+                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    transform: scale(0.95);
   }
   .stepper-display {
     min-width: 0;
@@ -588,6 +784,82 @@ export const controlStyles = css`
     height: 100%;
     background: var(--primary-color);
     border-radius: inherit;
+  }
+  input[type="range"],
+  .range-slider-control {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: var(--dashboard-radius-control);
+    background: var(--divider-color);
+    outline: none;
+    cursor: pointer;
+    margin: 8px 0;
+    padding: 0;
+    border: 0;
+    display: block;
+    accent-color: var(--primary-color);
+  }
+  input[type="range"]::-webkit-slider-runnable-track,
+  .range-slider-control::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    border-radius: var(--dashboard-radius-control);
+    background: var(--divider-color);
+    border: 0;
+  }
+  input[type="range"]::-moz-range-track,
+  .range-slider-control::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    border-radius: var(--dashboard-radius-control);
+    background: var(--divider-color);
+    border: 0;
+  }
+  input[type="range"]::-webkit-slider-thumb,
+  .range-slider-control::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    border: 2px solid var(--dashboard-card-surface, #1c1c1e);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    margin-top: -6px;
+    cursor: pointer;
+    transition: transform 0.12s ease, background-color 0.12s ease;
+  }
+  input[type="range"]::-moz-range-thumb,
+  .range-slider-control::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    border: 2px solid var(--dashboard-card-surface, #1c1c1e);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+  }
+  input[type="range"]:focus-visible::-webkit-slider-thumb,
+  .range-slider-control:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 3px;
+  }
+  input[type="range"]:focus-visible::-moz-range-thumb,
+  .range-slider-control:focus-visible::-moz-range-thumb {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 3px;
+  }
+  input[type="range"]:disabled,
+  .range-slider-control:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  input[type="range"]:disabled::-webkit-slider-thumb,
+  .range-slider-control:disabled::-webkit-slider-thumb {
+    cursor: default;
+    background: var(--disabled-text-color, #616161);
   }
 `;
 
@@ -864,14 +1136,28 @@ export const remoteStyles = css`
     place-items: center;
     color: var(--secondary-text-color);
     background: var(--dashboard-card-surface);
+    --action-glow-color: var(--primary-color, #03a9f4);
+    transition:
+      transform 0.15s ease,
+      border-color 0.4s ease,
+      box-shadow 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.25s ease,
+      color 0.2s ease;
   }
   .dpad-btn:hover {
     color: var(--primary-text-color);
     background: var(--dashboard-card-muted-surface);
   }
+  .dpad-btn:active:not(:disabled) {
+    border-color: var(--action-glow-color) !important;
+    box-shadow: 0 0 0 1px var(--action-glow-color),
+                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    transform: scale(0.95);
+  }
   .dpad-btn.select-center {
     background: var(--dashboard-active-surface);
     color: var(--primary-color);
+    --action-glow-color: var(--primary-color, #03a9f4);
   }
 `;
 
@@ -879,6 +1165,104 @@ export const remoteStyles = css`
  * 14. Modals & Dialog Overlays (Section 14 in Design Catalogue)
  */
 export const dialogStyles = css`
+  /* Native dialogs must be styled at the dialog element as well as at their
+   * inner shell. A number of controllers render a <dialog><div class="sheet">
+   * structure, so styling only .dialog-shell-box leaves the browser's default
+   * white inset dialog visible and makes the sheet look unstyled. */
+  dialog {
+    width: min(640px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 0;
+    border: var(--dashboard-card-border);
+    border-radius: var(--dashboard-radius-dialog);
+    background: var(--card-background-color);
+    color: var(--primary-text-color);
+    box-shadow: var(--dashboard-dialog-shadow);
+    overflow: hidden;
+  }
+  dialog::backdrop {
+    background: var(--dashboard-modal-scrim);
+  }
+  dialog .sheet {
+    display: flex;
+    max-height: inherit;
+    min-height: 0;
+    flex-direction: column;
+    background: var(--card-background-color);
+  }
+  dialog .sheet-head,
+  dialog .head {
+    min-height: 56px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--divider-color);
+    color: var(--primary-text-color);
+  }
+  dialog .sheet-title,
+  dialog .sheet-name {
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 650;
+    line-height: 1.25;
+  }
+  dialog .sheet-title {
+    flex: 1;
+  }
+  dialog .sheet-state {
+    margin-top: 2px;
+    color: var(--secondary-text-color);
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  dialog .sheet-body,
+  dialog .body {
+    min-height: 0;
+    padding: 16px;
+    overflow: auto;
+    color: var(--secondary-text-color);
+    font-size: 13px;
+  }
+  dialog .close {
+    width: 32px;
+    height: 32px;
+    margin-left: auto;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: var(--dashboard-radius-control);
+    background: transparent;
+    color: var(--secondary-text-color);
+    --action-glow-color: var(--error-color, #f44336);
+    transition:
+      transform 0.15s ease,
+      border-color 0.4s ease,
+      box-shadow 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.25s ease,
+      color 0.2s ease;
+  }
+  dialog .close:hover,
+  dialog .close:focus-visible {
+    background: var(--dashboard-card-muted-surface);
+    color: var(--primary-text-color);
+  }
+  dialog .close:active:not(:disabled) {
+    box-shadow: 0 0 0 1px var(--action-glow-color),
+                0 0 12px 2.5px color-mix(in srgb, var(--action-glow-color) 50%, transparent) !important;
+    transform: scale(0.95);
+  }
+  @media (max-width: 700px) {
+    dialog {
+      width: min(100vw - 16px, 640px);
+      max-width: calc(100vw - 16px);
+      max-height: calc(100dvh - 16px);
+      border-radius: 8px;
+    }
+  }
   .dialog-shell-box {
     border: var(--dashboard-card-border);
     border-radius: var(--dashboard-radius-dialog);

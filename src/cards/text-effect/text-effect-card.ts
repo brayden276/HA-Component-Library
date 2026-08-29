@@ -56,7 +56,7 @@ export class ComponentTextEffectV1 extends LitBaseCard<TextEffectCardConfig> {
 
   protected override render(): TemplateResult {
     if (!this._config) return html``;
-    const effect = [
+    const requestedEffect = [
       "stamp",
       "typewave",
       "overprint",
@@ -65,6 +65,9 @@ export class ComponentTextEffectV1 extends LitBaseCard<TextEffectCardConfig> {
     ].includes(this._config.effect || "")
       ? this._config.effect
       : "stamp";
+    // Keep legacy YAML valid while rendering it through the catalogue's stamp
+    // primitive. The room-card presence glow owns the requested rainbow cue.
+    const effect = requestedEffect === "rainbow_stamp" ? "stamp" : requestedEffect;
     const speed = Math.max(1.6, Math.min(6, Number(this._config.speed) || 2.6));
     const text = this._config.text;
 

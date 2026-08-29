@@ -151,6 +151,7 @@ async function runSmokeTest() {
       const results = [];
       const container = document.getElementById('test-container');
 
+      window.__recordedServiceCalls = [];
       const mockHass = {
         states: {
           'light.living_room': { entity_id: 'light.living_room', state: 'on', attributes: { friendly_name: 'Living Room Light' } },
@@ -162,7 +163,10 @@ async function runSmokeTest() {
           'light.wled': { entity_id: 'light.wled', state: 'on', attributes: { friendly_name: 'WLED Light' } }
         },
         services: {},
-        callService: () => Promise.resolve(),
+        callService: (domain, service, data, target) => {
+          window.__recordedServiceCalls.push({ domain, service, data, target });
+          return Promise.resolve();
+        },
         connection: {
           sendMessagePromise: () => Promise.resolve([]),
           subscribeEvents: () => Promise.resolve(() => {})
@@ -213,7 +217,7 @@ async function runSmokeTest() {
     }
     console.log(`✓ All ${EXPECTED_TAGS.length} custom elements instantiated and rendered with mock HomeAssistant`);
 
-    // 5. Test Standalone elements (ha-status-card, ha-action-tile, ha-quick-bar, ha-metric-badge)
+    // 4. Test Standalone elements (ha-status-card, ha-action-tile, ha-quick-bar, ha-metric-badge)
     const standaloneResults = await page.evaluate(() => {
       const container = document.getElementById('test-container');
       const results = [];
@@ -227,7 +231,10 @@ async function runSmokeTest() {
           'climate.thermostat': { entity_id: 'climate.thermostat', state: 'heat', attributes: { friendly_name: 'Thermostat' } },
         },
         services: {},
-        callService: () => Promise.resolve({}),
+        callService: (domain, service, data, target) => {
+          window.__recordedServiceCalls.push({ domain, service, data, target });
+          return Promise.resolve({});
+        },
       };
 
       for (const tag of tags) {
@@ -253,6 +260,33 @@ async function runSmokeTest() {
       throw new Error(`Standalone element failures: ${JSON.stringify(standaloneFailures, null, 2)}`);
     }
     console.log(`✓ All 4 standalone elements (ha-status-card, ha-action-tile, ha-quick-bar, ha-metric-badge) instantiated and tested`);
+
+    // 5. Interactive Browser Testing: trigger real click events on custom elements
+    const interactionResults = await page.evaluate(async () => {
+      const splitEl = document.querySelector('component-split-controller-v4');
+      const powerBtn = splitEl?.shadowRoot?.querySelector('button.power-btn');
+      if (powerBtn) {
+        powerBtn.click();
+      }
+
+      const statusCardEl = document.querySelector('ha-status-card');
+      const toggleBtn = statusCardEl?.shadowRoot?.querySelector('button.toggle-btn');
+      if (toggleBtn) {
+        toggleBtn.click();
+      }
+
+      await new Promise((r) => setTimeout(r, 60));
+      return {
+        recordedCallsCount: window.__recordedServiceCalls.length,
+        hasClimateCall: window.__recordedServiceCalls.some((c) => c.domain === 'climate'),
+        hasLightCall: window.__recordedServiceCalls.some((c) => c.domain === 'light' && c.service === 'toggle')
+      };
+    });
+
+    if (!interactionResults.hasClimateCall || !interactionResults.hasLightCall) {
+      throw new Error(`Real browser interaction failed to dispatch service calls: ${JSON.stringify(interactionResults)}`);
+    }
+    console.log(`✓ Real browser interaction testing verified: UI clicks dispatched correct Home Assistant service calls`);
 
     // 6. Capture full page screenshot
     await page.screenshot({ path: resolve(rootDir, 'tests/browser/smoke-render.png'), fullPage: true });

@@ -106,7 +106,7 @@ describe('Stage 1 Presentational Cards Contract Tests', () => {
     expect(el.getCardSize()).toBe(2);
     expect(el.shadowRoot.textContent).toContain('75%');
     expect(el.shadowRoot.textContent).toContain('Battery Charge');
-    const fill = el.shadowRoot.querySelector('.fill') as HTMLElement;
+    const fill = el.shadowRoot.querySelector('.determinate-fill') as HTMLElement;
     expect(fill.style.width).toBe('75%');
     el.remove();
   });
@@ -158,7 +158,7 @@ describe('Stage 1 Presentational Cards Contract Tests', () => {
     await el.updateComplete;
 
     expect(el.getCardSize()).toBe(2);
-    expect(el.shadowRoot.querySelector('.wrap.warning')).not.toBeNull();
+    expect(el.shadowRoot.querySelector('.notice-box.warning')).not.toBeNull();
     expect(el.shadowRoot.textContent).toContain('Firmware Update');
     el.remove();
   });

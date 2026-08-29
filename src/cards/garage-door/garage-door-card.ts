@@ -10,7 +10,7 @@ import type {
   HassEntity,
 } from "../../types/home-assistant";
 import { interaction, InteractionHandle } from "../../utils/interaction";
-import { isEntityUnavailable } from "../../utils/entity";
+import { isEntityUnavailable, runServiceAction } from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
 interface ConfirmationContext {
@@ -48,8 +48,6 @@ export class ComponentGarageDoorControllerV1 extends LitBaseCard<GarageDoorContr
   public override setConfig(config: GarageDoorControllerConfig): void {
     if (!config?.entity)
       throw new Error("A garage-door state entity is required");
-    if (!config?.control_entity)
-      throw new Error("A garage-door control entity is required");
     if (this._messageTimer) clearTimeout(this._messageTimer);
     this._messageTimer = null;
     this._requestGeneration += 1;
@@ -76,8 +74,13 @@ export class ComponentGarageDoorControllerV1 extends LitBaseCard<GarageDoorContr
   }
 
   private _controlEntityId(): string | null {
-    const entityId = String(this._config?.control_entity || this._config?.entity || "");
-    return entityId || null;
+    const configured = this._config?.control_entity;
+    if (configured) return configured;
+    const entityId = this._config?.entity || "";
+    const domain = entityId.split(".")[0];
+    return ["button", "cover", "lock", "script", "switch"].includes(domain)
+      ? entityId
+      : null;
   }
 
   private _status() {
@@ -178,15 +181,15 @@ export class ComponentGarageDoorControllerV1 extends LitBaseCard<GarageDoorContr
       if (!controlId) return;
       const domain = controlId.split(".")[0];
       if (domain === "cover") {
-        await this.hass.callService("cover", "toggle", { entity_id: controlId });
+        await runServiceAction(this.hass, { domain: "cover", service: "toggle", target: { entity_id: controlId } });
       } else if (domain === "switch") {
-        await this.hass.callService("switch", "toggle", { entity_id: controlId });
+        await runServiceAction(this.hass, { domain: "switch", service: "toggle", target: { entity_id: controlId } });
       } else if (domain === "button") {
-        await this.hass.callService("button", "press", { entity_id: controlId });
+        await runServiceAction(this.hass, { domain: "button", service: "press", target: { entity_id: controlId } });
       } else if (domain === "script") {
-        await this.hass.callService("script", "turn_on", { entity_id: controlId });
+        await runServiceAction(this.hass, { domain: "script", service: "turn_on", target: { entity_id: controlId } });
       } else {
-        await this.hass.callService("homeassistant", "toggle", { entity_id: controlId });
+        await runServiceAction(this.hass, { domain: "homeassistant", service: "toggle", target: { entity_id: controlId } });
       }
 
       if (generation !== this._requestGeneration) return;
@@ -303,7 +306,6 @@ export class ComponentGarageDoorControllerV1 extends LitBaseCard<GarageDoorContr
               class="identity"
               type="button"
               aria-label="Open details for ${this.esc(name)}"
-              @click=${() => this.moreInfo(this._config?.entity || this._config?.control_entity)}
             >
               <span class="well ${status.notClosed ? "not-closed" : ""}">
                 <ha-icon
@@ -328,7 +330,6 @@ export class ComponentGarageDoorControllerV1 extends LitBaseCard<GarageDoorContr
               type="button"
               ?disabled=${disabled}
               aria-disabled="${String(disabled)}"
-              @click=${() => this._requestAction()}
               aria-label="${
                 status.controllerUnavailable
                   ? "Garage door controller unavailable"

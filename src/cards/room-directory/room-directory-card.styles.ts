@@ -127,8 +127,9 @@ export const roomDirectoryCardStyles: CSSResultGroup = [
       background: var(--dashboard-card-muted-surface);
     }
     .room.active {
-      background: var(--dashboard-active-surface);
-      border-color: var(--primary-color);
+      background: var(--dashboard-card-surface);
+      border-color: hsl(var(--room-active-hue) 72% 52% / 0.72);
+      box-shadow: 0 0 8px hsl(var(--room-active-hue) 72% 52% / 0.26);
     }
     .room.warning {
       background: var(--dashboard-warning-surface);
@@ -138,6 +139,7 @@ export const roomDirectoryCardStyles: CSSResultGroup = [
       background: var(--dashboard-critical-surface);
       border-left: 3px solid var(--error-color);
     }
+    .room .ico,
     .room .icon {
       width: 36px;
       height: 36px;
@@ -148,21 +150,26 @@ export const roomDirectoryCardStyles: CSSResultGroup = [
       color: var(--secondary-text-color);
       flex-shrink: 0;
     }
+    .room.active .ico,
     .room.active .icon {
       color: var(--primary-color);
     }
+    .room.warning .ico,
     .room.warning .icon {
       color: var(--warning-color);
     }
+    .room.critical .ico,
     .room.critical .icon {
       color: var(--error-color);
     }
+    .room .ico ha-icon,
     .room .icon ha-icon {
       --mdc-icon-size: 20px;
     }
     .room .copy {
       min-width: 0;
     }
+    .room .name,
     .room .title {
       font-size: 13px;
       font-weight: 600;
@@ -172,6 +179,7 @@ export const roomDirectoryCardStyles: CSSResultGroup = [
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .room .summary,
     .room .status {
       margin-top: 3px;
       font-size: 12px;
@@ -224,6 +232,11 @@ export const roomDirectoryCardStyles: CSSResultGroup = [
     @media (max-width: 700px) {
       .grid {
         grid-template-columns: 1fr;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .room.active {
+        box-shadow: none;
       }
     }
   `,

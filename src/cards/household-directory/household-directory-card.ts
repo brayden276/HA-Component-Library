@@ -2,16 +2,18 @@ export * from "./household-directory-card.types";
 import type { HouseholdDirectoryConfig } from "./household-directory-card.types";
 export * from "./household-directory-card.styles";
 import { householdDirectoryCardStyles } from "./household-directory-card.styles";
-import { html, TemplateResult, CSSResultGroup } from "lit";
+import { html, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type {
   LovelaceGridOptions,
   EntityRegistryEntry,
+  HomeAssistant,
 } from "../../types/home-assistant";
 import { centralRegistry } from "../../services/registry/dashboard-registry";
 import { navigateTo } from "../../utils/navigation";
 import { interaction, InteractionHandle } from "../../utils/interaction";
+import { runServiceAction } from "../../utils/entity";
 import { registerCard } from "../../utils/registration";
 
 const DEFAULTS: HouseholdDirectoryConfig = {
@@ -54,6 +56,7 @@ export class ComponentHouseholdDirectoryV3 extends LitBaseCard<HouseholdDirector
   private _registry: EntityRegistryEntry[] = [];
 
   private _unsubRegistry: (() => void) | null = null;
+  private _registryHass: HomeAssistant | null = null;
   private _interactionHandles: InteractionHandle[] = [];
 
   public static override styles: CSSResultGroup = householdDirectoryCardStyles;
@@ -61,9 +64,7 @@ export class ComponentHouseholdDirectoryV3 extends LitBaseCard<HouseholdDirector
   public override setConfig(config: HouseholdDirectoryConfig): void {
     super.setConfig({ ...DEFAULTS, ...config });
     if (this.hass) {
-      centralRegistry.load(this.hass).then((data) => {
-        this._registry = data.entities || [];
-      });
+      void this._loadRegistry();
     }
   }
 
@@ -73,26 +74,56 @@ export class ComponentHouseholdDirectoryV3 extends LitBaseCard<HouseholdDirector
 
   public override connectedCallback(): void {
     super.connectedCallback();
-    if (!this._unsubRegistry && this.hass) {
-      this._unsubRegistry = centralRegistry.subscribe(this.hass, (data) => {
-        this._registry = data.entities || [];
-      });
-    }
+    this._bindRegistry();
+    void this._loadRegistry();
   }
 
   public override disconnectedCallback(): void {
-    this._unsubRegistry?.();
-    this._unsubRegistry = null;
+    this._unbindRegistry();
     for (const h of this._interactionHandles) h.destroy();
     this._interactionHandles = [];
     super.disconnectedCallback();
   }
 
-  protected override willUpdate(): void {
-    if (this._registry.length === 0 && this.hass) {
-      centralRegistry.load(this.hass).then((data) => {
-        this._registry = data.entities || [];
-      });
+  protected override willUpdate(changedProps: PropertyValues): void {
+    if (changedProps.has("hass") && changedProps.get("hass") !== this.hass) {
+      this._registry = [];
+      this._unbindRegistry();
+    }
+    if (this.hass) {
+      this._bindRegistry();
+      if (this._registry.length === 0 || changedProps.has("hass")) {
+        void this._loadRegistry();
+      }
+    }
+  }
+
+  private _bindRegistry(): void {
+    if (!this.isConnected || !this.hass) return;
+    if (this._registryHass === this.hass && this._unsubRegistry) return;
+
+    this._unbindRegistry();
+    const hass = this.hass;
+    this._registryHass = hass;
+    this._unsubRegistry = centralRegistry.subscribe(hass, (data) => {
+      if (this.hass === hass) this._registry = data.entities || [];
+    });
+  }
+
+  private _unbindRegistry(): void {
+    this._unsubRegistry?.();
+    this._unsubRegistry = null;
+    this._registryHass = null;
+  }
+
+  private async _loadRegistry(): Promise<void> {
+    if (!this.hass) return;
+    const hass = this.hass;
+    try {
+      const data = await centralRegistry.load(hass);
+      if (this.hass === hass) this._registry = data.entities || [];
+    } catch {
+      // The live subscription will populate the card after Home Assistant reconnects.
     }
   }
 
@@ -188,8 +219,10 @@ export class ComponentHouseholdDirectoryV3 extends LitBaseCard<HouseholdDirector
 
   private async _runAction(item: DirectoryItem): Promise<void> {
     if (!this.hass || !item.domain || !item.service || !item.entity) return;
-    await this.hass.callService(item.domain, item.service, {
-      entity_id: item.entity,
+    await runServiceAction(this.hass, {
+      domain: item.domain,
+      service: item.service,
+      target: { entity_id: item.entity },
     });
   }
 

@@ -2,7 +2,7 @@ export * from "./split-ac-card.types";
 import type { SplitControllerConfig } from "./split-ac-card.types";
 export * from "./split-ac-card.styles";
 import { splitAcCardStyles } from "./split-ac-card.styles";
-import { html, TemplateResult, CSSResultGroup } from "lit";
+import { html, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type {
@@ -16,20 +16,88 @@ import {
   waitForEntityState,
 } from "../../utils/interaction";
 import { registerCard } from "../../utils/registration";
+import { runServiceAction } from "../../utils/entity";
 
 
 const unavailable = (st?: HassEntity | null): boolean =>
   !st || ["unknown", "unavailable"].includes(st.state);
 
-const label = (value?: unknown): string =>
-  String(value || "")
+const label = (value?: unknown): string => {
+  const str = String(value || "");
+  if (!str) return "";
+  const mitsubishiMap: Record<string, string> = {
+    "1_up": "1 (Up)",
+    "2_up_middle": "2 (Up Mid)",
+    "3_middle": "3 (Middle)",
+    "4_down_middle": "4 (Down Mid)",
+    "5_down": "5 (Down)",
+    "1_left": "1 (Left)",
+    "2_left_center": "2 (Left Mid)",
+    "3_center": "3 (Center)",
+    "4_right_center": "4 (Right Mid)",
+    "5_right": "5 (Right)",
+    "left_right": "Split (Left/Right)",
+    "fan_only": "Fan",
+    "heat_cool": "Auto",
+  };
+  const lower = str.toLowerCase();
+  if (mitsubishiMap[lower]) return mitsubishiMap[lower];
+  return str
     .replaceAll("_", " ")
-    .replace(/^./, (letter) => letter.toUpperCase());
+    .split(" ")
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase())
+    .join(" ");
+};
 
 const degrees = (value?: unknown): string =>
   Number.isFinite(Number(value))
     ? Number(value).toFixed(Number(value) % 1 ? 1 : 0) + "°"
     : "—";
+
+interface SplitResumeState {
+  hvacMode: string;
+  temperature?: number;
+  fanMode?: string;
+  swingMode?: string;
+  swingHorizontalMode?: string;
+  verticalVaneOption?: string;
+  horizontalVaneOption?: string;
+  updatedAt: number;
+}
+
+const splitResumeCache = new Map<string, SplitResumeState>();
+
+const getStorageKey = (entityId: string): string => `ha_split_resume_${entityId}`;
+
+const loadResumeState = (entityId: string): SplitResumeState | null => {
+  if (splitResumeCache.has(entityId)) {
+    return splitResumeCache.get(entityId)!;
+  }
+  try {
+    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(getStorageKey(entityId)) : null;
+    if (raw) {
+      const parsed = JSON.parse(raw) as SplitResumeState;
+      if (parsed && typeof parsed.hvacMode === "string") {
+        splitResumeCache.set(entityId, parsed);
+        return parsed;
+      }
+    }
+  } catch {
+    // Ignore storage failure
+  }
+  return null;
+};
+
+const saveResumeState = (entityId: string, stateData: SplitResumeState): void => {
+  splitResumeCache.set(entityId, stateData);
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(getStorageKey(entityId), JSON.stringify(stateData));
+    }
+  } catch {
+    // Ignore storage failure
+  }
+};
 
 @customElement("component-split-controller-v4")
 export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfig> {
@@ -42,6 +110,8 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
 
   private _interactionHandles: InteractionHandle[] = [];
   private _tempCoalescer: RequestCoalescer<number> | null = null;
+  private _lastFocused: HTMLElement | null = null;
+  private _backdropMouseDown = false;
 
   public static override getGridOptions(): LovelaceGridOptions {
     return { columns: 12, rows: "auto" };
@@ -75,9 +145,37 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
   private _call(
     domain: string,
     service: string,
-    data: Record<string, any>,
-  ): Promise<any> | void {
-    return this.hass?.callService?.(domain, service, data);
+    data: Record<string, unknown>,
+  ): Promise<void> | void {
+    return this.hass
+      ? runServiceAction(this.hass, { domain, service, data })
+      : undefined;
+  }
+
+  public override updated(changed: PropertyValues): void {
+    super.updated(changed);
+    this._captureActiveState();
+  }
+
+  private _captureActiveState(): void {
+    if (!this._config?.entity) return;
+    const st = this._state();
+    if (!st || unavailable(st) || st.state === "off") return;
+    const attrs = st.attributes || {};
+    const vertVane = this._vanes().find((v) => v.axis === "Vertical");
+    const horizVane = this._vanes().find((v) => v.axis === "Horizontal");
+
+    const resumeData: SplitResumeState = {
+      hvacMode: st.state,
+      temperature: Number.isFinite(Number(attrs.temperature)) ? Number(attrs.temperature) : undefined,
+      fanMode: attrs.fan_mode ? String(attrs.fan_mode) : undefined,
+      swingMode: attrs.swing_mode ? String(attrs.swing_mode) : undefined,
+      swingHorizontalMode: attrs.swing_horizontal_mode ? String(attrs.swing_horizontal_mode) : undefined,
+      verticalVaneOption: vertVane?.entity ? vertVane.current : undefined,
+      horizontalVaneOption: horizVane?.entity ? horizVane.current : undefined,
+      updatedAt: Date.now(),
+    };
+    saveResumeState(this._config.entity, resumeData);
   }
 
   private async _power(): Promise<void> {
@@ -86,28 +184,81 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
     if (!st || unavailable(st)) return;
     const isOff = st.state === "off";
     if (!isOff) {
+      this._captureActiveState();
       try {
-        await this.hass.callService("climate", "set_hvac_mode", {
-          entity_id: this._config.entity,
-          hvac_mode: "off",
+        await runServiceAction(this.hass, {
+          domain: "climate",
+          service: "set_hvac_mode",
+          data: { hvac_mode: "off" },
+          target: { entity_id: this._config.entity },
         });
       } catch {
-        await this.hass.callService("climate", "turn_off", {
-          entity_id: this._config.entity,
+        await runServiceAction(this.hass, {
+          domain: "climate",
+          service: "turn_off",
+          target: { entity_id: this._config.entity },
         });
       }
     } else {
+      const saved = loadResumeState(this._config.entity);
       const modes: string[] = st.attributes?.hvac_modes || [];
-      const targetMode = modes.find((m) => m !== "off") || "cool";
+      const resumeMode =
+        (saved?.hvacMode && modes.includes(saved.hvacMode) && saved.hvacMode !== "off")
+          ? saved.hvacMode
+          : (modes.includes("cool") ? "cool" : modes.includes("heat") ? "heat" : modes.find((m) => m !== "off") || "cool");
+
       try {
-        await this.hass.callService("climate", "set_hvac_mode", {
-          entity_id: this._config.entity,
-          hvac_mode: targetMode,
+        await runServiceAction(this.hass, {
+          domain: "climate",
+          service: "set_hvac_mode",
+          data: { hvac_mode: resumeMode },
+          target: { entity_id: this._config.entity },
         });
       } catch {
-        await this.hass.callService("climate", "turn_on", {
-          entity_id: this._config.entity,
+        await runServiceAction(this.hass, {
+          domain: "climate",
+          service: "turn_on",
+          target: { entity_id: this._config.entity },
         });
+      }
+
+      if (saved?.temperature && Number.isFinite(saved.temperature)) {
+        try {
+          await runServiceAction(this.hass, {
+            domain: "climate",
+            service: "set_temperature",
+            data: { temperature: saved.temperature },
+            target: { entity_id: this._config.entity },
+          });
+        } catch {
+          // Ignore failure
+        }
+      }
+
+      if (saved?.fanMode && Array.isArray(st.attributes?.fan_modes) && st.attributes.fan_modes.includes(saved.fanMode)) {
+        try {
+          await runServiceAction(this.hass, {
+            domain: "climate",
+            service: "set_fan_mode",
+            data: { fan_mode: saved.fanMode },
+            target: { entity_id: this._config.entity },
+          });
+        } catch {
+          // Ignore failure
+        }
+      }
+
+      if (saved?.swingMode && Array.isArray(st.attributes?.swing_modes) && st.attributes.swing_modes.includes(saved.swingMode)) {
+        try {
+          await runServiceAction(this.hass, {
+            domain: "climate",
+            service: "set_swing_mode",
+            data: { swing_mode: saved.swingMode },
+            target: { entity_id: this._config.entity },
+          });
+        } catch {
+          // Ignore failure
+        }
       }
     }
   }
@@ -117,9 +268,11 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
     this._tempCoalescer = createRequestCoalescer<number>(
       async (targetTemp: number) => {
         if (!this._config?.entity || !this.hass) return;
-        await this.hass.callService("climate", "set_temperature", {
-          entity_id: this._config.entity,
-          temperature: targetTemp,
+        await runServiceAction(this.hass, {
+          domain: "climate",
+          service: "set_temperature",
+          data: { temperature: targetTemp },
+          target: { entity_id: this._config.entity },
         });
         await waitForEntityState(
           this.hass,
@@ -145,7 +298,8 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
 
   private _temperature(direction: number): void {
     const attributes = this._state()?.attributes || {};
-    const base = this._optimisticTemp ?? Number(attributes.temperature) ?? 21;
+    const reported = Number(attributes.temperature);
+    const base = this._optimisticTemp ?? (Number.isFinite(reported) ? reported : 21);
     const step = Number(attributes.target_temp_step || attributes.step) || 0.5;
     const min = Number(attributes.min_temp) || 16;
     const max = Number(attributes.max_temp) || 31;
@@ -155,27 +309,122 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
     this._getTempCoalescer().request(next);
   }
 
-  private _vanes(): Array<{ axis: string; entity: string; state: HassEntity }> {
-    const list: Array<[string, string | undefined]> = [
-      ["Vertical", this._config?.vertical_vane_entity],
-      ["Horizontal", this._config?.horizontal_vane_entity],
-    ];
-    return list.flatMap(([axis, entity]) => {
-      const st = this._state(entity);
-      return entity && st && !unavailable(st)
-        ? [{ axis, entity, state: st }]
-        : [];
-    });
+  private _vanes(): Array<{
+    axis: string;
+    entity?: string;
+    state?: HassEntity;
+    isClimateSwing?: boolean;
+    isClimateHorizontalSwing?: boolean;
+    options: string[];
+    current: string;
+  }> {
+    const results: Array<{
+      axis: string;
+      entity?: string;
+      state?: HassEntity;
+      isClimateSwing?: boolean;
+      isClimateHorizontalSwing?: boolean;
+      options: string[];
+      current: string;
+    }> = [];
+
+    const climateSt = this._state();
+    const climateAttrs = climateSt?.attributes || {};
+    const baseEntity = this._config?.entity?.replace(/^climate\./, "") || "";
+
+    const vertEntity =
+      this._config?.vertical_vane_entity ||
+      this._config?.vertical_vane ||
+      (this.hass?.states?.[`select.${baseEntity}_vertical_vane`]
+        ? `select.${baseEntity}_vertical_vane`
+        : undefined) ||
+      (this.hass?.states?.[`select.${baseEntity}_vane_vertical`]
+        ? `select.${baseEntity}_vane_vertical`
+        : undefined);
+
+    const horizEntity =
+      this._config?.horizontal_vane_entity ||
+      this._config?.horizontal_vane ||
+      (this.hass?.states?.[`select.${baseEntity}_horizontal_vane`]
+        ? `select.${baseEntity}_horizontal_vane`
+        : undefined) ||
+      (this.hass?.states?.[`select.${baseEntity}_vane_horizontal`]
+        ? `select.${baseEntity}_vane_horizontal`
+        : undefined);
+
+    if (vertEntity) {
+      const st = this._state(vertEntity);
+      if (st && !unavailable(st)) {
+        results.push({
+          axis: "Vertical",
+          entity: vertEntity,
+          state: st,
+          options: (st.attributes?.options as string[]) || [],
+          current: st.state,
+        });
+      }
+    }
+
+    if (horizEntity) {
+      const st = this._state(horizEntity);
+      if (st && !unavailable(st)) {
+        results.push({
+          axis: "Horizontal",
+          entity: horizEntity,
+          state: st,
+          options: (st.attributes?.options as string[]) || [],
+          current: st.state,
+        });
+      }
+    }
+
+    if (
+      !results.some((r) => r.axis === "Vertical") &&
+      Array.isArray(climateAttrs.swing_modes) &&
+      climateAttrs.swing_modes.length > 0
+    ) {
+      results.push({
+        axis: "Vertical",
+        isClimateSwing: true,
+        options: climateAttrs.swing_modes,
+        current: String(climateAttrs.swing_mode || "off"),
+      });
+    }
+
+    if (
+      !results.some((r) => r.axis === "Horizontal") &&
+      Array.isArray(climateAttrs.swing_horizontal_modes) &&
+      climateAttrs.swing_horizontal_modes.length > 0
+    ) {
+      results.push({
+        axis: "Horizontal",
+        isClimateHorizontalSwing: true,
+        options: climateAttrs.swing_horizontal_modes,
+        current: String(climateAttrs.swing_horizontal_mode || "off"),
+      });
+    }
+
+    return results;
   }
 
   private _closeOverlay(): void {
     this._activePanel = null;
+    const focusTarget = this._lastFocused;
+    this._lastFocused = null;
+    focusTarget?.focus();
   }
 
   private _openPanel(
     panel: "mode" | "fan" | "vanes" | "timer" | "settings",
   ): void {
+    const activeElement = this.renderRoot.querySelector(":focus");
+    this._lastFocused = activeElement instanceof HTMLElement
+      ? activeElement
+      : null;
     this._activePanel = panel;
+    this.updateComplete.then(() =>
+      this.renderRoot.querySelector<HTMLElement>(".pn [data-dialog-close]")?.focus(),
+    );
   }
 
   public override disconnectedCallback(): void {
@@ -195,7 +444,7 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
     const timer = this._state(this._config.timer_entity);
     const vanes = this._vanes();
     const vaneSummary = vanes
-      .map((v) => `${v.axis.slice(0, 1)} ${label(v.state.state)}`)
+      .map((v) => `${v.axis.slice(0, 1)} ${label(v.current)}`)
       .join(" · ");
 
     const name =
@@ -204,7 +453,9 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
       ? "Unavailable"
       : on
         ? label(st?.state)
-        : "Off";
+        : attributes.current_temperature !== undefined
+          ? `Off · ${degrees(attributes.current_temperature)}`
+          : "Off";
 
     const targetTemp = this._optimisticTemp ?? attributes.temperature;
     const modeIcons: Record<string, string> = {
@@ -220,29 +471,39 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
 
     return html`
       <ha-card>
-        <div class="w">
-          <div class="hd settings">
+        <div class="split-card">
+          <div class="split-toolbar">
             <button
-              class="idn"
+              class="split-identity"
               type="button"
               @click=${() => this.moreInfo(this._config?.entity)}
             >
-              <span class="iw"><ha-icon icon="${modeIcon}"></ha-icon></span>
-              <span class="cp">
-                <span class="nm">${this.esc(name)}</span>
-                <span class="st" role="status">${this.esc(displayState)}</span>
+              <span class="icon-well"><ha-icon icon="${modeIcon}"></ha-icon></span>
+              <span class="copy-block">
+                <span class="label-title">${this.esc(name)}</span>
+                <span class="label-sub" role="status">${this.esc(displayState)}</span>
               </span>
             </button>
             <button
-              class="pw sg"
+              class="btn-icon-44"
+              type="button"
+              aria-label="Profiles"
+              ?disabled=${unavailable(st)}
+              @click=${() => this._openPanel("settings")}
+            >
+              <ha-icon icon="mdi:account-circle-outline"></ha-icon>
+            </button>
+            <button
+              class="btn-icon-44"
               type="button"
               aria-label="Advanced settings"
+              ?disabled=${unavailable(st)}
               @click=${() => this._openPanel("settings")}
             >
               <ha-icon icon="mdi:cog-outline"></ha-icon>
             </button>
             <button
-              class="pw power-btn ${on ? "on" : ""}"
+              class="btn-icon-44 power-btn ${on ? "on" : ""}"
               type="button"
               aria-label="Toggle split system power"
               ?disabled=${unavailable(st)}
@@ -253,103 +514,113 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
             </button>
           </div>
 
-          <div class="ct">
-            <div class="cr">
-              <div class="rm">
-                <span class="rv"
-                  >${degrees(attributes.current_temperature)}</span
-                >
-                <span class="ml">Room temperature</span>
-              </div>
-              <div class="tc">
-                <button
-                  class="tb decrease"
-                  type="button"
-                  aria-label="Decrease target temperature"
-                  ?disabled=${!on}
-                  aria-disabled="${String(!on)}"
-                  @click=${() => this._temperature(-1)}
-                >
-                  <ha-icon icon="mdi:minus"></ha-icon>
-                </button>
-                <div class="tp">
-                  <div class="tv">${degrees(targetTemp)}</div>
-                  <div class="ts">Target</div>
-                </div>
-                <button
-                  class="tb increase"
-                  type="button"
-                  aria-label="Increase target temperature"
-                  ?disabled=${!on}
-                  aria-disabled="${String(!on)}"
-                  @click=${() => this._temperature(1)}
-                >
-                  <ha-icon icon="mdi:plus"></ha-icon>
-                </button>
-              </div>
-            </div>
+          ${
+            on
+              ? html`
+                  <div class="card-divider-line"></div>
 
-            <div class="as">
-              <button
-                class="a ma"
-                type="button"
-                data-panel="mode"
-                aria-expanded="${String(this._activePanel === "mode")}"
-                aria-label="HVAC mode: ${label(st?.state)}"
-                @click=${() => this._openPanel("mode")}
-              >
-                <ha-icon icon="${modeIcon}"></ha-icon>
-                <span class="al">Mode · ${label(st?.state)}</span>
-              </button>
-              <button
-                class="a fa"
-                type="button"
-                data-panel="fan"
-                aria-expanded="${String(this._activePanel === "fan")}"
-                aria-label="Fan speed: ${label(attributes.fan_mode)}"
-                @click=${() => this._openPanel("fan")}
-              >
-                <ha-icon icon="mdi:fan"></ha-icon>
-                <span class="al">Fan · ${label(attributes.fan_mode)}</span>
-              </button>
-              ${
-                vaneSummary
-                  ? html`
-                      <button
-                        class="a va"
-                        type="button"
-                        data-panel="vanes"
-                        aria-expanded="${String(this._activePanel === "vanes")}"
-                        aria-label="Vanes: ${vaneSummary}"
-                        @click=${() => this._openPanel("vanes")}
+                  <div class="split-climate-row">
+                    <div>
+                      <span class="kpi-metric-lg"
+                        >${degrees(attributes.current_temperature)}</span
                       >
-                        <ha-icon icon="mdi:swap-vertical"></ha-icon>
-                        <span class="al">Vanes · ${this.esc(vaneSummary)}</span>
-                      </button>
-                    `
-                  : ""
-              }
-              ${
-                this._config.timer_entity
-                  ? html`
+                      <span class="label-sub room-temperature">Room temperature</span>
+                    </div>
+                    <div class="stepper-control">
                       <button
-                        class="a ta ${timer?.state === "active" ? "av" : ""}"
+                        class="stepper-step-btn decrease"
                         type="button"
-                        data-panel="timer"
-                        aria-expanded="${String(this._activePanel === "timer")}"
-                        aria-label="Off timer: ${timer?.state === "active" ? "Active" : "Off"}"
-                        @click=${() => this._openPanel("timer")}
+                        aria-label="Decrease target temperature"
+                        ?disabled=${!on}
+                        aria-disabled="${String(!on)}"
+                        @click=${() => this._temperature(-1)}
                       >
-                        <ha-icon icon="mdi:timer-outline"></ha-icon>
-                        <span class="al"
-                          >${timer?.state === "active" ? "Timer · Active" : "Timer"}</span
-                        >
+                        <ha-icon icon="mdi:minus"></ha-icon>
                       </button>
-                    `
-                  : ""
-              }
-            </div>
-          </div>
+                      <div class="stepper-display">
+                        <div class="stepper-main-val">${degrees(targetTemp)}</div>
+                        <div class="stepper-sub-lbl">Target</div>
+                      </div>
+                      <button
+                        class="stepper-step-btn increase"
+                        type="button"
+                        aria-label="Increase target temperature"
+                        ?disabled=${!on}
+                        aria-disabled="${String(!on)}"
+                        @click=${() => this._temperature(1)}
+                      >
+                        <ha-icon icon="mdi:plus"></ha-icon>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="split-actions">
+                    <button
+                      class="btn-action-pill action-pill ${on ? "active" : ""}"
+                      type="button"
+                      data-panel="mode"
+                      aria-expanded="${String(this._activePanel === "mode")}"
+                      aria-label="HVAC mode: ${label(st?.state)}"
+                      ?disabled=${unavailable(st)}
+                      @click=${() => this._openPanel("mode")}
+                    >
+                      <ha-icon icon="${modeIcon}"></ha-icon>
+                      <span class="action-label">Mode · ${label(st?.state)}</span>
+                    </button>
+                    <button
+                      class="btn-action-pill action-pill"
+                      type="button"
+                      data-panel="fan"
+                      aria-expanded="${String(this._activePanel === "fan")}"
+                      aria-label="Fan speed: ${label(attributes.fan_mode)}"
+                      ?disabled=${unavailable(st)}
+                      @click=${() => this._openPanel("fan")}
+                    >
+                      <ha-icon icon="mdi:fan"></ha-icon>
+                      <span class="action-label">Fan · ${label(attributes.fan_mode)}</span>
+                    </button>
+                    ${
+                      vaneSummary
+                        ? html`
+                            <button
+                              class="btn-action-pill action-pill"
+                              type="button"
+                              data-panel="vanes"
+                              aria-expanded="${String(this._activePanel === "vanes")}"
+                              aria-label="Vanes: ${vaneSummary}"
+                              ?disabled=${unavailable(st)}
+                              @click=${() => this._openPanel("vanes")}
+                            >
+                              <ha-icon icon="mdi:swap-vertical"></ha-icon>
+                              <span class="action-label">Vanes · ${this.esc(vaneSummary)}</span>
+                            </button>
+                          `
+                        : ""
+                    }
+                    ${
+                      this._config.timer_entity
+                        ? html`
+                            <button
+                              class="btn-action-pill action-pill ${timer?.state === "active" ? "active" : ""}"
+                              type="button"
+                              data-panel="timer"
+                              aria-expanded="${String(this._activePanel === "timer")}"
+                              aria-label="Off timer: ${timer?.state === "active" ? "Active" : "Off"}"
+                              ?disabled=${unavailable(st) || unavailable(timer)}
+                              @click=${() => this._openPanel("timer")}
+                            >
+                              <ha-icon icon="mdi:timer-outline"></ha-icon>
+                              <span class="action-label"
+                                >${timer?.state === "active" ? "Timer · Active" : "Timer"}</span
+                              >
+                            </button>
+                          `
+                        : ""
+                    }
+                  </div>
+                `
+              : ""
+          }
         </div>
       </ha-card>
 
@@ -374,6 +645,9 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
         role="dialog"
         aria-modal="true"
         aria-label="${title}"
+        @mousedown=${(e: MouseEvent) => {
+          this._backdropMouseDown = e.target === e.currentTarget;
+        }}
         @keydown=${(e: KeyboardEvent) => {
           if (e.key === "Escape") {
             e.stopPropagation();
@@ -381,15 +655,18 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
           }
         }}
         @click=${(e: MouseEvent) => {
-          if (e.target === this.renderRoot.querySelector(".pn"))
+          if (e.target === e.currentTarget && this._backdropMouseDown) {
             this._closeOverlay();
+          }
+          this._backdropMouseDown = false;
         }}
       >
-        <div class="pd">
+        <div class="pd" @click=${(e: MouseEvent) => e.stopPropagation()} @mousedown=${(e: MouseEvent) => e.stopPropagation()}>
           <div class="ph">
             <h3 class="pt">${title}</h3>
             <button
               class="x"
+              data-dialog-close
               type="button"
               aria-label="Close"
               @click=${this._closeDialog}
@@ -429,12 +706,12 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                 class="o choice"
                 type="button"
                 aria-selected="${String(mode === st?.state)}"
-                @click=${() => {
+                @click=${(e: Event) => {
+                  e.stopPropagation();
                   this._call("climate", "set_hvac_mode", {
                     entity_id: this._config?.entity,
                     hvac_mode: mode,
                   });
-                  this._closeOverlay();
                 }}
               >
                 <span><ha-icon icon="${modeIcons[mode] || "mdi:thermostat"}"></ha-icon></span>
@@ -457,12 +734,12 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                 class="o choice"
                 type="button"
                 aria-selected="${String(mode === attributes.fan_mode)}"
-                @click=${() => {
+                @click=${(e: Event) => {
+                  e.stopPropagation();
                   this._call("climate", "set_fan_mode", {
                     entity_id: this._config?.entity,
                     fan_mode: mode,
                   });
-                  this._closeOverlay();
                 }}
               >
                 <span><ha-icon icon="mdi:fan"></ha-icon></span>
@@ -484,23 +761,35 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
             <section class="group og">
               <p class="gt">${vane.axis} vane</p>
               <div class="qs choices">
-                ${((vane.state.attributes?.options as string[]) || []).map(
+                ${vane.options.map(
                   (opt) => html`
                     <button
                       class="o choice"
                       type="button"
-                      aria-selected="${String(opt === vane.state.state)}"
-                      @click=${() => {
-                        this._call("select", "select_option", {
-                          entity_id: vane.entity,
-                          option: opt,
-                        });
-                        this._closeOverlay();
+                      aria-selected="${String(opt === vane.current)}"
+                      @click=${(e: Event) => {
+                        e.stopPropagation();
+                        if (vane.isClimateSwing) {
+                          this._call("climate", "set_swing_mode", {
+                            entity_id: this._config?.entity,
+                            swing_mode: opt,
+                          });
+                        } else if (vane.isClimateHorizontalSwing) {
+                          this._call("climate", "set_swing_horizontal_mode", {
+                            entity_id: this._config?.entity,
+                            swing_horizontal_mode: opt,
+                          });
+                        } else if (vane.entity) {
+                          this._call("select", "select_option", {
+                            entity_id: vane.entity,
+                            option: opt,
+                          });
+                        }
                       }}
                     >
-                      <span></span>
+                      <span><ha-icon icon="mdi:swap-vertical"></ha-icon></span>
                       <span>${label(opt)}</span>
-                      <span class="oi"></span>
+                      <span class="oi">${opt === vane.current ? html`<ha-icon icon="mdi:check"></ha-icon>` : ""}</span>
                     </button>
                   `,
                 )}
@@ -522,12 +811,12 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
             ([name, duration]) => html`
               <button
                 type="button"
-                @click=${() => {
+                @click=${(e: Event) => {
+                  e.stopPropagation();
                   this._call("timer", "start", {
                     entity_id: this._config?.timer_entity,
                     duration,
                   });
-                  this._closeOverlay();
                 }}
               >
                 ${name}
@@ -538,11 +827,11 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
         <div class="tac">
           <button
             type="button"
-            @click=${() => {
+            @click=${(e: Event) => {
+              e.stopPropagation();
               this._call("timer", "cancel", {
                 entity_id: this._config?.timer_entity,
               });
-              this._closeOverlay();
             }}
           >
             Cancel timer
@@ -568,11 +857,14 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                 <button
                   class="o"
                   type="button"
-                  @click=${() => this._openPanel("vanes")}
+                  @click=${(e: Event) => {
+                    e.stopPropagation();
+                    this._openPanel("vanes");
+                  }}
                 >
-                  <span></span>
+                  <span><ha-icon icon="mdi:swap-vertical"></ha-icon></span>
                   <span>Vane settings</span>
-                  <span class="oi"></span>
+                  <span class="oi"><ha-icon icon="mdi:chevron-right"></ha-icon></span>
                 </button>
               `
             : ""
@@ -583,16 +875,50 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
                 <button
                   class="o"
                   type="button"
-                  @click=${() => this._openPanel("timer")}
+                  @click=${(e: Event) => {
+                    e.stopPropagation();
+                    this._openPanel("timer");
+                  }}
                 >
-                  <span></span>
+                  <span><ha-icon icon="mdi:timer-outline"></ha-icon></span>
                   <span>Off timer</span>
-                  <span class="oi"></span>
+                  <span class="oi"><ha-icon icon="mdi:chevron-right"></ha-icon></span>
                 </button>
               `
             : ""
         }
       </div>
+      ${
+        Array.isArray(attributes.preset_modes) && attributes.preset_modes.length > 0
+          ? html`
+              <div class="og">
+                <p class="fb" style="margin-bottom: 6px; font-weight: 600;">Preset mode</p>
+                <div class="qs choices">
+                  ${(attributes.preset_modes as string[]).map(
+                    (preset) => html`
+                      <button
+                        class="o choice"
+                        type="button"
+                        aria-selected="${String(preset === attributes.preset_mode)}"
+                        @click=${(e: Event) => {
+                          e.stopPropagation();
+                          this._call("climate", "set_preset_mode", {
+                            entity_id: this._config?.entity,
+                            preset_mode: preset,
+                          });
+                        }}
+                      >
+                        <span><ha-icon icon="mdi:tune"></ha-icon></span>
+                        <span>${label(preset)}</span>
+                        <span class="oi">${preset === attributes.preset_mode ? html`<ha-icon icon="mdi:check"></ha-icon>` : ""}</span>
+                      </button>
+                    `,
+                  )}
+                </div>
+              </div>
+            `
+          : ""
+      }
       <div class="og">
         ${[
           ...(this._config?.settings_entities || []),
@@ -609,10 +935,10 @@ export class ComponentSplitControllerV4 extends LitBaseCard<SplitControllerConfi
               class="o setting"
               type="button"
               style="margin-bottom: 6px;"
-              @click=${() => {
+              @click=${(e: Event) => {
+                e.stopPropagation();
                 const [domain] = entity.split(".");
                 this._call(domain, "turn_on", { entity_id: entity });
-                this._closeOverlay();
               }}
             >
               <span></span>
