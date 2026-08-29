@@ -5,7 +5,6 @@ import "../../src/cards/history-graph/history-graph-card";
 import "../../src/cards/solar-daylight/solar-daylight-card";
 import "../../src/cards/energy-history/energy-history-card";
 import "../../src/cards/metric-pair/metric-pair-card";
-import "../../src/cards/energy-dashboard/energy-dashboard-card";
 import { createMockHass } from '../fixtures/mock-hass';
 
 describe('Stage 6 Energy Family Contract Tests', () => {
@@ -185,22 +184,6 @@ describe('Stage 6 Energy Family Contract Tests', () => {
     await el.updateComplete;
     expect(el.config.day_channel).toBe('new-channel');
 
-    el.remove();
-  });
-
-  it('component-energy-dashboard-v1 renders unified dashboard with all child cards', async () => {
-    const el = document.createElement('component-energy-dashboard-v1') as any;
-    el.setConfig({ profile: 'household-energy' });
-    el.hass = hass;
-    document.body.appendChild(el);
-    await el.updateComplete;
-
-    expect(el.getCardSize()).toBe(12);
-    expect(el.shadowRoot.querySelector('.layout')).not.toBeNull();
-    expect(el.shadowRoot.querySelector('component-energy-day-selector-v1')).not.toBeNull();
-    expect(el.shadowRoot.querySelector('component-energy-summary-v1')).not.toBeNull();
-    expect(el.shadowRoot.querySelector('solar-daylight-card-v7')).not.toBeNull();
-    expect(el.shadowRoot.querySelector('energy-history-card-v3')).not.toBeNull();
     el.remove();
   });
 });

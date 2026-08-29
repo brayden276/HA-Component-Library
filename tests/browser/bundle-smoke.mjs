@@ -11,7 +11,7 @@ const distBundlePath = resolve(rootDir, 'dist/ha-component-library.js');
 
 const bundleJs = readFileSync(distBundlePath, 'utf-8');
 
-// Expected 48 custom elements
+// Expected 40 custom elements
 const EXPECTED_TAGS = [
   'component-context-strip-v3',
   'component-single-kpi-v2',
@@ -24,7 +24,6 @@ const EXPECTED_TAGS = [
   'component-text-effect-v1',
   'component-section-separator-v2',
   'component-empty-state-v3',
-  'component-empty-state-v2',
   'component-quick-nav-v2',
   'component-nav-tile-v2',
   'component-room-navigation-v1',
@@ -40,27 +39,21 @@ const EXPECTED_TAGS = [
   'component-split-controller-v4',
   'component-apple-tv-controller-v1',
   'component-camera-controller-v2',
-  'component-camera-controller-v1',
   'component-security-summary-v1',
   'component-security-camera-wall-v3',
   'component-security-entry-points-v1',
-  'component-security-dashboard-v1',
   'component-energy-day-selector-v1',
   'component-energy-summary-v1',
   'component-history-graph-v2',
   'solar-daylight-card-v7',
   'energy-history-card-v3',
   'metric-pair-card-v3',
-  'component-energy-dashboard-v1',
   'component-welcome-header-v1',
-  'component-household-attention-v1',
+  'component-household-attention-v2',
   'component-favourites-v3',
-  'component-favourites-minimal-v1',
   'component-smart-collection-v3',
   'component-household-directory-v3',
-  'component-room-directory-v4',
-  'component-home-overview-v4',
-  'component-home-overview-v5'
+  'component-room-directory-v4'
 ];
 
 async function runSmokeTest() {

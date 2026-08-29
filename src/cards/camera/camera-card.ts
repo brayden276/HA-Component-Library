@@ -557,23 +557,3 @@ registerCard({
   description:
     "Platform-adapted camera controls with explicit state and protected destructive changes.",
 });
-
-/** Backward-compatible V1 adapter delegating to V2 controller */
-@customElement("component-camera-controller-v1")
-export class ComponentCameraControllerV1 extends ComponentCameraControllerV2 {
-  public override setConfig(config: CameraControllerConfig): void {
-    super.setConfig({
-      profile: "household-security",
-      ...config,
-      type: "custom:component-camera-controller-v1",
-    });
-  }
-}
-
-registerCard({
-  type: "component-camera-controller-v1",
-  element: ComponentCameraControllerV1,
-  name: "Camera Controller V1",
-  description:
-    "Legacy camera controller adapter registering custom:component-camera-controller-v1.",
-});

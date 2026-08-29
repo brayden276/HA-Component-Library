@@ -1,0 +1,34 @@
+﻿title: Energy
+path: energy
+icon: mdi:lightning-bolt
+badges: []
+cards:
+  - type: custom:component-energy-day-selector-v1
+    channel: energy-day
+
+  - type: custom:component-energy-summary-v1
+    profile: household-energy
+    day_channel: energy-day
+    house_entity: sensor.ha_component_house_power
+    solar_entity: sensor.ha_component_solar_power
+    grid_entity: sensor.ha_component_grid_power
+
+  - type: custom:solar-daylight-card-v7
+    weather_entity: weather.forecast_home
+    sun_entity: sun.sun
+
+  - type: custom:metric-pair-card-v3
+    left_label: House Load
+    left_value: 1.24 kW
+    right_label: Solar Production
+    right_value: 2.85 kW
+    left_more_info_entity: sensor.ha_component_house_power
+    right_more_info_entity: sensor.ha_component_solar_power
+
+  - type: custom:energy-history-card-v3
+    profile: household-energy
+    day_channel: energy-day
+    calendar_day: true
+    house_entity: sensor.ha_component_house_power
+    solar_entity: sensor.ha_component_solar_power
+    grid_entity: sensor.ha_component_grid_power

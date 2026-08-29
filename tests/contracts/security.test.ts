@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import "../../src/cards/security-summary/security-summary-card";
 import "../../src/cards/security-camera-wall/security-camera-wall-card";
 import "../../src/cards/security-entry-points/security-entry-points-card";
-import "../../src/cards/security-dashboard/security-dashboard-card";
 import "../../src/cards/camera/camera-card";
 import { createMockHass, MockHassBuilder } from '../fixtures/mock-hass';
 
@@ -59,64 +58,7 @@ describe('Stage 5 Security Family Contract Tests', () => {
     el.remove();
   });
 
-  it('component-security-dashboard-v1 renders hero and sections', async () => {
-    const el = document.createElement('component-security-dashboard-v1') as any;
-    el.setConfig({ profile: 'household-security', title: 'Security Dashboard' });
-    el.hass = hass;
-    document.body.appendChild(el);
-    await el.updateComplete;
 
-    expect(el.getCardSize()).toBe(12);
-    expect(el.shadowRoot.textContent).toContain('Security Dashboard');
-    expect(el.shadowRoot.querySelector('.hero')).not.toBeNull();
-    expect(el.shadowRoot.querySelector('.camera-section')).not.toBeNull();
-    el.remove();
-  });
-
-  it('disables quick actions whose live HA entity state is unavailable', async () => {
-    const el = document.createElement('component-security-dashboard-v1') as any;
-    el.setConfig({ profile: 'household-security' });
-    el.hass = createMockHass({
-      states: {
-        'scene.night_mode': { state: 'unavailable', attributes: {} } as any,
-      },
-    });
-    document.body.appendChild(el);
-    await el.updateComplete;
-    el._model = {
-      error: null, profileError: null, profileMissing: false, profile: {}, cameras: [], entries: [], attention: [], allClear: true, onlineCameras: 0,
-      quickActions: [{ id: 'night', entityId: 'scene.night_mode', domain: 'scene', service: 'turn_on', name: 'Night mode', icon: 'mdi:weather-night', available: true }],
-    };
-    await el.updateComplete;
-
-    expect(el.shadowRoot.querySelector<HTMLButtonElement>('.quick-action')?.disabled).toBe(true);
-    el.remove();
-  });
-
-  it('uses a Home Assistant target for available quick actions', async () => {
-    const builder = new MockHassBuilder({
-      states: {
-        'scene.night_mode': { state: 'scening', attributes: {} } as any,
-      },
-    });
-    const el = document.createElement('component-security-dashboard-v1') as any;
-    el.setConfig({ profile: 'household-security' });
-    el.hass = builder.build();
-    document.body.appendChild(el);
-    await el.updateComplete;
-    el._model = {
-      error: null, profileError: null, profileMissing: false, profile: {}, cameras: [], entries: [], attention: [], allClear: true, onlineCameras: 0,
-      quickActions: [{ id: 'night', entityId: 'scene.night_mode', domain: 'scene', service: 'turn_on', name: 'Night mode', icon: 'mdi:weather-night', available: true }],
-    };
-    await el.updateComplete;
-
-    el.shadowRoot.querySelector<HTMLButtonElement>('.quick-action')?.click();
-    await Promise.resolve();
-    expect(builder.getServiceCalls()).toContainEqual({
-      domain: 'scene', service: 'turn_on', data: undefined, target: { entity_id: 'scene.night_mode' },
-    });
-    el.remove();
-  });
 
   it('disables camera controls when their entity state is unavailable', async () => {
     const el = document.createElement('component-camera-controller-v2') as any;

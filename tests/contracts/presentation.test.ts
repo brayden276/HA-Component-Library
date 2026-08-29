@@ -206,15 +206,5 @@ describe('Stage 1 Presentational Cards Contract Tests', () => {
     expect(v3.shadowRoot.textContent).toContain('No Devices Found');
     expect(v3.shadowRoot.textContent).toContain('Check integrations.');
     v3.remove();
-
-    const v2 = document.createElement('component-empty-state-v2') as any;
-    v2.setConfig({ title: 'No Items', message: 'Nothing here.' });
-    v2.hass = hass;
-    document.body.appendChild(v2);
-    await v2.updateComplete;
-
-    expect(v2.getCardSize()).toBe(1);
-    expect(v2.shadowRoot.textContent).toContain('No Items');
-    v2.remove();
   });
 });

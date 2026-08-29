@@ -5,7 +5,6 @@ import "../../src/cards/favourites/favourites-card";
 import "../../src/cards/smart-collection/smart-collection-card";
 import "../../src/cards/household-directory/household-directory-card";
 import "../../src/cards/room-directory/room-directory-card";
-import "../../src/cards/home-overview/home-overview-card";
 import { createMockHass } from '../fixtures/mock-hass';
 
 describe('Stage 7 Home Composition & Directories Contract Tests', () => {
@@ -36,8 +35,8 @@ describe('Stage 7 Home Composition & Directories Contract Tests', () => {
     el.remove();
   });
 
-  it('component-household-attention-v1 renders demo issues', async () => {
-    const el = document.createElement('component-household-attention-v1') as any;
+  it('component-household-attention-v2 renders demo issues', async () => {
+    const el = document.createElement('component-household-attention-v2') as any;
     el.setConfig({ demo: true, title: 'Attention items' });
     el.hass = hass;
     document.body.appendChild(el);
@@ -49,7 +48,7 @@ describe('Stage 7 Home Composition & Directories Contract Tests', () => {
     el.remove();
   });
 
-  it('component-favourites-v3 and component-favourites-minimal-v1 render favourites', async () => {
+  it('component-favourites-v3 renders favourites', async () => {
     const el = document.createElement('component-favourites-v3') as any;
     el.setConfig({
       items: [{ title: 'Ceiling Light', state: 'On', icon: 'mdi:lightbulb' }],
@@ -62,15 +61,6 @@ describe('Stage 7 Home Composition & Directories Contract Tests', () => {
     expect(el.getCardSize()).toBe(2);
     expect(el.shadowRoot.textContent).toContain('Ceiling Light');
     el.remove();
-
-    const minEl = document.createElement('component-favourites-minimal-v1') as any;
-    minEl.setConfig({ title: 'Minimal Favourites' });
-    minEl.hass = hass;
-    document.body.appendChild(minEl);
-    await minEl.updateComplete;
-
-    expect(minEl.getCardSize()).toBe(2);
-    minEl.remove();
   });
 
   it('component-smart-collection-v3 renders collection', async () => {
@@ -109,26 +99,5 @@ describe('Stage 7 Home Composition & Directories Contract Tests', () => {
     expect(el.getCardSize()).toBe(4);
     expect(el.shadowRoot.textContent).toContain('Rooms');
     el.remove();
-  });
-
-  it('component-home-overview-v4 and v5 alias render composed dashboard', async () => {
-    const el = document.createElement('component-home-overview-v4') as any;
-    el.setConfig({ weather_entity: 'weather.forecast_home' });
-    el.hass = hass;
-    document.body.appendChild(el);
-    await el.updateComplete;
-
-    expect(el.getCardSize()).toBe(12);
-    expect(el.shadowRoot.querySelector('.sections')).not.toBeNull();
-    el.remove();
-
-    const elV5 = document.createElement('component-home-overview-v5') as any;
-    elV5.setConfig({ weather_entity: 'weather.forecast_home' });
-    elV5.hass = hass;
-    document.body.appendChild(elV5);
-    await elV5.updateComplete;
-
-    expect(elV5.getCardSize()).toBe(12);
-    elV5.remove();
   });
 });

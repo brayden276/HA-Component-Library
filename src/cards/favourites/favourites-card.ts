@@ -2,8 +2,8 @@ export * from "./favourites-card.types";
 import type { FavouriteRef, FavouritesConfig } from "./favourites-card.types";
 export * from "./favourites-card.styles";
 import { favouritesCardStyles } from "./favourites-card.styles";
-import { html, css, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { html, TemplateResult, CSSResultGroup, PropertyValues } from "lit";
+import { customElement, state } from "lit/decorators.js";
 import { LitBaseCard } from "../../components/base/lit-base-card";
 import type {
   LovelaceGridOptions,
@@ -22,10 +22,6 @@ const INVALID_STATES = new Set(["unavailable", "unknown"]);
 @customElement("component-favourites-v3")
 export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
   public static stubConfig = { helpers: [], max: 4, title: "Favourites" };
-
-  /** Explicit compatibility mode used by component-favourites-minimal-v1. */
-  @property({ attribute: false })
-  public minimal = false;
 
   @state()
   private _selected: FavouriteRef[] = [];
@@ -383,7 +379,7 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
       demoItems.length > 0 &&
       !(this._config.helpers?.length || this._config.preference_key)
     ) {
-      return html`${this._renderCompatibilityStyles()}
+      return html`
         <ha-card>
           <div class="wrap">
             <div class="grid">
@@ -408,10 +404,11 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
               )}
             </div>
           </div>
-        </ha-card> `;
+        </ha-card>
+      `;
     }
 
-    return html`${this._renderCompatibilityStyles()}
+    return html`
       <ha-card>
         <div class="wrap">
           ${
@@ -427,9 +424,7 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
                       type="button"
                       aria-label="Edit favourites"
                     >
-                      <ha-icon
-                        icon="${this.minimal ? "mdi:dots-horizontal" : "mdi:pencil-outline"}"
-                      ></ha-icon>
+                      <ha-icon icon="mdi:pencil-outline"></ha-icon>
                       <span>Edit</span>
                     </button>
                   </div>
@@ -477,95 +472,7 @@ export class ComponentFavouritesV3 extends LitBaseCard<FavouritesConfig> {
             }
           </div>
         </div>
-      </ha-card> `;
-  }
-
-  private _renderCompatibilityStyles(): TemplateResult {
-    if (!this.minimal) return html``;
-    return html`<style>
-      .heading h2 {
-        font-size: 15px !important;
-        font-weight: 500 !important;
-      }
-      .heading ha-icon {
-        color: var(--secondary-text-color) !important;
-        --mdc-icon-size: 17px !important;
-      }
-      .edit {
-        min-width: 44px !important;
-        min-height: 44px !important;
-        padding: 0 !important;
-        color: var(--secondary-text-color) !important;
-        font-weight: 400 !important;
-      }
-      .edit ha-icon {
-        --mdc-icon-size: 16px !important;
-      }
-      .edit span {
-        display: none !important;
-      }
-      .icon {
-        color: var(--secondary-text-color) !important;
-      }
-      .name {
-        font-weight: 500 !important;
-      }
-      .state {
-        font-size: 12px !important;
-      }
-      .dialog-title,
-      .confirm-title {
-        font-size: 16px !important;
-        font-weight: 500 !important;
-      }
-      .subheading,
-      .group-title,
-      .choice-name,
-      .dialog-button {
-        font-weight: 500 !important;
-      }
-      .selected-meta,
-      .choice-meta,
-      .editor-copy {
-        font-size: 12px !important;
-      }
-    </style>`;
-  }
-}
-
-@customElement("component-favourites-minimal-v1")
-export class ComponentFavouritesMinimalV1 extends LitBaseCard<FavouritesConfig> {
-  public static override getGridOptions(): LovelaceGridOptions {
-    return { columns: 12, rows: "auto" };
-  }
-
-  public static override styles: CSSResultGroup = css`
-    :host {
-      display: block;
-      min-width: 0;
-    }
-  `;
-
-  public override setConfig(config: FavouritesConfig): void {
-    super.setConfig({
-      preference_key: "home-control.favourites.v1",
-      ...(config || {}),
-      type: "custom:component-favourites-minimal-v1",
-    });
-  }
-
-  public override getCardSize(): number {
-    return 2;
-  }
-
-  protected override render(): TemplateResult {
-    if (!this._config) return html``;
-    return html`
-      <component-favourites-v3
-        .hass=${this.hass}
-        .config=${this._config}
-        .minimal=${true}
-      ></component-favourites-v3>
+      </ha-card>
     `;
   }
 }
@@ -576,11 +483,4 @@ registerCard({
   name: "Favourites V3",
   description:
     "Stable household favourites with entity discovery and backend companion storage.",
-});
-
-registerCard({
-  type: "component-favourites-minimal-v1",
-  element: ComponentFavouritesMinimalV1,
-  name: "Favourites Minimal",
-  description: "Existing favourites behaviour with restrained Home typography.",
 });

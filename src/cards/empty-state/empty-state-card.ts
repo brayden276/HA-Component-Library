@@ -47,20 +47,3 @@ registerCard({
   name: "Empty State",
   description: "Reusable empty-state component.",
 });
-
-@customElement("component-empty-state-v2")
-export class ComponentEmptyStateV2 extends ComponentEmptyStateV3 {
-  public override setConfig(config: EmptyStateCardConfig): void {
-    super.setConfig({
-      ...config,
-      type: "custom:component-empty-state-v2",
-    });
-  }
-}
-
-registerCard({
-  type: "component-empty-state-v2",
-  element: ComponentEmptyStateV2,
-  name: "Empty State V2",
-  description: "Reusable compact empty-state component.",
-});

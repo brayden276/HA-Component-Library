@@ -35,18 +35,18 @@ describe('Composition, Multi-Instance, and Lifecycle Reconnection Contract Tests
   });
 
   describe('1. Home Dashboard Composition', () => {
-    it('composes Home Overview, Favourites, Room Directory, and Smart Collection cleanly', () => {
-      const overview = document.createElement('component-home-overview-v4') as any;
+    it('composes Welcome Header, Favourites, Room Directory, and Smart Collection cleanly', () => {
+      const welcome = document.createElement('component-welcome-header-v1') as any;
       const favourites = document.createElement('component-favourites-v3') as any;
       const roomDir = document.createElement('component-room-directory-v4') as any;
       const collection = document.createElement('component-smart-collection-v3') as any;
 
-      overview.setConfig({ type: 'custom:component-home-overview-v4' });
+      welcome.setConfig({ type: 'custom:component-welcome-header-v1', title: 'Residence' });
       favourites.setConfig({ type: 'custom:component-favourites-v3', title: 'Top Controls' });
       roomDir.setConfig({ type: 'custom:component-room-directory-v4', title: 'Rooms' });
       collection.setConfig({ type: 'custom:component-smart-collection-v3', title: 'Lights Collection' });
 
-      [overview, favourites, roomDir, collection].forEach((card) => {
+      [welcome, favourites, roomDir, collection].forEach((card) => {
         card.hass = mockHass;
         container.appendChild(card);
         expect(card.shadowRoot).toBeDefined();

@@ -340,15 +340,6 @@ describe('Stage 4 Device Controllers Contract Tests', () => {
     expect(v2.getCardSize()).toBe(1);
     expect(v2.shadowRoot.querySelector('button.view')).not.toBeNull();
     v2.remove();
-
-    const v1 = document.createElement('component-camera-controller-v1') as any;
-    v1.setConfig({ profile: 'household-security' });
-    v1.hass = hass;
-    document.body.appendChild(v1);
-    await v1.updateComplete;
-
-    expect(v1.getCardSize()).toBe(1);
-    v1.remove();
   });
 
   it('component-split-controller-v4 auto-discovers native swing_modes for vanes control', async () => {

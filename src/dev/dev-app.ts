@@ -327,8 +327,7 @@ export class HaDevApp extends LitElement {
             { id: "primitives", label: "1. Primitives & Presentation (10)" },
             { id: "controls", label: "2. Navigation & Controls (8)" },
             { id: "devices", label: "3. Specialised Controllers (5)" },
-            { id: "compositions", label: "4. Composed Dashboards & Suites (11)" },
-            { id: "compat", label: "5. Compatibility Aliases (5)" },
+            { id: "compositions", label: "4. Composed Cards & Directories (11)" },
           ].map(
             (tab) => html`
               <button
@@ -1205,21 +1204,6 @@ export class HaDevApp extends LitElement {
                       `,
                       "custom:component-security-entry-points-v1",
                     )}
-                    ${this._renderShowcase(
-                      "component-security-dashboard-v1",
-                      "Security Dashboard V1 (Full Security Management Center)",
-                      html`
-                        <component-security-dashboard-v1
-                          .hass=${this._hass}
-                          .config=${{
-                            type: "custom:component-security-dashboard-v1",
-                            title: "Comprehensive Security Center",
-                            profile: "household-security",
-                          }}
-                        ></component-security-dashboard-v1>
-                      `,
-                      "custom:component-security-dashboard-v1",
-                    )}
                   </section>
                 `
               : ""
@@ -1512,116 +1496,6 @@ export class HaDevApp extends LitElement {
               : ""
           }
 
-          <!-- 9. Compatibility Registration Aliases -->
-          ${
-            this._activeTab === "all" || this._activeTab === "compat"
-              ? html`
-                  <section class="dev-section">
-                    <div class="section-header">
-                      <h2>5. Compatibility Registration Aliases (5)</h2>
-                      <p>
-                        Backward-compatible custom element registrations and
-                        adapter cards ensuring legacy Lovelace YAML compatibility
-                        without duplicated domain logic
-                      </p>
-                    </div>
-
-                    <div class="card-grid">
-                      ${this._renderShowcase(
-                        "component-camera-controller-v1",
-                        "Camera Controller V1 (Legacy Compatibility Adapter)",
-                        html`
-                          <component-camera-controller-v1
-                            .hass=${this._hass}
-                            .config=${{
-                              type: "custom:component-camera-controller-v1",
-                              camera_entity: "camera.front_doorbell",
-                              title: "Front Doorbell (V1 Adapter)",
-                            }}
-                          ></component-camera-controller-v1>
-                        `,
-                        "custom:component-camera-controller-v1",
-                      )}
-                      ${this._renderShowcase(
-                        "component-household-attention-v1",
-                        "Household Attention V1 (V1 Compatibility Adapter)",
-                        html`
-                          <component-household-attention-v1
-                            .hass=${this._hass}
-                            .config=${{
-                              type: "custom:component-household-attention-v1",
-                              title: "Household Attention (V1 Adapter)",
-                              demo: true,
-                            }}
-                          ></component-household-attention-v1>
-                        `,
-                        "custom:component-household-attention-v1",
-                      )}
-                    </div>
-
-                    <div class="card-grid">
-                      ${this._renderShowcase(
-                        "component-empty-state-v2",
-                        "Empty State V2 (Legacy Adapter)",
-                        html`
-                          <component-empty-state-v2
-                            .hass=${this._hass}
-                            .config=${{
-                              type: "custom:component-empty-state-v2",
-                              icon: "mdi:clipboard-check-outline",
-                              title: "Queue Empty",
-                              message:
-                                "No maintenance actions or pending updates in the queue.",
-                            }}
-                          ></component-empty-state-v2>
-                        `,
-                        "custom:component-empty-state-v2",
-                      )}
-                      ${this._renderShowcase(
-                        "component-home-overview-v4",
-                        "Home Overview V4 (Legacy Compatibility Adapter)",
-                        html`
-                          <component-home-overview-v4
-                            .hass=${this._hass}
-                            .config=${{
-                              type: "custom:component-home-overview-v4",
-                              title: "Home Overview Board (V4 Adapter)",
-                              weather_entity: "weather.forecast_home",
-                            }}
-                          ></component-home-overview-v4>
-                        `,
-                        "custom:component-home-overview-v4",
-                      )}
-                    </div>
-
-                    ${this._renderShowcase(
-                      "component-favourites-minimal-v1",
-                      "Favourites Minimal V1 (Condensed Grid Adapter)",
-                      html`
-                        <component-favourites-minimal-v1
-                          .hass=${this._hass}
-                          .config=${{
-                            type: "custom:component-favourites-minimal-v1",
-                            title: "Favourites (Minimal)",
-                            items: [
-                              {
-                                entity_id: "light.living_room",
-                                name: "Living Room",
-                              },
-                              {
-                                entity_id: "climate.living_room_ac",
-                                name: "Living AC",
-                              },
-                            ],
-                          }}
-                        ></component-favourites-minimal-v1>
-                      `,
-                      "custom:component-favourites-minimal-v1",
-                    )}
-                  </section>
-                `
-              : ""
-          }
         </main>
       </div>
     `;

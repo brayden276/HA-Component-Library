@@ -437,8 +437,8 @@ describe('Exhaustive 100% Functionality & Interactive Verification Matrix', () =
 
   // 5. HOME & DIRECTORY
   describe('Home & Directory Functional Verification', () => {
-    it('component-household-attention-v1 renders demo issues and alerts', async () => {
-      const el = document.createElement('component-household-attention-v1') as any;
+    it('component-household-attention-v2 renders demo issues and alerts', async () => {
+      const el = document.createElement('component-household-attention-v2') as any;
       el.setConfig({
         demo: true,
         title: 'Attention items',
@@ -485,65 +485,6 @@ describe('Exhaustive 100% Functionality & Interactive Verification Matrix', () =
 
       expect(el.getCardSize()).toBe(4);
       expect(el.shadowRoot.textContent).toContain('Rooms');
-      el.remove();
-    });
-  });
-
-  // 6. BACKWARD COMPATIBILITY ADAPTERS
-  describe('Consolidated Backward Compatibility Adapters', () => {
-    it('component-favourites-minimal-v1 adapter correctly maps to favourites-v3', async () => {
-      const el = document.createElement('component-favourites-minimal-v1') as any;
-      el.setConfig({
-        title: 'Minimal Favourites',
-      });
-      el.hass = mockHass;
-      document.body.appendChild(el);
-      await el.updateComplete;
-
-      expect(el.getCardSize()).toBeGreaterThan(0);
-      el.remove();
-    });
-
-    it('component-camera-controller-v1 adapter maps to camera-controller-v2', async () => {
-      const el = document.createElement('component-camera-controller-v1') as any;
-      el.setConfig({
-        camera_entity: 'camera.porch',
-        title: 'Porch Cam Adapter',
-      });
-      el.hass = mockHass;
-      document.body.appendChild(el);
-      await el.updateComplete;
-
-      expect(el.getCardSize()).toBeGreaterThan(0);
-      expect(el.shadowRoot.textContent).toContain('Porch Cam Adapter');
-      el.remove();
-    });
-
-    it('component-home-overview-v5 adapter maps to home-overview-v4', async () => {
-      const el = document.createElement('component-home-overview-v5') as any;
-      el.setConfig({
-        title: 'Overview V5',
-      });
-      el.hass = mockHass;
-      document.body.appendChild(el);
-      await el.updateComplete;
-
-      expect(el.getCardSize()).toBeGreaterThan(0);
-      el.remove();
-    });
-
-    it('component-empty-state-v2 adapter renders correctly', async () => {
-      const el = document.createElement('component-empty-state-v2') as any;
-      el.setConfig({
-        title: 'No Alerts',
-        message: 'System nominal',
-      });
-      el.hass = mockHass;
-      document.body.appendChild(el);
-      await el.updateComplete;
-
-      expect(el.shadowRoot.textContent).toContain('No Alerts');
-      expect(el.shadowRoot.textContent).toContain('System nominal');
       el.remove();
     });
   });

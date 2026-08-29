@@ -469,15 +469,15 @@
     "publicCustomElement": "component-security-dashboard-v1",
     "publicLovelaceType": "custom:component-security-dashboard-v1",
     "legacyClass": "ComponentSecurityDashboardV1",
-    "canonicalClass": "ComponentSecurityDashboardV1",
-    "canonicalFile": "src/components/security/security-dashboard-card.ts",
+    "canonicalClass": "N/A (Superseded by Lovelace Blueprint)",
+    "canonicalFile": "dashboards/security-view.yaml",
     "category": "composition-wrapper",
     "interaction": "shared",
     "isConsolidated": false,
     "compatibilityAdapter": false,
-    "status": "MIGRATED",
-    "verificationStatus": "VERIFIED",
-    "reviewStatus": "VERIFIED"
+    "status": "DEPRECATED_REMOVED",
+    "verificationStatus": "SUPERSEDED_BY_BLUEPRINT",
+    "reviewStatus": "REMOVED"
   },
   {
     "oldSourceFile": "src/components/energy-day-selector.js",
@@ -574,15 +574,15 @@
     "publicCustomElement": "component-energy-dashboard-v1",
     "publicLovelaceType": "custom:component-energy-dashboard-v1",
     "legacyClass": "ComponentEnergyDashboardV1",
-    "canonicalClass": "ComponentEnergyDashboardV1",
-    "canonicalFile": "src/components/energy/energy-dashboard-card.ts",
+    "canonicalClass": "N/A (Superseded by Lovelace Blueprint)",
+    "canonicalFile": "dashboards/energy-view.yaml",
     "category": "composition-wrapper",
     "interaction": "delegated",
     "isConsolidated": false,
     "compatibilityAdapter": false,
-    "status": "MIGRATED",
-    "verificationStatus": "VERIFIED",
-    "reviewStatus": "VERIFIED"
+    "status": "DEPRECATED_REMOVED",
+    "verificationStatus": "SUPERSEDED_BY_BLUEPRINT",
+    "reviewStatus": "REMOVED"
   },
   {
     "oldSourceFile": "src/components/welcome-header.js",
@@ -694,29 +694,29 @@
     "publicCustomElement": "component-home-overview-v4",
     "publicLovelaceType": "custom:component-home-overview-v4",
     "legacyClass": "ComponentHomeOverviewV4",
-    "canonicalClass": "ComponentHomeOverviewV4",
-    "canonicalFile": "src/components/home/home-overview-card.ts",
+    "canonicalClass": "N/A (Superseded by Lovelace Blueprint)",
+    "canonicalFile": "dashboards/home-overview-view.yaml",
     "category": "composition-wrapper",
     "interaction": "shared",
     "isConsolidated": false,
     "compatibilityAdapter": false,
-    "status": "MIGRATED",
-    "verificationStatus": "VERIFIED",
-    "reviewStatus": "VERIFIED"
+    "status": "DEPRECATED_REMOVED",
+    "verificationStatus": "SUPERSEDED_BY_BLUEPRINT",
+    "reviewStatus": "REMOVED"
   },
   {
     "oldSourceFile": "src/components/home-overview.js",
     "publicCustomElement": "component-home-overview-v5",
     "publicLovelaceType": "custom:component-home-overview-v5",
     "legacyClass": "ComponentHomeOverviewV5",
-    "canonicalClass": "ComponentHomeOverviewV5",
-    "canonicalFile": "src/components/home/home-overview-card.ts",
+    "canonicalClass": "N/A (Superseded by Lovelace Blueprint)",
+    "canonicalFile": "dashboards/home-overview-view.yaml",
     "category": "composition-wrapper",
     "interaction": "shared",
     "isConsolidated": true,
     "compatibilityAdapter": true,
-    "status": "MIGRATED",
-    "verificationStatus": "VERIFIED",
-    "reviewStatus": "VERIFIED"
+    "status": "DEPRECATED_REMOVED",
+    "verificationStatus": "SUPERSEDED_BY_BLUEPRINT",
+    "reviewStatus": "REMOVED"
   }
 ]

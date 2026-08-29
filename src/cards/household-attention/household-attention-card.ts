@@ -319,23 +319,6 @@ export class ComponentHouseholdAttentionV2 extends LitBaseCard<HouseholdAttentio
   }
 }
 
-@customElement("component-household-attention-v1")
-export class ComponentHouseholdAttentionV1 extends ComponentHouseholdAttentionV2 {
-  public override setConfig(config: HouseholdAttentionConfig): void {
-    super.setConfig({
-      ...config,
-      type: "custom:component-household-attention-v1",
-    });
-  }
-}
-
-registerCard({
-  type: "component-household-attention-v1",
-  element: ComponentHouseholdAttentionV1,
-  name: "Household Attention V1",
-  description: "Aggregated safety and hardware attention queue (v1).",
-});
-
 registerCard({
   type: "component-household-attention-v2",
   element: ComponentHouseholdAttentionV2,

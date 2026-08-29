@@ -1,0 +1,17 @@
+﻿title: Security
+path: security
+icon: mdi:shield-home
+badges: []
+cards:
+  - type: custom:component-security-summary-v1
+    title: Security Summary
+    profile: household-security
+
+  - type: custom:component-security-camera-wall-v3
+    title: Security Cameras
+    profile: household-security
+    columns: 2
+
+  - type: custom:component-security-entry-points-v1
+    title: Perimeter Entry Points
+    profile: household-security

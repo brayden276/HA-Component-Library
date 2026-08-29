@@ -181,15 +181,6 @@ describe('Lovelace YAML Dashboard Configurations Compatibility Fixtures', () => 
       }
     },
     {
-      name: 'Legacy Camera Controller V1 Adapter',
-      tag: 'component-camera-controller-v1',
-      yamlConfig: {
-        type: 'custom:component-camera-controller-v1',
-        camera_entity: 'camera.front_porch',
-        title: 'Porch Cam V1'
-      }
-    },
-    {
       name: 'Energy Day Selector Navigation Bar',
       tag: 'component-energy-day-selector-v1',
       yamlConfig: {
@@ -234,30 +225,6 @@ describe('Lovelace YAML Dashboard Configurations Compatibility Fixtures', () => 
       }
     },
     {
-      name: 'Favourites Minimal V1 Adapter',
-      tag: 'component-favourites-minimal-v1',
-      yamlConfig: {
-        type: 'custom:component-favourites-minimal-v1',
-        preference_key: 'home-control.favourites.v1'
-      }
-    },
-    {
-      name: 'Home Overview V4 Board',
-      tag: 'component-home-overview-v4',
-      yamlConfig: {
-        type: 'custom:component-home-overview-v4',
-        title: 'Residence Overview'
-      }
-    },
-    {
-      name: 'Home Overview V5 Alias',
-      tag: 'component-home-overview-v5',
-      yamlConfig: {
-        type: 'custom:component-home-overview-v5',
-        title: 'Residence Overview V5'
-      }
-    },
-    {
       name: 'Security Summary Panel',
       tag: 'component-security-summary-v1',
       yamlConfig: {
@@ -289,15 +256,6 @@ describe('Lovelace YAML Dashboard Configurations Compatibility Fixtures', () => 
         type: 'custom:component-empty-state-v3',
         title: 'All Clear',
         message: 'No pending alerts at this time.'
-      }
-    },
-    {
-      name: 'Empty State V2 Adapter',
-      tag: 'component-empty-state-v2',
-      yamlConfig: {
-        type: 'custom:component-empty-state-v2',
-        title: 'No issues',
-        message: 'Everything running smoothly.'
       }
     }
   ];

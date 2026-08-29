@@ -15,7 +15,7 @@ describe("catalogue style parity", () => {
   const styleRoots = findStyleRoots(cardStylesRoot);
 
   it("keeps every public card within the catalogue token boundary", () => {
-    expect(styleRoots).toHaveLength(48);
+    expect(styleRoots).toHaveLength(45);
 
     for (const styleRoot of styleRoots) {
       const source = readFileSync(styleRoot, "utf8");
@@ -41,11 +41,11 @@ describe("catalogue style parity", () => {
   });
 
   it("keeps security surfaces and dialogs on the same shared recipe", () => {
-    const dashboard = readFileSync(
+    const summary = readFileSync(
       join(
         cardStylesRoot,
-        "security-dashboard",
-        "security-dashboard-card.styles.ts",
+        "security-summary",
+        "security-summary-card.styles.ts",
       ),
       "utf8",
     );
@@ -58,10 +58,8 @@ describe("catalogue style parity", () => {
       "utf8",
     );
 
-    expect(dashboard).toContain("border-radius: var(--dashboard-radius-card)");
-    expect(dashboard).toContain("border-radius: var(--dashboard-radius-dialog)");
-    expect(dashboard).toContain("background: var(--dashboard-modal-scrim)");
-    expect(dashboard).not.toMatch(/--dashboard-media-surface|#111|0\.46|- 24px/);
+    expect(summary).toContain("border-radius: var(--dashboard-radius-control)");
+    expect(cameraWall).toContain("border-radius: var(--dashboard-radius-control)");
     expect(cameraWall).not.toMatch(/background:\s*#111|color:\s*#ffffff/);
   });
 });

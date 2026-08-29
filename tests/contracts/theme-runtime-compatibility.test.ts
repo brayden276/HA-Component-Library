@@ -15,18 +15,16 @@ describe("theme and runtime compatibility", () => {
     expect(GLOBAL_THEME_CSS).not.toContain("[data-theme");
   });
 
-  it("uses the explicit minimal compatibility path without reaching into a child shadow root", async () => {
-    const host = document.createElement("component-favourites-minimal-v1") as any;
-    host.setConfig({ title: "Favourites" });
-    document.body.append(host);
-    await host.updateComplete;
+  it("renders favourites card edit control with icon cleanly", async () => {
+    const card = document.createElement("component-favourites-v3") as any;
+    card.setConfig({ title: "Favourites", show_header: true });
+    document.body.append(card);
+    await card.updateComplete;
 
-    const child = host.shadowRoot.querySelector("component-favourites-v3") as any;
-    await child.updateComplete;
-
-    expect(child.minimal).toBe(true);
-    expect(child.shadowRoot.querySelector(".edit ha-icon")?.getAttribute("icon")).toBe("mdi:dots-horizontal");
-    host.remove();
+    expect(card.shadowRoot.querySelector(".edit")).not.toBeNull();
+    expect(card.shadowRoot.textContent).toContain("Favourites");
+    expect(card.shadowRoot.textContent).toContain("Edit");
+    card.remove();
   });
 
   it("renders tooltip values as Lit text rather than assigning HTML", async () => {

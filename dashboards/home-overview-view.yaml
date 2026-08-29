@@ -1,0 +1,26 @@
+﻿title: Home Overview
+path: home-overview
+icon: mdi:home
+badges: []
+cards:
+  - type: custom:component-welcome-header-v1
+    title: Residence
+    weather_entity: weather.forecast_home
+
+  - type: custom:component-household-attention-v2
+    title: Household Attention
+
+  - type: custom:component-favourites-v3
+    title: Quick Access Favourites
+    max: 4
+
+  - type: custom:component-smart-collection-v3
+    title: Smart Control Collection
+    mode: all
+    show_header: true
+
+  - type: custom:component-household-directory-v3
+    title: Household Quick Actions
+
+  - type: custom:component-room-directory-v4
+    title: Rooms & Areas Directory

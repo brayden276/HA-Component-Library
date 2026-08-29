@@ -15,7 +15,6 @@ describe('Public Card Inventory & Registration Contract Tests', () => {
     'component-text-effect-v1',
     'component-section-separator-v2',
     'component-empty-state-v3',
-    'component-empty-state-v2',
 
     // Navigation
     'component-quick-nav-v2',
@@ -37,13 +36,11 @@ describe('Public Card Inventory & Registration Contract Tests', () => {
     'component-split-controller-v4',
     'component-apple-tv-controller-v1',
     'component-camera-controller-v2',
-    'component-camera-controller-v1',
 
     // Security
     'component-security-summary-v1',
     'component-security-camera-wall-v3',
     'component-security-entry-points-v1',
-    'component-security-dashboard-v1',
 
     // Energy
     'component-energy-day-selector-v1',
@@ -52,21 +49,17 @@ describe('Public Card Inventory & Registration Contract Tests', () => {
     'solar-daylight-card-v7',
     'energy-history-card-v3',
     'metric-pair-card-v3',
-    'component-energy-dashboard-v1',
 
     // Home
     'component-welcome-header-v1',
-    'component-household-attention-v1',
+    'component-household-attention-v2',
     'component-favourites-v3',
-    'component-favourites-minimal-v1',
     'component-smart-collection-v3',
     'component-household-directory-v3',
-    'component-room-directory-v4',
-    'component-home-overview-v4',
-    'component-home-overview-v5'
+    'component-room-directory-v4'
   ];
 
-  it('registers all 48 custom element tags in customElements registry', () => {
+  it('registers all 40 canonical custom element tags in customElements registry', () => {
     for (const tag of EXPECTED_CARDS) {
       const cls = customElements.get(tag);
       expect(cls, `Expected custom element <${tag}> to be defined`).toBeDefined();
@@ -82,8 +75,8 @@ describe('Public Card Inventory & Registration Contract Tests', () => {
     expect(registeredTypes.has('component-single-kpi-v2')).toBe(true);
     expect(registeredTypes.has('component-garage-door-controller-v1')).toBe(true);
     expect(registeredTypes.has('component-split-controller-v4')).toBe(true);
-    expect(registeredTypes.has('component-security-dashboard-v1')).toBe(true);
-    expect(registeredTypes.has('component-energy-dashboard-v1')).toBe(true);
-    expect(registeredTypes.has('component-home-overview-v4')).toBe(true);
+    expect(registeredTypes.has('component-security-summary-v1')).toBe(true);
+    expect(registeredTypes.has('component-energy-summary-v1')).toBe(true);
+    expect(registeredTypes.has('component-welcome-header-v1')).toBe(true);
   });
 });
